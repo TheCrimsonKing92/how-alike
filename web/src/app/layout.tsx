@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import DevPrewarm from "@/components/DevPrewarm";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
+        {process.env.NODE_ENV !== "production" ? <DevPrewarm /> : null}
         <header className="border-b border-black/10 dark:border-white/15">
           <div className="mx-auto w-full max-w-6xl px-6 py-4 flex items-center justify-between">
             <h1 className="text-lg font-semibold">How Alike</h1>

@@ -10,3 +10,6 @@ export const REGION_INDICES: Record<string, number[]> = {
   jaw: [152, 172, 136, 150, 149, 176, 397, 365, 379, 400, 378, 402],
 };
 
+// Minimal subsets to locate eye centers (left/right)
+export const LEFT_EYE_CENTER_INDICES = [33, 133, 159, 145];
+export const RIGHT_EYE_CENTER_INDICES = [362, 263, 386, 374];

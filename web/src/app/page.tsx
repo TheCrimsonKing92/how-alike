@@ -5,8 +5,8 @@ import ResultsPanel from "@/components/ResultsPanel";
 import CanvasPanel from "@/components/CanvasPanel";
 import { loadImageFromFile, preprocessImage } from "@/lib/image";
 import { detect } from "@/models/facemesh-adapter";
-import { eyeCenter, fromKeypoints, normalizeByEyes, summarizeRegions, Vec2 } from "@/lib/geometry";
-import { REGION_INDICES } from "@/lib/regions";
+import { eyeCenterFromIndices, fromKeypoints, normalizeByEyes, summarizeRegions, Vec2 } from "@/lib/geometry";
+import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES } from "@/lib/regions";
 
 export default function Home() {
   const [loading, setLoading] = React.useState(false);
@@ -33,17 +33,16 @@ export default function Home() {
       const detA = await detect(procA.canvas);
       const detB = await detect(procB.canvas);
       const t3 = performance.now();
-      if (!detA || !detB || !detA.annotations || !detB.annotations) {
+      if (!detA || !detB) {
         throw new Error("Could not detect a single face in one or both images.");
       }
-      const leftA = eyeCenter(detA.annotations, "left");
-      const rightA = eyeCenter(detA.annotations, "right");
-      const leftB = eyeCenter(detB.annotations, "left");
-      const rightB = eyeCenter(detB.annotations, "right");
-      if (!leftA || !rightA || !leftB || !rightB) throw new Error("Failed to locate eyes.");
 
       const ptsA = fromKeypoints(detA.keypoints);
       const ptsB = fromKeypoints(detB.keypoints);
+      const leftA = eyeCenterFromIndices(ptsA, LEFT_EYE_CENTER_INDICES);
+      const rightA = eyeCenterFromIndices(ptsA, RIGHT_EYE_CENTER_INDICES);
+      const leftB = eyeCenterFromIndices(ptsB, LEFT_EYE_CENTER_INDICES);
+      const rightB = eyeCenterFromIndices(ptsB, RIGHT_EYE_CENTER_INDICES);
       const nA = normalizeByEyes(ptsA, leftA, rightA);
       const nB = normalizeByEyes(ptsB, leftB, rightB);
       setPointsA(nA);

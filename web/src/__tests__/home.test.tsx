@@ -10,7 +10,7 @@ describe("Home Page", () => {
     expect(screen.getByRole("heading", { name: /upload or capture/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /results/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /visualization/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /select photos/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /use camera/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /analyze/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /use camera \(soon\)/i })).toBeInTheDocument();
   });
 });

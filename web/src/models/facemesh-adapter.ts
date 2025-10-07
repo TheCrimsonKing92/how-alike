@@ -27,7 +27,8 @@ type FaceLike = {
 };
 
 export async function getDetector(): Promise<FaceLandmarksDetector> {
-  if (typeof window === "undefined") throw new Error("Detector must run in browser");
+  // Allow running in window or worker; only disallow server
+  if (typeof self === "undefined") throw new Error("Detector must run in a browser context");
   if (!detectorPromise) {
     detectorPromise = (async () => {
       const isDev = process.env.NODE_ENV !== "production";

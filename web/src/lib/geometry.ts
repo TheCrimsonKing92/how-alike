@@ -1,4 +1,3 @@
-import type { Keypoint } from "@tensorflow-models/face-landmarks-detection";
 
 export type Vec2 = { x: number; y: number };
 
@@ -21,7 +20,7 @@ export function angle(a: Vec2, b: Vec2) {
   return Math.atan2(b.y - a.y, b.x - a.x);
 }
 
-export function fromKeypoints(kps: Keypoint[]): Vec2[] {
+export function fromKeypoints(kps: Array<{ x: number; y: number }>): Vec2[] {
   return kps.map((k) => ({ x: k.x, y: k.y }));
 }
 

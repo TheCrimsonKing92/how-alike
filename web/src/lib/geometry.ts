@@ -30,6 +30,91 @@ export function eyeCenterFromIndices(points: Vec2[], indices: number[]): Vec2 {
   return centroid(pts);
 }
 
+// Procrustes alignment (2D, similarity transform) using a closed-form 2x2 solution.
+export function procrustesRMSE(a: Vec2[], b: Vec2[]) {
+  const n = Math.min(a.length, b.length);
+  if (n === 0) return { rmse: Infinity };
+  const ax = new Array(n);
+  const ay = new Array(n);
+  const bx = new Array(n);
+  const by = new Array(n);
+  const ca = { x: 0, y: 0 };
+  const cb = { x: 0, y: 0 };
+  for (let i = 0; i < n; i++) {
+    ca.x += a[i].x;
+    ca.y += a[i].y;
+    cb.x += b[i].x;
+    cb.y += b[i].y;
+  }
+  ca.x /= n; ca.y /= n; cb.x /= n; cb.y /= n;
+  for (let i = 0; i < n; i++) {
+    ax[i] = a[i].x - ca.x;
+    ay[i] = a[i].y - ca.y;
+    bx[i] = b[i].x - cb.x;
+    by[i] = b[i].y - cb.y;
+  }
+  // Cross-covariance H = X^T Y
+  let a00 = 0, a01 = 0, a10 = 0, a11 = 0;
+  let sumXX = 0, sumYY = 0;
+  for (let i = 0; i < n; i++) {
+    a00 += ax[i] * bx[i];
+    a01 += ax[i] * by[i];
+    a10 += ay[i] * bx[i];
+    a11 += ay[i] * by[i];
+    sumXX += ax[i] * ax[i] + ay[i] * ay[i];
+    sumYY += bx[i] * bx[i] + by[i] * by[i];
+  }
+  // Optimal rotation angle for 2D Kabsch
+  const phi = Math.atan2(a01 - a10, a00 + a11);
+  const c = Math.cos(phi);
+  const s = Math.sin(phi);
+  // trace(R H)
+  const traceRH = c * (a00 + a11) + s * (a01 - a10);
+  const denom = sumXX || 1e-12;
+  const scale = traceRH / denom;
+  // Error sum: ||sRX - Y||^2 = s^2*sumXX + sumYY - 2*s*trace(RH)
+  const errSum = scale * scale * sumXX + sumYY - 2 * scale * traceRH;
+  const rmse = Math.sqrt(Math.max(errSum, 0) / n);
+  return { rmse };
+}
+
+export function regionalProcrustesSimilarity(
+  a: Vec2[],
+  b: Vec2[],
+  indices: number[],
+  alpha = 8,
+) {
+  const ptsA = indices.map((i) => a[i]).filter(Boolean) as Vec2[];
+  const ptsB = indices.map((i) => b[i]).filter(Boolean) as Vec2[];
+  if (ptsA.length < 2 || ptsB.length < 2) return 0;
+  const { rmse } = procrustesRMSE(ptsA, ptsB);
+  // Normalize by region scale (RMS radius of target region) to be size-invariant
+  const cB = centroid(ptsB);
+  let sumR2 = 0;
+  for (const p of ptsB) {
+    const dx = p.x - cB.x, dy = p.y - cB.y;
+    sumR2 += dx * dx + dy * dy;
+  }
+  const regionScale = Math.sqrt(sumR2 / ptsB.length) || 1e-6;
+  const normErr = rmse / regionScale;
+  const sim = Math.exp(-alpha * normErr);
+  return sim;
+}
+
+export function summarizeRegionsProcrustes(a: Vec2[], b: Vec2[], regions: Record<string, number[]>) {
+  const scores: RegionScore[] = [];
+  let totalWeight = 0;
+  let weighted = 0;
+  for (const [name, idxs] of Object.entries(regions)) {
+    const sim = regionalProcrustesSimilarity(a, b, idxs);
+    scores.push({ region: name, score: sim });
+    totalWeight += idxs.length;
+    weighted += sim * idxs.length;
+  }
+  const overall = totalWeight ? weighted / totalWeight : 0;
+  return { scores: scores.sort((x, y) => y.score - x.score), overall };
+}
+
 export function normalizeByEyes(points: Vec2[], leftEye: Vec2, rightEye: Vec2) {
   const mid = { x: (leftEye.x + rightEye.x) / 2, y: (leftEye.y + rightEye.y) / 2 };
   const ipd = distance(leftEye, rightEye) || 1;

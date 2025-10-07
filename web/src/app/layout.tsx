@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import DevPrewarm from "@/components/DevPrewarm";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,18 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
         {process.env.NODE_ENV !== "production" ? <DevPrewarm /> : null}
+        {/* PWA manifest */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        {/* Register service worker in production */}
+        {process.env.NODE_ENV === "production" ? (
+          <Script id="sw-register" strategy="afterInteractive">
+            {`
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+              }
+            `}
+          </Script>
+        ) : null}
         <header className="border-b border-black/10 dark:border-white/15">
           <div className="mx-auto w-full max-w-6xl px-6 py-4 flex items-center justify-between">
             <h1 className="text-lg font-semibold">How Alike</h1>

@@ -30,23 +30,23 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       return;
     }
     if (data.type === 'ANALYZE') {
-      const { fileA, fileB, maxDim = 1280 } = data.payload;
-      post({ type: 'PROGRESS', stage: 'load' });
+      const { jobId, fileA, fileB, maxDim = 1280 } = data.payload;
+      post({ type: 'PROGRESS', jobId, stage: 'load' });
       const [bmpA, bmpB] = await Promise.all([
         createImageBitmap(fileA),
         createImageBitmap(fileB),
       ]);
-      post({ type: 'PROGRESS', stage: 'preprocess' });
+      post({ type: 'PROGRESS', jobId, stage: 'preprocess' });
       const [cnvA, cnvB] = await Promise.all([
         preprocessBitmap(bmpA, maxDim),
         preprocessBitmap(bmpB, maxDim),
       ]);
 
       const detector = await getDetector();
-      post({ type: 'PROGRESS', stage: 'detectA' });
+      post({ type: 'PROGRESS', jobId, stage: 'detectA' });
       const est: MediaPipeFaceMeshTfjsEstimationConfig = { flipHorizontal: false, staticImageMode: true } as MediaPipeFaceMeshTfjsEstimationConfig;
       const facesA = await detector.estimateFaces(cnvA as unknown as FaceLandmarksDetectorInput, est);
-      post({ type: 'PROGRESS', stage: 'detectB' });
+      post({ type: 'PROGRESS', jobId, stage: 'detectB' });
       const facesB = await detector.estimateFaces(cnvB as unknown as FaceLandmarksDetectorInput, est);
 
       if (!facesA?.length || !facesB?.length) {
@@ -70,14 +70,17 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const nA = normalizeByEyes(ptsA, leftA, rightA);
       const nB = normalizeByEyes(ptsB, leftB, rightB);
 
-      post({ type: 'PROGRESS', stage: 'score' });
+      post({ type: 'PROGRESS', jobId, stage: 'score' });
       const { scores, overall } = summarizeRegionsProcrustes(nA, nB, REGION_INDICES);
-      post({ type: 'RESULT', pointsA: nA, pointsB: nB, scores, overall });
+      post({ type: 'RESULT', jobId, pointsA: nA, pointsB: nB, scores, overall });
       return;
     }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    post({ type: 'ERROR', message: msg });
+    // Best-effort: echo jobId if present
+    // @ts-expect-error: ev type is MessageEvent<AnalyzeMessage>; payload only on ANALYZE
+    const jobId = (ev?.data?.payload?.jobId as string) || '';
+    post({ type: 'ERROR', jobId, message: msg });
   }
 };
 

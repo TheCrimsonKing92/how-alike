@@ -16,6 +16,7 @@ export default function Home() {
 
   const workerRef = React.useRef<Worker | null>(null);
   const [progress, setProgress] = React.useState<string>("");
+  const jobIdRef = React.useRef(0);
 
   React.useEffect(() => {
     if (typeof Worker === 'undefined') return;
@@ -35,11 +36,14 @@ export default function Home() {
     setError(null);
     try {
       setProgress("Starting…");
+      const jobId = String(++jobIdRef.current);
       await new Promise<void>((resolve, reject) => {
         const w = workerRef.current;
         if (!w) return reject(new Error("Worker not available"));
         const onMessage = (e: MessageEvent<AnalyzeResponse>) => {
           const msg = e.data;
+          // Ignore stale messages from older jobs
+          if ('jobId' in msg && (msg as { jobId?: string }).jobId !== jobId) return;
           if (msg.type === "PROGRESS") {
             setProgress(msg.stage);
           } else if (msg.type === "RESULT") {
@@ -55,7 +59,7 @@ export default function Home() {
           }
         };
         w.addEventListener("message", onMessage as EventListener);
-        w.postMessage({ type: "ANALYZE", payload: { fileA: fa, fileB: fb, maxDim: 1280 } });
+        w.postMessage({ type: "ANALYZE", payload: { jobId, fileA: fa, fileB: fb, maxDim: 1280 } });
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

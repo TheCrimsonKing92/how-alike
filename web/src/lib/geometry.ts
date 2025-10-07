@@ -25,13 +25,8 @@ export function fromKeypoints(kps: Keypoint[]): Vec2[] {
   return kps.map((k) => ({ x: k.x, y: k.y }));
 }
 
-export function eyeCenter(ann: Record<string, Keypoint[]>, side: "left" | "right"): Vec2 | null {
-  const keys = side === "left" ? ["leftEyeUpper0", "leftEyeLower0"] : ["rightEyeUpper0", "rightEyeLower0"];
-  const pts: Vec2[] = [];
-  for (const k of keys) {
-    if (ann[k]) pts.push(...fromKeypoints(ann[k]));
-  }
-  if (pts.length === 0) return null;
+export function eyeCenterFromIndices(points: Vec2[], indices: number[]): Vec2 {
+  const pts = indices.map((i) => points[i]).filter(Boolean) as Vec2[];
   return centroid(pts);
 }
 

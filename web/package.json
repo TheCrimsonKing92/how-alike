@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "e2e": "playwright test e2e/smoke.shallow.spec.ts",
-    "e2e:deep": "playwright test e2e/smoke.deep.spec.ts",
+    "e2e:deep": "playwright test e2e/smoke.deep.spec.ts e2e/sample-analysis.spec.ts",
     "e2e:ui": "playwright test --ui"
   },
   "dependencies": {

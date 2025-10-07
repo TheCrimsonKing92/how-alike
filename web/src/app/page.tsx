@@ -5,7 +5,7 @@ import ResultsPanel from "@/components/ResultsPanel";
 import CanvasPanel from "@/components/CanvasPanel";
 import { loadImageFromFile, preprocessImage } from "@/lib/image";
 import { detect } from "@/models/facemesh-adapter";
-import { eyeCenterFromIndices, fromKeypoints, normalizeByEyes, summarizeRegions, Vec2 } from "@/lib/geometry";
+import { eyeCenterFromIndices, fromKeypoints, normalizeByEyes, summarizeRegionsProcrustes, Vec2 } from "@/lib/geometry";
 import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES } from "@/lib/regions";
 
 export default function Home() {
@@ -48,7 +48,7 @@ export default function Home() {
       setPointsA(nA);
       setPointsB(nB);
 
-      const { scores, overall } = summarizeRegions(nA, nB, REGION_INDICES);
+      const { scores, overall } = summarizeRegionsProcrustes(nA, nB, REGION_INDICES);
       const t4 = performance.now();
       if (isDev) {
         const loadMs = Math.round(t1 - t0);

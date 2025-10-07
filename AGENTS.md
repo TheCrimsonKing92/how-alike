@@ -36,5 +36,28 @@
   - Mark the build as unstable and create a tracking issue. Do not merge unrelated code until green.
 - Run the smoke test locally before merging changes affecting model init, routing, or build config.
 
+## Process Adjustments
+- Merge gating
+  - All unit tests and the shallow E2E smoke must pass on PRs.
+  - The deep E2E smoke must pass on main/nightly; for PRs that modify detector/runtime or dependencies (see below), run deep locally before merge when possible.
+- Changes requiring extra validation
+  - Touching: `web/src/models/**`, `web/src/app/**`, `web/src/lib/**`, `web/playwright.config.*`, `web/package.json`
+  - Dependency bumps involving: Next.js, `@tensorflow-models/face-landmarks-detection`, `@tensorflow/tfjs-*`, `@playwright/test`
+  - Action: run `npm run e2e` (shallow) during dev loop and `npm run e2e:deep` before merge.
+- Runtime selection
+  - Default to TFJS runtime; include a safe fallback (WebGL → CPU) and keep unit/E2E tests green.
+  - If changing runtime logic, document it in the PR and update smoke tests as needed.
+- TFJS backends
+  - Register backends via static imports; keep `@tensorflow/tfjs-backend-cpu` as a dependency.
+  - Ensure `tf.ready()` is awaited before detector creation.
+- Version pinning
+  - Pin compatible versions for Next.js, TFJS, and face-landmarks-detection. After bumps, run both smoke tests.
+- Observability
+  - Log chosen TFJS backend and detector init duration in dev (info-level) to aid diagnosis; keep noise minimal in prod.
+- Health route
+  - Keep `/health/detector` stable. It must remain client-only and fast; update smoke tests if its behavior changes.
+- Model hosting (if deep test flakiness persists)
+  - Prefer self-hosting model assets under `public/models/` and pointing the detector to local URLs; track with an issue if adopted later.
+
 ## Self-Improvement
 - After each interaction, reflect on any way to update this AGENTS.md file to improve future interactions

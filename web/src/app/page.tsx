@@ -3,65 +3,60 @@ import React from "react";
 import UploadPanel from "@/components/UploadPanel";
 import ResultsPanel from "@/components/ResultsPanel";
 import CanvasPanel from "@/components/CanvasPanel";
-import { loadImageFromFile, preprocessImage } from "@/lib/image";
-import { detect } from "@/models/facemesh-adapter";
-import { eyeCenterFromIndices, fromKeypoints, normalizeByEyes, summarizeRegionsProcrustes, Vec2 } from "@/lib/geometry";
-import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES } from "@/lib/regions";
+import type { OverlayPoint } from "@/components/CanvasPanel";
+import type { AnalyzeResponse } from "@/workers/types";
 
 export default function Home() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [scores, setScores] = React.useState<{ region: string; score: number }[] | undefined>();
   const [overall, setOverall] = React.useState<number | undefined>();
-  const [pointsA, setPointsA] = React.useState<Vec2[] | undefined>();
-  const [pointsB, setPointsB] = React.useState<Vec2[] | undefined>();
+  const [pointsA, setPointsA] = React.useState<OverlayPoint[] | undefined>();
+  const [pointsB, setPointsB] = React.useState<OverlayPoint[] | undefined>();
+
+  const workerRef = React.useRef<Worker | null>(null);
+  const [progress, setProgress] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (typeof Worker === 'undefined') return;
+    // Module worker with bundler URL
+    const w = new Worker(new URL("../workers/analyze.worker.ts", import.meta.url), { type: "module" });
+    workerRef.current = w;
+    w.postMessage({ type: "INIT" });
+    return () => {
+      w.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   const onFiles = async (fa: File | null, fb: File | null) => {
     if (!fa || !fb) return;
     setLoading(true);
     setError(null);
     try {
-      const isDev = process.env.NODE_ENV !== "production";
-      const t0 = performance.now();
-      const imgA = await loadImageFromFile(fa);
-      const imgB = await loadImageFromFile(fb);
-      const t1 = performance.now();
-      const procA = await preprocessImage(imgA);
-      const procB = await preprocessImage(imgB);
-      const t2 = performance.now();
-
-      const detA = await detect(procA.canvas);
-      const detB = await detect(procB.canvas);
-      const t3 = performance.now();
-      if (!detA || !detB) {
-        throw new Error("Could not detect a single face in one or both images.");
-      }
-
-      const ptsA = fromKeypoints(detA.keypoints);
-      const ptsB = fromKeypoints(detB.keypoints);
-      const leftA = eyeCenterFromIndices(ptsA, LEFT_EYE_CENTER_INDICES);
-      const rightA = eyeCenterFromIndices(ptsA, RIGHT_EYE_CENTER_INDICES);
-      const leftB = eyeCenterFromIndices(ptsB, LEFT_EYE_CENTER_INDICES);
-      const rightB = eyeCenterFromIndices(ptsB, RIGHT_EYE_CENTER_INDICES);
-      const nA = normalizeByEyes(ptsA, leftA, rightA);
-      const nB = normalizeByEyes(ptsB, leftB, rightB);
-      setPointsA(nA);
-      setPointsB(nB);
-
-      const { scores, overall } = summarizeRegionsProcrustes(nA, nB, REGION_INDICES);
-      const t4 = performance.now();
-      if (isDev) {
-        const loadMs = Math.round(t1 - t0);
-        const prepMs = Math.round(t2 - t1);
-        const detectMs = Math.round(t3 - t2);
-        const scoreMs = Math.round(t4 - t3);
-        const totalMs = Math.round(t4 - t0);
-        console.info(
-          `[analyze] load=${loadMs}ms preprocess=${prepMs}ms detect=${detectMs}ms score=${scoreMs}ms total=${totalMs}ms`
-        );
-      }
-      setScores(scores);
-      setOverall(overall);
+      setProgress("Starting…");
+      await new Promise<void>((resolve, reject) => {
+        const w = workerRef.current;
+        if (!w) return reject(new Error("Worker not available"));
+        const onMessage = (e: MessageEvent<AnalyzeResponse>) => {
+          const msg = e.data;
+          if (msg.type === "PROGRESS") {
+            setProgress(msg.stage);
+          } else if (msg.type === "RESULT") {
+            setPointsA(msg.pointsA);
+            setPointsB(msg.pointsB);
+            setScores(msg.scores);
+            setOverall(msg.overall);
+            w.removeEventListener("message", onMessage as EventListener);
+            resolve();
+          } else if (msg.type === "ERROR") {
+            w.removeEventListener("message", onMessage as EventListener);
+            reject(new Error(msg.message));
+          }
+        };
+        w.addEventListener("message", onMessage as EventListener);
+        w.postMessage({ type: "ANALYZE", payload: { fileA: fa, fileB: fb, maxDim: 1280 } });
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
@@ -71,6 +66,7 @@ export default function Home() {
       setPointsB(undefined);
     } finally {
       setLoading(false);
+      setProgress("");
     }
   };
 
@@ -79,7 +75,7 @@ export default function Home() {
       <div className="grid gap-8 md:grid-cols-2">
         <UploadPanel onFiles={onFiles} />
         <div>
-          {loading ? <p className="text-sm">Analyzing…</p> : null}
+          {loading ? <p className="text-sm">Analyzing… {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <ResultsPanel scores={scores} overall={overall} />
         </div>

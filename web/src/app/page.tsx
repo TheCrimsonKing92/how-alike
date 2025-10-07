@@ -21,13 +21,18 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
+      const isDev = process.env.NODE_ENV !== "production";
+      const t0 = performance.now();
       const imgA = await loadImageFromFile(fa);
       const imgB = await loadImageFromFile(fb);
+      const t1 = performance.now();
       const procA = await preprocessImage(imgA);
       const procB = await preprocessImage(imgB);
+      const t2 = performance.now();
 
       const detA = await detect(procA.canvas);
       const detB = await detect(procB.canvas);
+      const t3 = performance.now();
       if (!detA || !detB || !detA.annotations || !detB.annotations) {
         throw new Error("Could not detect a single face in one or both images.");
       }
@@ -45,6 +50,17 @@ export default function Home() {
       setPointsB(nB);
 
       const { scores, overall } = summarizeRegions(nA, nB, REGION_INDICES);
+      const t4 = performance.now();
+      if (isDev) {
+        const loadMs = Math.round(t1 - t0);
+        const prepMs = Math.round(t2 - t1);
+        const detectMs = Math.round(t3 - t2);
+        const scoreMs = Math.round(t4 - t3);
+        const totalMs = Math.round(t4 - t0);
+        console.info(
+          `[analyze] load=${loadMs}ms preprocess=${prepMs}ms detect=${detectMs}ms score=${scoreMs}ms total=${totalMs}ms`
+        );
+      }
       setScores(scores);
       setOverall(overall);
     } catch (e: unknown) {

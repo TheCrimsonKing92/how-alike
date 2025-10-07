@@ -8,6 +8,7 @@ import type {
   Face,
   MediaPipeFaceMeshTfjsModelConfig,
   FaceLandmarksDetectorInput,
+  MediaPipeFaceMeshTfjsEstimationConfig,
 } from "@tensorflow-models/face-landmarks-detection";
 
 let detectorPromise: Promise<FaceLandmarksDetector> | null = null;
@@ -66,7 +67,8 @@ export async function getDetector(): Promise<FaceLandmarksDetector> {
 export async function detect(image: HTMLImageElement | HTMLCanvasElement | ImageBitmap) {
   const detector = await getDetector();
   const input = image as unknown as FaceLandmarksDetectorInput;
-  const faces = (await detector.estimateFaces(input)) as Face[];
+  const est: MediaPipeFaceMeshTfjsEstimationConfig = { flipHorizontal: false, staticImageMode: true } as MediaPipeFaceMeshTfjsEstimationConfig;
+  const faces = (await detector.estimateFaces(input, est)) as Face[];
   if (!faces || faces.length === 0) return null;
   const f = faces[0] as unknown as FaceLike;
   const keypoints: Keypoint[] = f.keypoints

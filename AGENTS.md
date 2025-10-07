@@ -5,6 +5,7 @@
 
 ## Quality
 - All code must be tested, and all tests must pass, to be considered acceptable
+- Add only absolutely necessary observability code to aid diagnosing problems in logs
 - Add or update tests for the code you change, even if nobody asked
 - When any test errors are found, resolve them until the entire test suite is green
 - After moving files or changing imports, run tests to confirm everything still passes

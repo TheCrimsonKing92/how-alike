@@ -7,14 +7,21 @@ export type ProcessedImage = {
 
 export async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   const url = URL.createObjectURL(file);
+  const img = new Image();
   await new Promise<void>((resolve, reject) => {
-    const img = new Image();
     img.onload = () => resolve();
     img.onerror = (e) => reject(e);
     img.src = url;
   });
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
+  // Prefer decode when available for stronger readiness guarantees
+  if (typeof (img as HTMLImageElement & { decode?: () => Promise<void> }).decode === "function") {
+    try {
+      await (img as HTMLImageElement & { decode: () => Promise<void> }).decode();
+    } catch {
+      // ignore decode errors; drawImage after onload still works
+    }
+  }
+  URL.revokeObjectURL(url);
   return img;
 }
 
@@ -31,4 +38,3 @@ export async function preprocessImage(img: HTMLImageElement, maxDim = 1280): Pro
   ctx.drawImage(img, 0, 0, width, height);
   return { canvas, ctx, width, height };
 }
-

@@ -29,6 +29,8 @@ export async function getDetector(): Promise<FaceLandmarksDetector> {
   if (typeof window === "undefined") throw new Error("Detector must run in browser");
   if (!detectorPromise) {
     detectorPromise = (async () => {
+      const isDev = process.env.NODE_ENV !== "production";
+      const t0 = performance.now();
       let backendSet = false;
       try {
         await tf.setBackend("webgl");
@@ -40,6 +42,11 @@ export async function getDetector(): Promise<FaceLandmarksDetector> {
         await tf.setBackend("cpu");
       }
       await tf.ready();
+      const backend = tf.getBackend();
+      const t1 = performance.now();
+      if (isDev) {
+        console.info(`[detector] backend=${backend} init=${(t1 - t0).toFixed(0)}ms`);
+      }
 
       const face = await import("@tensorflow-models/face-landmarks-detection");
       const model = face.SupportedModels.MediaPipeFaceMesh;

@@ -46,6 +46,9 @@ export async function getDetector(): Promise<FaceLandmarksDetector> {
       const t1 = performance.now();
       if (isDev) {
         console.info(`[detector] backend=${backend} init=${(t1 - t0).toFixed(0)}ms`);
+        if (backend === "cpu") {
+          console.info("[detector] running on CPU backend; performance may be reduced");
+        }
       }
 
       const face = await import("@tensorflow-models/face-landmarks-detection");

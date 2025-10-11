@@ -29,6 +29,13 @@ export type MaskOverlay = {
   crop: { sx: number; sy: number; sw: number; sh: number };
 };
 
+export type FeatureNarrative = {
+  overall: string;
+  featureSummaries: Record<string, string>;
+  axisDetails: Record<string, string[]>;
+  sharedCharacteristics?: string;
+};
+
 export type AnalyzeResult = {
   type: 'RESULT';
   jobId: string;
@@ -50,6 +57,8 @@ export type AnalyzeResult = {
   ortB?: string;
   maskA?: MaskOverlay;
   maskB?: MaskOverlay;
+  featureNarrative?: FeatureNarrative;
+  congruenceScore?: number;
 };
 
 export type AnalyzeError = { type: 'ERROR'; jobId: string; message: string };

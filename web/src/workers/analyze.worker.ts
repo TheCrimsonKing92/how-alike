@@ -6,6 +6,10 @@ import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES, FEAT
 import { deriveRegionHints } from '@/lib/hints';
 import { summarizeRegionsFromMasks } from '@/lib/segmentation-scoring';
 import { generateNarrativeFromScores } from '@/lib/narrative';
+import { extractFeatureMeasurements } from '@/lib/feature-axes';
+import { classifyFeatures } from '@/lib/axis-classifiers';
+import { performComparison } from '@/lib/feature-comparisons';
+import { generateNarrative } from '@/lib/feature-narratives';
 import type { RegionPoly, MaskOverlay } from './types';
 import type { RegionHintsArray } from '@/models/detector-types';
 import type { AnalyzeMessage, AnalyzeResponse } from './types';
@@ -333,8 +337,11 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
 
       // Compute outlines BEFORE transferring canvas to ImageBitmap
       // (transfer detaches the canvas, making it unusable)
-      const outlineA = await computeOutlinePolys(ptsA, leftA, rightA, kpsA, cnvA);
-      const outlineB = await computeOutlinePolys(ptsB, leftB, rightB, kpsB, cnvB);
+      // Parse both images simultaneously for better performance
+      const [outlineA, outlineB] = await Promise.all([
+        computeOutlinePolys(ptsA, leftA, rightA, kpsA, cnvA),
+        computeOutlinePolys(ptsB, leftB, rightB, kpsB, cnvB),
+      ]);
 
       // Use segmentation-based scoring if masks are available, otherwise fall back to Procrustes
       let scores, overall, texts: { region: string; text: string }[] = [];
@@ -408,6 +415,39 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         }
       }
 
+      // Compute detailed feature axis analysis
+      let featureNarrative: { overall: string; featureSummaries: Record<string, string>; axisDetails: Record<string, string[]> } | undefined;
+      let congruenceScore: number | undefined;
+
+      try {
+        // Extract measurements from both faces
+        const measurementsA = extractFeatureMeasurements(ptsA, leftA, rightA);
+        const measurementsB = extractFeatureMeasurements(ptsB, leftB, rightB);
+
+        // Classify measurements into categorical descriptors
+        const classificationsA = classifyFeatures(measurementsA);
+        const classificationsB = classifyFeatures(measurementsB);
+
+        // Perform comparison and generate narratives
+        const comparison = performComparison(measurementsA, measurementsB, classificationsA, classificationsB);
+        const narrative = generateNarrative(comparison.comparisons, comparison.sharedAxes, comparison.congruenceScore);
+
+        featureNarrative = narrative;
+        congruenceScore = comparison.congruenceScore;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[worker] detailed feature analysis:', {
+            congruence: comparison.congruenceScore.toFixed(2),
+            sharedAxes: comparison.sharedAxes.length,
+            overall: narrative.overall,
+          });
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[worker] detailed feature analysis failed:', e);
+        }
+      }
+
       // Now transfer canvases to ImageBitmap for display
       const imageA = (cnvA as OffscreenCanvas).transferToImageBitmap();
       const imageB = (cnvB as OffscreenCanvas).transferToImageBitmap();
@@ -440,6 +480,8 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         ortB: outlineB.ort,
         maskA: outlineA.mask,
         maskB: outlineB.mask,
+        featureNarrative,
+        congruenceScore,
       });
       return;
     }

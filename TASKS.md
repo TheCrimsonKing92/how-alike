@@ -4,6 +4,17 @@
 - Visual QA: test segmentation-based scoring on diverse images to validate that similarity scores now reflect actual visual feature overlap rather than just landmark geometry
 
 ## Done (recent)
+- **Implemented Phase 5: Worker integration + simultaneous parsing** (FEATURE_AXES_PLAN.md):
+  - Refactored worker to parse both images simultaneously using `Promise.all()` for better performance
+  - Integrated detailed feature axis analysis into worker pipeline
+  - Extracts measurements, classifies features, performs comparisons, generates narratives
+  - Returns `featureNarrative` with overall assessment, feature summaries, and detailed axis-by-axis descriptions
+  - Returns `congruenceScore` (0-1) for overall morphological similarity
+  - Updated `web/src/workers/types.ts` with `FeatureNarrative` type definition
+  - All feature analysis wrapped in try-catch for graceful degradation
+  - Logs congruence score and shared axes count in development mode
+  - Files modified: `analyze.worker.ts` (simultaneous parsing + analysis integration), `types.ts` (new types)
+  - All 169/170 tests passing (1 pre-existing parsing-adapter failure unrelated to changes)
 - **Implemented Phase 3 of detailed feature axis analysis** (FEATURE_AXES_PLAN.md):
   - Created `web/src/lib/feature-comparisons.ts` with axis comparison functions
   - Compares two faces across all 16 axes to determine agreement/disagreement

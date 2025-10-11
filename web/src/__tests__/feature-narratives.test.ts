@@ -141,11 +141,11 @@ describe('detailedNarrativeForFeature', () => {
     const result = detailedNarrativeForFeature(comparison);
 
     expect(result.shared).toHaveLength(1);
-    expect(result.shared[0]).toContain('canthal tilt');
+    expect(result.shared[0]).toBe('Positive canthal tilt');
     expect(result.imageA).toHaveLength(1);
-    expect(result.imageA[0]).toContain('Eye size: average');
+    expect(result.imageA[0]).toBe('Average eye size');
     expect(result.imageB).toHaveLength(1);
-    expect(result.imageB[0]).toContain('Eye size: wide');
+    expect(result.imageB[0]).toBe('Wide eye size');
   });
 });
 

@@ -81,9 +81,12 @@ export function detailedNarrativeForFeature(comparison: FeatureComparison): Deta
   const agreements = comparison.axes.filter(axis => axis.agreement);
   const disagreements = comparison.axes.filter(axis => !axis.agreement);
 
-  const shared = agreements.map(axis => `Both have ${axis.valueA} ${axis.axis}`);
-  const imageA = disagreements.map(axis => `${capitalize(axis.axis)}: ${axis.valueA}`);
-  const imageB = disagreements.map(axis => `${capitalize(axis.axis)}: ${axis.valueB}`);
+  // For shared: just state the characteristic (section header already says "Shared")
+  const shared = agreements.map(axis => `${capitalize(axis.valueA)} ${axis.axis}`);
+
+  // For distinctive: show what each image has
+  const imageA = disagreements.map(axis => `${capitalize(axis.valueA)} ${axis.axis}`);
+  const imageB = disagreements.map(axis => `${capitalize(axis.valueB)} ${axis.axis}`);
 
   return { shared, imageA, imageB };
 }

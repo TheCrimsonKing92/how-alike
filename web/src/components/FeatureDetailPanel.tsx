@@ -80,31 +80,31 @@ export default function FeatureDetailPanel({
                   {details.shared.length > 0 && (
                     <div>
                       <div className="font-medium text-gray-700 mb-1">Shared Characteristics</div>
-                      {details.shared.map((item, idx) => (
-                        <div key={idx} className="opacity-80">
-                          • {item}
-                        </div>
-                      ))}
+                      <ul className="list-disc list-inside opacity-80">
+                        {details.shared.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                   {details.imageA.length > 0 && (
                     <div>
                       <div className="font-medium text-gray-700 mb-1">Image A</div>
-                      {details.imageA.map((item, idx) => (
-                        <div key={idx} className="opacity-80">
-                          • {item}
-                        </div>
-                      ))}
+                      <ul className="list-disc list-inside opacity-80">
+                        {details.imageA.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                   {details.imageB.length > 0 && (
                     <div>
                       <div className="font-medium text-gray-700 mb-1">Image B</div>
-                      {details.imageB.map((item, idx) => (
-                        <div key={idx} className="opacity-80">
-                          • {item}
-                        </div>
-                      ))}
+                      <ul className="list-disc list-inside opacity-80">
+                        {details.imageB.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>

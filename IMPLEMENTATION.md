@@ -147,6 +147,21 @@ for (const axis of axes) {
 }
 ```
 
+### HTML/JSX
+- **Use semantic HTML for visual elements** - never embed Unicode characters for visual formatting
+- Lists must use `<ul>` and `<li>` tags, not text prefixes like "• "
+
+Example:
+```tsx
+// Preferred
+<ul className="list-disc list-inside">
+  {items.map(item => <li key={item.id}>{item.text}</li>)}
+</ul>
+
+// Avoid
+{items.map(item => <div key={item.id}>• {item.text}</div>)}
+```
+
 ---
 
 ## Summary

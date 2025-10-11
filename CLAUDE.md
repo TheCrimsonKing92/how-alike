@@ -8,6 +8,14 @@ How Alike is a privacy-first, browser-based face similarity comparison tool that
 
 The app emphasizes explainable similarity (not biometric identity) through regional breakdowns (eyes, brows, nose, mouth, jaw) with visual overlays and textual summaries.
 
+## Communication Style
+
+- Be concise and terse in responses unless asked for greater detail
+- Avoid lengthy explanations, summaries, or play-by-play narration of work in progress
+- Focus on executing tasks and sharing results, not documenting every step
+- When finished, provide a brief summary of what was accomplished
+- Save detailed explanations for when the user explicitly requests them
+
 ## Development Commands
 
 All commands run from the `web/` directory:

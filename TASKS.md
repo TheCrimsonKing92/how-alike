@@ -4,6 +4,56 @@
 - Visual QA: test segmentation-based scoring on diverse images to validate that similarity scores now reflect actual visual feature overlap rather than just landmark geometry
 
 ## Done (recent)
+- **Fixed segmentation convex hull merging disconnected regions (third iteration - FINAL)**:
+  - Root cause: The segmentation model sometimes misclassifies a few pixels of class 6 (l_brow) on the right eyebrow, or class 7 (r_brow) on the left eyebrow
+  - When `maskToOutline()` computed the convex hull of ALL class 6 pixels, it wrapped around BOTH eyebrows because there were scattered pixels on both sides
+  - This created a large polygon spanning from left to right across the face, wrapping both eyebrows
+  - Solution: Added `largestConnectedComponent()` function to `lib/mask.ts` using flood-fill algorithm
+  - Now `maskToOutline()` first extracts the largest connected component before computing the convex hull
+  - This ensures each eyebrow gets its own separate outline, even if there are a few misclassified pixels
+  - Uses 4-connected flood fill to find all connected regions, then keeps only the largest one
+  - Modified `maskToOutline()` to call `largestConnectedComponent()` before `pointsFromMask()`
+  - Each segmentation class now generates a single, localized outline following the largest cluster of pixels
+- **Fixed worker to prevent duplicate brows/nose outlines (second iteration)**:
+  - Root cause was deeper than initially thought: landmark-based nose outlines were ALSO being added before adapter hints
+  - The nose generation code (lines 185-196) was pushing alar arc + bridge outlines directly to polys array
+  - When adapter provided nose hints (classId=2), we ended up with BOTH landmark nose AND segmentation nose
+  - Solution: Changed nose generation to store in variables (noseAlar, noseBridge) instead of immediately pushing to polys
+  - Added conditional logic to only use landmark nose if adapter doesn't provide `hasNose`
+  - Now both brows AND nose follow the same pattern: generate landmark fallbacks but only use them if adapter doesn't provide them
+  - Modified `compute Outline Polys()` in `analyze.worker.ts` to check `hints.some(h => h.region === 'nose')` before adding landmark fallback
+  - Each segmentation-based outline (l_brow=6, r_brow=7, nose=2) now displays independently without merged or duplicate landmark-based outlines
+- **Fixed worker to prevent duplicate brows/nose outlines (first iteration)**:
+  - Root cause: Worker was adding landmark-based brows to polys array BEFORE attempting to override with adapter hints
+  - Even though adapter removal code existed, the landmark brows were already in the array and weren't being removed
+  - Solution: Changed worker to skip adding landmark brows initially, only add adapter hints, then fallback to landmark brows only if adapter didn't provide them
+  - Modified `computeOutlinePolys()` in `analyze.worker.ts` to check `hints.some(h => h.region === 'brows')` before adding landmark fallback
+  - Eliminated the merged "big outline around both eyebrows" issue - now only individual segmentation-based outlines are displayed
+  - Each bilateral feature (left/right brow, left/right eye) now displays independently without duplicate merged outlines
+- **Fixed Transformers.js adapter to generate segmentation-based outlines**:
+  - Modified `transformers-parsing-adapter.ts` to convert segmentation masks to outline polygons
+  - Added mask-to-outline conversion for brows, nose, eyes, and mouth regions
+  - Uses `maskToOutline()` function with convex hull + RDP simplification
+  - Outlines now follow actual segmented regions instead of falling back to crude landmark-based shapes
+  - Removed TODO comment - segmentation-based outlines are now fully implemented
+  - Visual overlays now display accurate contours derived from the SegFormer model
+- **Integrated narrative descriptions with similarity scores in UI**:
+  - Modified `ResultsPanel.tsx` to display narrative descriptions inline with their corresponding similarity scores
+  - Descriptions now appear on the same line as the score with format: "region: 85.0% — description"
+  - Uses em dash separator and reduced opacity for visual hierarchy
+  - Eliminated separate list of descriptions for cleaner, more intuitive UI
+- **Added narrative generation for segmentation scores**:
+  - Created `lib/narrative.ts` with natural language descriptions for regional similarity
+  - Generates context-aware text based on score thresholds (very-similar, similar, somewhat-similar, different, very-different)
+  - Covers all segmentation regions: eyes, brows, nose, mouth, jaw, ears, skin, hair, neck, eyeglasses
+  - Worker automatically uses narrative generator when segmentation masks are available
+  - Falls back to landmark-based narrative text when masks unavailable
+  - Added comprehensive unit tests (9 test cases) covering all similarity levels and edge cases
+  - All tests passing (72/72 total, including 9 new narrative tests)
+- **Excluded cloth region from similarity calculations**:
+  - Modified `summarizeRegionsFromMasks` to filter out 'cloth' region before computing scores
+  - Cloth is not a facial feature and was skewing similarity results
+  - Overall similarity score now only considers facial features
 - **Implemented segmentation-based similarity scoring**:
   - Created `lib/segmentation-scoring.ts` with mask-based regional similarity computation
   - Uses Dice coefficient for shape overlap (less sensitive than IoU to size differences)

@@ -252,12 +252,72 @@ export const transformersParsingAdapter: DetectorAdapter = {
         crop: { sx: 0, sy: 0, sw: iw, sh: ih },
       };
 
-      // For now, return landmark hints with mask attached
-      // TODO: Generate actual ONNX-style region hints from the segmentation
-      const result = landmarkHints as RegionHintsArray;
+      // Generate region hints from segmentation masks
+      const hints: RegionHint[] = [];
+
+      // Define regions to extract - process each class separately to avoid merging
+      const regionClasses: { region: string; classId: number; open?: boolean }[] = [
+        { region: 'brows', classId: 6, open: true },  // l_brow
+        { region: 'brows', classId: 7, open: true },  // r_brow
+        { region: 'nose', classId: 2, open: true },    // nose
+        { region: 'eyes', classId: 4 },                // l_eye
+        { region: 'eyes', classId: 5 },                // r_eye
+        { region: 'mouth', classId: 10 },              // mouth
+        { region: 'mouth', classId: 11 },              // u_lip
+        { region: 'mouth', classId: 12 },              // l_lip
+      ];
+
+      for (const { region, classId, open } of regionClasses) {
+        // Create binary mask for this specific class (not merged)
+        const classMask = new Uint8Array(labels.length);
+        for (let i = 0; i < labels.length; i++) {
+          classMask[i] = labels[i] === classId ? 1 : 0;
+        }
+
+        // Check if this class has any pixels
+        const pixelCount = classMask.reduce((sum, v) => sum + v, 0);
+        if (pixelCount === 0) continue;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info(`[transformers-parsing] processing region=${region} classId=${classId} pixels=${pixelCount}`);
+        }
+
+        // Convert mask to outline polygon
+        const outline = maskToOutline(classMask, segWidth, segHeight, 2.0);
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info(`[transformers-parsing] outline for classId=${classId}: ${outline.length} points`);
+        }
+
+        if (outline.length >= 3) {
+          hints.push({
+            region,
+            points: outline,
+            open: open ?? false,
+          });
+        }
+      }
+
+      // If we didn't get any hints from segmentation, fall back to landmarks
+      if (hints.length === 0) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[transformers-parsing] no segmentation hints generated, falling back to landmarks');
+        }
+        const result = landmarkHints as RegionHintsArray;
+        result.__source = 'landmarks';
+        result.__transformers = 'no-hints';
+        result.__mask = debugMask;
+        return result;
+      }
+
+      const result = hints as RegionHintsArray;
       result.__source = 'transformers';
       result.__transformers = 'ok';
       result.__mask = debugMask;
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[transformers-parsing] generated', hints.length, 'region hints from segmentation');
+      }
 
       return result;
 

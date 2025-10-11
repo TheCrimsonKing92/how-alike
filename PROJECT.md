@@ -10,10 +10,10 @@ The app is responsive but not mobile-first -- it provides an identical experienc
 
 ## Core Concept
 1. **Upload / Capture:** Users provide two photos (front-facing, well-lit).
-2. **Analyze:** The app detects facial landmarks for both images using **MediaPipe FaceMesh (TF.js)**.
-3. **Compare:** It normalizes faces (alignment by eyes), computes geometric and optional embedding-based similarities for defined regions.
-4. **Visualize:** It overlays colored markers and generates a text-based summary explaining which regions appear most alike.
-5. **Result:** The output is interpretable ("similar brow arch," "different jaw width") rather than opaque AI scoring.
+2. **Analyze:** The app detects facial landmarks using **MediaPipe FaceMesh (TF.js)** and extracts semantic face regions using **Transformers.js (SegFormer)**.
+3. **Compare:** It computes regional similarity using segmentation masks (Dice coefficient for shape, centroid distance for position, area ratio for size) with Procrustes alignment as fallback.
+4. **Visualize:** It overlays segmentation-derived contours with similarity-colored strokes and generates narrative descriptions explaining regional resemblance.
+5. **Result:** The output is interpretable ("nearly identical eye shape," "nose differs in width") rather than opaque AI scoring.
 
 ---
 
@@ -31,11 +31,12 @@ The app is responsive but not mobile-first -- it provides an identical experienc
 |-----------|--------------|
 | **Input** | Dual uploads or camera captures (desktop & mobile) |
 | **Detection** | MediaPipe FaceMesh (468 landmarks) |
-| **Analysis** | Landmark geometry + optional embeddings |
-| **Visualization** | Canvas overlay + textual bullet summary |
-| **Modes** | Fast (geometry), Balanced (geometry + embeddings), Accurate (geometry + embeddings + parsing) |
+| **Parsing** | Transformers.js (SegFormer) for semantic face segmentation |
+| **Analysis** | Segmentation-based regional similarity (shape + position + size) with Procrustes fallback |
+| **Visualization** | Canvas overlay with segmentation-derived contours + narrative descriptions |
+| **Modes** | Transformers.js (SegFormer), ONNX Runtime (ResNet34), Landmarks only (MediaPipe) |
 | **Platform** | Next.js + React + Tailwind + shadcn/ui |
-| **Performance** | Web Worker inference + model lazy-loading |
+| **Performance** | Web Worker inference + model lazy-loading + connected component analysis |
 | **Offline** | PWA manifest + service worker caching |
 | **Security** | On-device inference; no backend storage |
 

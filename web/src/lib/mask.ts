@@ -72,9 +72,72 @@ export function convexHull(pts: Pt[]): Pt[] {
   return lower.concat(upper);
 }
 
+// Find largest connected component in a binary mask using flood fill
+export function largestConnectedComponent(mask: ArrayLike<number>, width: number, height: number): Uint8Array {
+  const w = Math.max(1, width | 0);
+  const h = Math.max(1, height | 0);
+  const visited = new Uint8Array(w * h);
+  const result = new Uint8Array(w * h);
+
+  let largestSize = 0;
+  let largestComponent: number[] = [];
+
+  const floodFill = (startIdx: number): number[] => {
+    const component: number[] = [];
+    const queue: number[] = [startIdx];
+    visited[startIdx] = 1;
+
+    while (queue.length > 0) {
+      const idx = queue.shift()!;
+      component.push(idx);
+
+      const x = idx % w;
+      const y = Math.floor(idx / w);
+
+      // Check 4-connected neighbors
+      const neighbors = [
+        [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]
+      ];
+
+      for (const [nx, ny] of neighbors) {
+        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+          const nidx = ny * w + nx;
+          if (!visited[nidx] && mask[nidx]) {
+            visited[nidx] = 1;
+            queue.push(nidx);
+          }
+        }
+      }
+    }
+
+    return component;
+  };
+
+  // Find all connected components
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] && !visited[i]) {
+      const component = floodFill(i);
+      if (component.length > largestSize) {
+        largestSize = component.length;
+        largestComponent = component;
+      }
+    }
+  }
+
+  // Mark only the largest component in the result
+  for (const idx of largestComponent) {
+    result[idx] = 1;
+  }
+
+  return result;
+}
+
 // High-level conversion: mask -> outline polyline (convex approximation), simplified
+// Uses largest connected component to avoid merging disconnected regions
 export function maskToOutline(mask: ArrayLike<number>, width: number, height: number, epsilon = 1.5): Pt[] {
-  const pts = pointsFromMask(mask, width, height);
+  // Extract only the largest connected component to avoid merging separate regions
+  const component = largestConnectedComponent(mask, width, height);
+  const pts = pointsFromMask(component, width, height);
   if (pts.length === 0) return [];
   const hull = convexHull(pts);
   return simplifyRDP(hull, epsilon);

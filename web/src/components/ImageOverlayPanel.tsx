@@ -234,8 +234,6 @@ export default function ImageOverlayPanel({
           ctx.lineCap = 'round';
           const closed = !(r.open === true);
           drawSmooth(ctx, pts, tensionFor(r.region), closed);
-          // Outline only: remove fill for clearer feature delineation
-          // ctx.fill();
           ctx.stroke();
         }
       }

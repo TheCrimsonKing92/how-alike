@@ -220,6 +220,9 @@ export function summarizeRegionsFromMasks(
     regions.add(region);
   }
 
+  // Exclude cloth region from similarity calculations (not part of facial features)
+  regions.delete('cloth');
+
   const scores: RegionScore[] = [];
   let totalWeight = 0;
   let weightedSum = 0;

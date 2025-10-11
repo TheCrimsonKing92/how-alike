@@ -5,6 +5,7 @@ import { convexHull, concaveHullKNN, offsetPolygon } from '@/lib/hulls';
 import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES, FEATURE_OUTLINES, LEFT_EYE_RING, RIGHT_EYE_RING, LOWER_FACE_INDICES } from '@/lib/regions';
 import { deriveRegionHints } from '@/lib/hints';
 import { summarizeRegionsFromMasks } from '@/lib/segmentation-scoring';
+import { generateNarrativeFromScores } from '@/lib/narrative';
 import type { RegionPoly, MaskOverlay } from './types';
 import type { RegionHintsArray } from '@/models/detector-types';
 import type { AnalyzeMessage, AnalyzeResponse } from './types';
@@ -132,14 +133,15 @@ async function computeOutlinePolys(
     }
     return out.length >= 2 ? out : pts;
   };
+  // Generate landmark-based brows (will be used only if adapter doesn't provide them)
   let browsLeft = FEATURE_OUTLINES.brows?.[0] ? keepCentral(mapPts(FEATURE_OUTLINES.brows[0]), 0.85) : [];
   let browsRight = FEATURE_OUTLINES.brows?.[1] ? keepCentral(mapPts(FEATURE_OUTLINES.brows[1]), 0.85) : [];
   if (browsLeft.length < 2) browsLeft = trimAndTaper(leftUpper, leftEye);
   if (browsRight.length < 2) browsRight = trimAndTaper(rightUpper, rightEye);
-  if (browsLeft.length >= 2) polys.push({ region: 'brows', points: browsLeft, open: true });
-  if (browsRight.length >= 2) polys.push({ region: 'brows', points: browsRight, open: true });
+
+  // Add landmark-based features (except brows and nose which will be overridden by adapter)
   for (const [region, lists] of Object.entries(FEATURE_OUTLINES)) {
-    if (region === 'brows') continue; // handled from upper lids
+    if (region === 'brows' || region === 'nose') continue; // will be provided by adapter
     for (const seq of lists) {
       const pts = mapPts(seq);
       if (pts.length >= 2) {
@@ -180,24 +182,22 @@ async function computeOutlinePolys(
     }
   } catch {}
 
-  // Nose: use stable static alar arc and a short bridge segment
+  // Generate landmark-based nose (will be used only if adapter doesn't provide it)
+  let noseAlar: {x:number;y:number}[] = [];
+  let noseBridge: {x:number;y:number}[] = [];
   try {
     const tip = points[2];
     const alar = FEATURE_OUTLINES.nose?.[0] ? FEATURE_OUTLINES.nose[0].map(i => points[i]).filter(Boolean) as {x:number;y:number}[] : [];
     if (alar.length >= 5) {
       const cut = Math.max(0, Math.floor(alar.length * 0.08));
-      const trimmed = alar.slice(cut, alar.length - cut);
-      polys.push({ region: 'nose', points: trimmed, open: true });
+      noseAlar = alar.slice(cut, alar.length - cut);
     }
     const bridge = [6, 2].map(i => points[i]).filter(Boolean) as {x:number;y:number}[];
-    if (bridge.length >= 2) polys.push({ region: 'nose', points: bridge, open: true });
+    if (bridge.length >= 2) noseBridge = bridge;
   } catch {}
 
-  // Override brows/nose with adapter-provided hints (segmentation or landmark-derived)
+  // Get adapter-provided hints (segmentation or landmark-derived) for brows/nose
   try {
-    for (let i = polys.length - 1; i >= 0; i--) {
-      if (polys[i].region === 'brows' || polys[i].region === 'nose') polys.splice(i, 1);
-    }
     const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const hints = (await regionHints(
       sourceImage ?? null,
@@ -217,8 +217,63 @@ async function computeOutlinePolys(
         crop: hints.__mask.crop,
       };
     }
+
+    // Add adapter hints to polys
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(`[worker] received ${hints.length} hints from adapter`);
+      const browHints = hints.filter(h => h.region === 'brows');
+      const noseHints = hints.filter(h => h.region === 'nose');
+      console.info(`[worker] brow hints: ${browHints.length}`, browHints.map(h => `${h.points.length} pts`));
+      console.info(`[worker] nose hints: ${noseHints.length}`, noseHints.map(h => `${h.points.length} pts`));
+    }
+
     for (const h of hints) polys.push(h as RegionPoly);
-  } catch {}
+
+    // If adapter didn't provide brows, use our landmark fallback
+    const hasBrows = hints.some(h => h.region === 'brows');
+    if (!hasBrows) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[worker] no brows from adapter, using landmark fallback');
+      }
+      if (browsLeft.length >= 2) polys.push({ region: 'brows', points: browsLeft, open: true });
+      if (browsRight.length >= 2) polys.push({ region: 'brows', points: browsRight, open: true });
+    } else {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[worker] using adapter brows, skipping landmark fallback');
+      }
+    }
+
+    // If adapter didn't provide nose, use our landmark fallback
+    const hasNose = hints.some(h => h.region === 'nose');
+    if (!hasNose) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[worker] no nose from adapter, using landmark fallback');
+      }
+      if (noseAlar.length >= 2) polys.push({ region: 'nose', points: noseAlar, open: true });
+      if (noseBridge.length >= 2) polys.push({ region: 'nose', points: noseBridge, open: true });
+    } else {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[worker] using adapter nose, skipping landmark fallback');
+      }
+    }
+  } catch {
+    // Fallback if adapter fails: use landmark-based brows and nose
+    if (browsLeft.length >= 2) polys.push({ region: 'brows', points: browsLeft, open: true });
+    if (browsRight.length >= 2) polys.push({ region: 'brows', points: browsRight, open: true });
+    if (noseAlar.length >= 2) polys.push({ region: 'nose', points: noseAlar, open: true });
+    if (noseBridge.length >= 2) polys.push({ region: 'nose', points: noseBridge, open: true });
+  }
+  // Debug: log final poly counts by region
+  if (process.env.NODE_ENV !== 'production') {
+    const regionCounts = new Map<string, number>();
+    for (const p of polys) {
+      regionCounts.set(p.region, (regionCounts.get(p.region) || 0) + 1);
+    }
+    console.info('[worker] final poly counts:', Array.from(regionCounts.entries()).map(([r, c]) => `${r}:${c}`).join(', '));
+    const browPolys = polys.filter(p => p.region === 'brows');
+    console.info('[worker] brow polys:', browPolys.length, browPolys.map(p => `${p.points.length} pts`));
+  }
+
   return { polys, parseMs, source, ort, mask };
 }
 
@@ -282,11 +337,14 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const outlineB = await computeOutlinePolys(ptsB, leftB, rightB, kpsB, cnvB);
 
       // Use segmentation-based scoring if masks are available, otherwise fall back to Procrustes
-      let scores, overall;
+      let scores, overall, texts: { region: string; text: string }[] = [];
       if (outlineA.mask && outlineB.mask) {
         const maskResult = summarizeRegionsFromMasks(outlineA.mask, outlineB.mask);
         scores = maskResult.scores;
         overall = maskResult.overall;
+
+        // Generate narrative descriptions from segmentation scores
+        texts = generateNarrativeFromScores(scores);
 
         if (process.env.NODE_ENV !== 'production') {
           console.info('[worker] using segmentation-based scoring from masks');
@@ -296,10 +354,60 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         scores = procrustesResult.scores;
         overall = procrustesResult.overall;
 
+        // Generate landmark-based narrative text (fallback method)
+        type Pt2 = { x: number; y: number };
+        const feature = (_name: string, idx: number[]): Pt2[] =>
+          idx.map((i) => ({ x: nA[i].x, y: nA[i].y } as Pt2));
+        const featB = (idx: number[]): Pt2[] =>
+          idx.map((i) => ({ x: nB[i].x, y: nB[i].y } as Pt2));
+
+        // Brows: arch height and spacing
+        if (REGION_INDICES.brows) {
+          const aPts = feature('brows', REGION_INDICES.brows);
+          const bPts = featB(REGION_INDICES.brows);
+          if (aPts.length && bPts.length) {
+            const minX = (pts: Pt2[]) => Math.min(...pts.map((p) => p.x));
+            const maxX = (pts: Pt2[]) => Math.max(...pts.map((p) => p.x));
+            const minY = (pts: Pt2[]) => Math.min(...pts.map((p) => p.y));
+            const maxY = (pts: Pt2[]) => Math.max(...pts.map((p) => p.y));
+            const arch = (pts: Pt2[]) => maxY(pts) - (minY(pts) + (maxY(pts) - minY(pts)) * 0.2);
+            const spanA = maxX(aPts) - minX(aPts);
+            const spanB = maxX(bPts) - minX(bPts);
+            const archA = arch(aPts) / (spanA || 1);
+            const archB = arch(bPts) / (spanB || 1);
+            const archDiff = Math.abs(archA - archB);
+            const archSimilar = archDiff < 0.06;
+            const spacingA = (minY(aPts) + maxY(aPts)) / 2; // average brow height in normalized coords
+            const spacingB = (minY(bPts) + maxY(bPts)) / 2;
+            const spaceDiff = Math.abs(spacingA - spacingB);
+            const parts = [] as string[];
+            parts.push(archSimilar ? 'similar eyebrow arch' : archA < archB ? 'brow arch slightly higher in B' : 'brow arch slightly higher in A');
+            parts.push(spaceDiff < 0.05 ? 'and spacing' : 'with different spacing');
+            texts.push({ region: 'brows', text: parts.join(' ') });
+          }
+        }
+        // Mouth: width/height ratio
+        if (REGION_INDICES.mouth) {
+          const aM = feature('mouth', REGION_INDICES.mouth);
+          const bM = featB(REGION_INDICES.mouth);
+          if (aM.length && bM.length) {
+            const minX = (pts: Pt2[]) => Math.min(...pts.map((p) => p.x));
+            const maxX = (pts: Pt2[]) => Math.max(...pts.map((p) => p.x));
+            const minY = (pts: Pt2[]) => Math.min(...pts.map((p) => p.y));
+            const maxY = (pts: Pt2[]) => Math.max(...pts.map((p) => p.y));
+            const ratio = (pts: Pt2[]) => (maxX(pts) - minX(pts)) / ((maxY(pts) - minY(pts)) || 1e-6);
+            const rA = ratio(aM);
+            const rB = ratio(bM);
+            const rel = Math.abs(rA - rB) / Math.max(rA, rB);
+            texts.push({ region: 'mouth', text: rel < 0.15 ? 'similar mouth width-to-height' : rA > rB ? 'mouth appears wider/shallower in A' : 'mouth appears wider/shallower in B' });
+          }
+        }
+
         if (process.env.NODE_ENV !== 'production') {
           console.info('[worker] using Procrustes scoring (no masks available)');
         }
       }
+
       // Now transfer canvases to ImageBitmap for display
       const imageA = (cnvA as OffscreenCanvas).transferToImageBitmap();
       const imageB = (cnvB as OffscreenCanvas).transferToImageBitmap();
@@ -310,55 +418,6 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const ipdB = Math.hypot(rightB.x - leftB.x, rightB.y - leftB.y) || 1;
       // For outlines, avoid offsetting which can distort alignment.
       // Keep points as-is and let the overlay do stroke hit-testing.
-
-      // Region-aware text generation using simple shape features on normalized points
-      const texts: { region: string; text: string }[] = [];
-      type Pt2 = { x: number; y: number };
-      const feature = (_name: string, idx: number[]): Pt2[] =>
-        idx.map((i) => ({ x: nA[i].x, y: nA[i].y } as Pt2));
-      const featB = (idx: number[]): Pt2[] =>
-        idx.map((i) => ({ x: nB[i].x, y: nB[i].y } as Pt2));
-      // Brows: arch height and spacing
-      if (REGION_INDICES.brows) {
-        const aPts = feature('brows', REGION_INDICES.brows);
-        const bPts = featB(REGION_INDICES.brows);
-        if (aPts.length && bPts.length) {
-          const minX = (pts: Pt2[]) => Math.min(...pts.map((p) => p.x));
-          const maxX = (pts: Pt2[]) => Math.max(...pts.map((p) => p.x));
-          const minY = (pts: Pt2[]) => Math.min(...pts.map((p) => p.y));
-          const maxY = (pts: Pt2[]) => Math.max(...pts.map((p) => p.y));
-          const arch = (pts: Pt2[]) => maxY(pts) - (minY(pts) + (maxY(pts) - minY(pts)) * 0.2);
-          const spanA = maxX(aPts) - minX(aPts);
-          const spanB = maxX(bPts) - minX(bPts);
-          const archA = arch(aPts) / (spanA || 1);
-          const archB = arch(bPts) / (spanB || 1);
-          const archDiff = Math.abs(archA - archB);
-          const archSimilar = archDiff < 0.06;
-          const spacingA = (minY(aPts) + maxY(aPts)) / 2; // average brow height in normalized coords
-          const spacingB = (minY(bPts) + maxY(bPts)) / 2;
-          const spaceDiff = Math.abs(spacingA - spacingB);
-          const parts = [] as string[];
-          parts.push(archSimilar ? 'similar eyebrow arch' : archA < archB ? 'brow arch slightly higher in B' : 'brow arch slightly higher in A');
-          parts.push(spaceDiff < 0.05 ? 'and spacing' : 'with different spacing');
-          texts.push({ region: 'brows', text: parts.join(' ') });
-        }
-      }
-      // Mouth: width/height ratio
-      if (REGION_INDICES.mouth) {
-        const aM = feature('mouth', REGION_INDICES.mouth);
-        const bM = featB(REGION_INDICES.mouth);
-        if (aM.length && bM.length) {
-          const minX = (pts: Pt2[]) => Math.min(...pts.map((p) => p.x));
-          const maxX = (pts: Pt2[]) => Math.max(...pts.map((p) => p.x));
-          const minY = (pts: Pt2[]) => Math.min(...pts.map((p) => p.y));
-          const maxY = (pts: Pt2[]) => Math.max(...pts.map((p) => p.y));
-          const ratio = (pts: Pt2[]) => (maxX(pts) - minX(pts)) / ((maxY(pts) - minY(pts)) || 1e-6);
-          const rA = ratio(aM);
-          const rB = ratio(bM);
-          const rel = Math.abs(rA - rB) / Math.max(rA, rB);
-          texts.push({ region: 'mouth', text: rel < 0.15 ? 'similar mouth width-to-height' : rA > rB ? 'mouth appears wider/shallower in A' : 'mouth appears wider/shallower in B' });
-        }
-      }
 
       post({
         type: 'RESULT',

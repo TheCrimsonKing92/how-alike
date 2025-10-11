@@ -27,11 +27,17 @@ A privacy-first, browser-based app that compares two faces and explains their re
 
 ## Status
 
-Stage 0 initialized: scaffolded Next.js app with Tailwind v4, ESLint, Prettier, Vitest, base layout, and placeholder panels.
+**Current**: Detailed feature axis analysis complete (8 morphological categories, 20+ axes)
 
-Next steps align to the plan:
-- Stage 1: Geometry-only MVP (uploads, FaceMesh landmarks, alignment, region similarity)
-- Stage 2+: Workerization, PWA shell, embeddings, and UX polish
+Completed:
+- Stage 0: Base project with tooling
+- Stage 1: Geometry-only MVP with FaceMesh landmarks
+- Stage 2: Workerization with PWA shell
+- Detailed feature axes (Phases 1-6): Comprehensive facial analysis across eyes, brows, nose, mouth, cheeks, jaw, forehead, and face shape
+
+Next steps:
+- Visual QA on diverse images
+- Stage 3+: Local embeddings (Balanced mode), enhanced UX, offline completion
 
 ---
 

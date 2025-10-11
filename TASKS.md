@@ -4,6 +4,17 @@
 - Visual QA: test segmentation-based scoring and detailed feature narratives on diverse images to validate that scores and descriptions accurately reflect morphological similarity
 
 ## Done (recent)
+- **Expanded morphological features from 4 to 8 categories with horizontal layout**:
+  - Added 4 new feature categories: brows (shape, position, length), cheeks (prominence, nasolabial depth, height), forehead (height, contour), face shape (length-width ratio, facial thirds)
+  - Implemented 12 new classification functions in `axis-classifiers.ts` for new measurement axes
+  - Added measurement extraction functions in `feature-axes.ts` for all new features
+  - Updated `feature-comparisons.ts` to compare all 8 features instead of 4
+  - Enhanced `FeatureDetailPanel.tsx` with horizontal flex layout for shared/A/B sections on desktop (md+ breakpoint)
+  - Updated all test mocks to include 8 features - 179/180 tests passing
+  - Fixed unused import in `parsing-adapter.ts` (removed PARSING_ENABLED)
+  - Commit: 19476ad "feat(analysis): expand morphological features from 4 to 8 categories with horizontal layout"
+  - Files modified: `feature-axes.ts`, `axis-classifiers.ts`, `feature-comparisons.ts`, `FeatureDetailPanel.tsx`, test files
+  - +739 lines, -46 lines across 7 files
 - **Implemented Phase 6: UI for detailed feature narratives**:
   - Created `web/src/components/FeatureDetailPanel.tsx` with expandable feature sections
   - Displays morphological congruence score at top level

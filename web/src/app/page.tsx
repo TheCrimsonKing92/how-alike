@@ -175,7 +175,7 @@ export default function Home() {
         <div>
           {loading ? <p className="text-sm">Analyzing�?� {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <ResultsPanel scores={scores} overall={overall} texts={texts} />
+          <ResultsPanel scores={scores} overall={overall} texts={texts} hasDetailedAnalysis={!!featureNarrative} />
           <FeatureDetailPanel narrative={featureNarrative} congruenceScore={congruenceScore} />
           <div className="mt-4">
             <OverlayControls value={buffers} onChange={setBuffers} />

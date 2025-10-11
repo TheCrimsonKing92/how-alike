@@ -8,7 +8,7 @@ describe("Home Page", () => {
     render(<Home />);
 
     expect(screen.getByRole("heading", { name: /upload or capture/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /results/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /segmentation-based similarity/i })).toBeInTheDocument();
     // Visualization is now a region containing two image panels with their own headings
     expect(screen.getByRole("region", { name: /visualization/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /analyze/i })).toBeInTheDocument();

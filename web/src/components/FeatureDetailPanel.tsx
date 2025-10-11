@@ -9,11 +9,23 @@ export default function FeatureDetailPanel({
   narrative?: FeatureNarrative;
   congruenceScore?: number;
 }) {
-  const [expandedFeature, setExpandedFeature] = React.useState<string | null>(null);
+  const [expandedFeatures, setExpandedFeatures] = React.useState<Set<string>>(new Set());
 
   if (!narrative) return null;
 
   const features = Object.keys(narrative.featureSummaries);
+
+  const toggleFeature = (feature: string) => {
+    setExpandedFeatures((prev) => {
+      const next = new Set(prev);
+      if (next.has(feature)) {
+        next.delete(feature);
+      } else {
+        next.add(feature);
+      }
+      return next;
+    });
+  };
 
   return (
     <section aria-label="Feature Analysis" className="w-full mt-6">
@@ -37,7 +49,7 @@ export default function FeatureDetailPanel({
 
       <div className="space-y-2">
         {features.map((feature) => {
-          const isExpanded = expandedFeature === feature;
+          const isExpanded = expandedFeatures.has(feature);
           const summary = narrative.featureSummaries[feature];
           const details = narrative.axisDetails[feature] || [];
 
@@ -46,7 +58,7 @@ export default function FeatureDetailPanel({
               <button
                 type="button"
                 className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 transition"
-                onClick={() => setExpandedFeature(isExpanded ? null : feature)}
+                onClick={() => toggleFeature(feature)}
               >
                 <div className="flex-1">
                   <div className="font-medium capitalize text-sm">{feature}</div>

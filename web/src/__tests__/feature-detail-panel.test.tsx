@@ -121,7 +121,7 @@ describe('FeatureDetailPanel', () => {
     expect(screen.queryByText('• Both have positive canthal tilt')).not.toBeInTheDocument();
   });
 
-  it('allows expanding multiple features independently', async () => {
+  it('allows expanding multiple features simultaneously', async () => {
     const user = userEvent.setup();
 
     const narrative: FeatureNarrative = {
@@ -146,9 +146,9 @@ describe('FeatureDetailPanel', () => {
     expect(screen.getByText('• Canthal tilt matches')).toBeInTheDocument();
     expect(screen.queryByText('• Nose width differs')).not.toBeInTheDocument();
 
-    // Expand nose (eyes should collapse)
+    // Expand nose (both should remain open)
     await user.click(noseButton);
-    expect(screen.queryByText('• Canthal tilt matches')).not.toBeInTheDocument();
+    expect(screen.getByText('• Canthal tilt matches')).toBeInTheDocument();
     expect(screen.getByText('• Nose width differs')).toBeInTheDocument();
   });
 

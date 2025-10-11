@@ -1,9 +1,9 @@
-# Face Similarity Web App — High-Level Architecture
+﻿# Face Similarity Web App -- High-Level Architecture
 
 ## Overview
 A single responsive web app that compares two faces entirely on-device, using browser-based machine learning.  
 It starts with simple geometric comparison (facial landmarks) and can optionally add local embeddings for appearance-based similarity.  
-No backend or cloud inference is required — everything runs locally for speed and privacy.  
+No backend or cloud inference is required -- everything runs locally for speed and privacy.  
 The app is installable as a Progressive Web App (PWA), functioning seamlessly across desktop and mobile browsers.
 
 ---
@@ -22,12 +22,12 @@ The app is installable as a Progressive Web App (PWA), functioning seamlessly ac
 
 ## Data Flow
 1. **Input:** User uploads or captures two images.  
-2. **Preprocess:** Correct EXIF orientation, downscale to ~1024–1280 px, send to Web Worker.  
+2. **Preprocess:** Correct EXIF orientation, downscale to ~1024-1280 px, send to Web Worker.  
 3. **Landmark Detection:** FaceMesh model extracts 468 landmarks per face.  
 4. **Alignment:** Normalize by eye centers and interpupillary distance.  
 5. **Similarity Computation:**  
    - Geometry comparison (angles, distances, ratios).  
-   - *(If enabled)* Embedding comparison (region crops → cosine similarity).  
+   - *(If enabled)* Embedding comparison (region crops -> cosine similarity).  
    - Weighted fusion of both results.  
 6. **Output:** Visual overlays and textual breakdown of regional resemblance.
 
@@ -74,7 +74,7 @@ Automatic mode selection is based on detected hardware (threads, SIMD).
 ---
 
 ## Privacy & Safety
-- 100% client-side processing — no network or data retention.  
+- 100% client-side processing -- no network or data retention.  
 - Only static assets and models cached by the service worker.  
 - Temporary data cleared immediately after use.  
 - Messaging framed as *feature resemblance*, not identity or kinship.
@@ -92,5 +92,5 @@ Automatic mode selection is based on detected hardware (threads, SIMD).
 ---
 
 ## TL;DR
-Responsive web UI → workerized FaceMesh → optional local embeddings → fused regional similarity → visual + textual results.  
+Responsive web UI -> workerized FaceMesh -> optional local embeddings -> fused regional similarity -> visual + textual results.  
 Private by design, fast on mobile, and extendable without any backend (at least for now).

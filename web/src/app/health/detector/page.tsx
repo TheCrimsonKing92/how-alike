@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { getDetector } from "@/models/facemesh-adapter";
+import { getDetector } from "@/models/detector";
 
 export default function DetectorHealth() {
   const [status, setStatus] = React.useState<"loading" | "ok" | "error">("loading");
@@ -12,6 +12,7 @@ export default function DetectorHealth() {
       try {
         const params = new URLSearchParams(window.location.search);
         const shallow = params.get("shallow") === "1";
+        const adapter = params.get("adapter");
         if (shallow) {
           const tf = await import("@tensorflow/tfjs-core");
           try {
@@ -25,7 +26,12 @@ export default function DetectorHealth() {
           // Touch the enum to ensure module resolution
           void mod.SupportedModels.MediaPipeFaceMesh;
         } else {
-          await getDetector();
+          if (adapter === "parsing") {
+            const mod = await import("@/models/parsing-adapter");
+            await mod.parsingAdapter.getDetector();
+          } else {
+            await getDetector();
+          }
         }
         if (!alive) return;
         setStatus("ok");

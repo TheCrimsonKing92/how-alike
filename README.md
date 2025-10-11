@@ -1,6 +1,6 @@
-# How Alike — Face Similarity Web App
+﻿# How Alike -- Face Similarity Web App
 
-A privacy-first, browser-based app that compares two faces and explains their resemblance across regions (eyes, nose, mouth, jawline, etc.). All processing runs locally on the user’s device.
+A privacy-first, browser-based app that compares two faces and explains their resemblance across regions (eyes, nose, mouth, jawline, etc.). All processing runs locally on the user's device.
 
 - Frontend: Next.js (App Router) + React + TailwindCSS
 - ML: MediaPipe FaceMesh (TF.js) for landmarks; optional local embeddings (ONNX Runtime Web)
@@ -9,7 +9,7 @@ A privacy-first, browser-based app that compares two faces and explains their re
 
 ## Monorepo Layout
 
-- `web/` — Next.js app (TypeScript, Tailwind v4, ESLint, Vitest)
+- `web/` -- Next.js app (TypeScript, Tailwind v4, ESLint, Vitest)
 
 ## Quick Start
 
@@ -35,5 +35,5 @@ Next steps align to the plan:
 
 ---
 
-How Alike emphasizes resemblance and explainability — it is not intended for biometric identity or verification.
+How Alike emphasizes resemblance and explainability -- it is not intended for biometric identity or verification.
 

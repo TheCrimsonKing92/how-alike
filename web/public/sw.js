@@ -15,6 +15,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+
+  // Never cache ONNX models or WASM files (always fetch fresh)
+  if (url.pathname.endsWith('.onnx') || url.pathname.includes('/models/') || url.pathname.includes('/ort/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   // Network-first for navigation; cache-first for others
   if (req.mode === 'navigate') {
     event.respondWith(

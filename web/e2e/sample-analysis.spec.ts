@@ -19,10 +19,15 @@ test('analyze two sample images shows results', async ({ page }) => {
   await second.setInputFiles(fileB);
 
   await page.getByRole('button', { name: /analyze/i }).click();
-
-  // Expect overall similarity text to appear
+  // Worker progress should surface in the UI
+  await expect(page.getByText(/Analyzing/i)).toBeVisible({ timeout: 120_000 });
+  // Optionally see specific stages; tolerate speed by not requiring every one
+  await page.waitForFunction(
+    () => /Analyzing.*(load|preprocess|detectA|detectB|score)/i.test(document.body.textContent || ''),
+    { timeout: 120_000 }
+  );
+  // Expect overall similarity text to appear (indicates RESULT processed)
   await expect(page.getByText(/overall similarity:/i)).toBeVisible({ timeout: 120_000 });
   // And at least one region line
   await expect(page.getByText(/eyes:/i)).toBeVisible();
 });
-

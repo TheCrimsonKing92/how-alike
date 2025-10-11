@@ -1,12 +1,12 @@
-# Face Similarity Web App — Implementation Plan
+﻿# Face Similarity Web App -- Implementation Plan
 
 ## Overview
 This document outlines the development plan for the **Face Similarity Web App**, from an empty repository to a feature-complete, offline-capable browser application.  
-The approach is incremental — each stage produces a usable, testable version that builds directly on the last.
+The approach is incremental -- each stage produces a usable, testable version that builds directly on the last.
 
 ---
 
-## Stage 0 — Foundations
+## Stage 0 -- Foundations
 **Goal:** Create a clean, functional base environment.
 
 **Deliverables**
@@ -20,7 +20,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 1 — MVP (Geometry-Only Comparison)
+## Stage 1 -- MVP (Geometry-Only Comparison)
 **Goal:** Full local pipeline from image upload to geometric similarity output.
 
 **Features**
@@ -38,7 +38,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 2 — Performance & Workerization
+## Stage 2 -- Performance & Workerization
 **Goal:** Make the MVP fast, responsive, and scalable to mobile.
 
 **Features**
@@ -53,7 +53,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 3 — Local Embeddings (Balanced Mode)
+## Stage 3 -- Local Embeddings (Balanced Mode)
 **Goal:** Add optional appearance-based similarity for improved accuracy.
 
 **Features**
@@ -69,7 +69,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 4 — Enhanced UX & Stability
+## Stage 4 -- Enhanced UX & Stability
 **Goal:** Refine user experience and ensure robustness.
 
 **Features**
@@ -84,7 +84,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 5 — PWA & Offline Completion
+## Stage 5 -- PWA & Offline Completion
 **Goal:** Finalize offline functionality and reliability.
 
 **Features**
@@ -98,7 +98,7 @@ The approach is incremental — each stage produces a usable, testable version t
 
 ---
 
-## Stage 6 — Optional Enhancements (Post-v1)
+## Stage 6 -- Optional Enhancements (Post-v1)
 **Goal:** Extend app intelligence and appeal beyond MVP.
 
 **Potential Additions**
@@ -117,9 +117,9 @@ The approach is incremental — each stage produces a usable, testable version t
 | Stage | Focus | Deliverable | Duration |
 |--------|--------|-------------|-----------|
 | **0** | Setup | Base project + tooling | 1 day |
-| **1** | MVP | Geometry-only resemblance | 2–3 days |
-| **2** | Performance | Workerization + PWA shell | 1–2 days |
-| **3** | Accuracy | Local embeddings (Balanced mode) | 2–4 days |
+| **1** | MVP | Geometry-only resemblance | 2-3 days |
+| **2** | Performance | Workerization + PWA shell | 1-2 days |
+| **3** | Accuracy | Local embeddings (Balanced mode) | 2-4 days |
 | **4** | UX Polish | Interactivity + responsiveness | 2 days |
 | **5** | Offline | PWA completion + persistence | 1 day |
 | **6** | Extensions | Parsing, 3D, or future work | Optional |
@@ -127,5 +127,5 @@ The approach is incremental — each stage produces a usable, testable version t
 ---
 
 ## Summary
-The implementation path emphasizes **progressive capability** — every milestone yields a functional product.  
+The implementation path emphasizes **progressive capability** -- every milestone yields a functional product.  
 Starting from a simple, explainable geometry-based MVP, the app evolves into a fast, private, offline-ready tool that intelligently compares facial resemblance with a modern, mobile-friendly UX.

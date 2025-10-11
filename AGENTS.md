@@ -1,7 +1,7 @@
 ﻿# Rules for Agents
 
 ## Follow Project Instructions
-- Always read the current contents of the following files and abide by their direction: ./PROJECT.md, ./ARCHITECTURE.md, and ./IMPLEMENTATION.md
+- Always read the current contents of the following files and abide by their direction: ./PROJECT.md, ./ARCHITECTURE.md, ./IMPLEMENTATION.md, and ./FEATURE_AXES_PLAN.md (for detailed feature analysis work)
 
 ## Don't Be Too Hasty
 - You can and should check your work before you tell me something which might be false

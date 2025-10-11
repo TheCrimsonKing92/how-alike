@@ -188,6 +188,7 @@ Read these before making architectural changes:
 - `PROJECT.md` — Project vision and use cases
 - `ARCHITECTURE.md` — High-level system design
 - `IMPLEMENTATION.md` — Stage-by-stage development plan
+- `FEATURE_AXES_PLAN.md` — Detailed feature axis analysis implementation plan
 - `AGENTS.md` — Agent-specific rules and workflow guidance
 
 **IMPORTANT**: Keep `CLAUDE.md` and `AGENTS.md` synchronized. When updating workflow guidance, testing requirements, or development practices, apply changes to both files to maintain consistency. CLAUDE.md provides high-level guidance for new Claude Code instances, while AGENTS.md contains detailed rules for ongoing work.

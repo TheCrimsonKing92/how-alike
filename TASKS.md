@@ -4,6 +4,24 @@
 - Visual QA: test segmentation-based scoring on diverse images to validate that similarity scores now reflect actual visual feature overlap rather than just landmark geometry
 
 ## Done (recent)
+- **Implemented Phase 1 & 2 of detailed feature axis analysis** (FEATURE_AXES_PLAN.md):
+  - Created `web/src/lib/feature-axes.ts` with landmark-based measurement extraction functions
+  - Extracts 16 detailed measurements across 4 feature categories: eyes (3 axes), nose (3 axes), mouth (5 axes), jaw (5 axes)
+  - Measurements include: canthal tilt, eye size, interocular distance, nose width, bridge contour, tip projection, lip fullness, cupid's bow, lip corners, philtrum length, mouth width, jaw width, mandibular angle, chin projection, chin width, symmetry
+  - All measurements normalized by IPD or face width for robust cross-face comparison
+  - Created `web/src/lib/axis-classifiers.ts` with threshold-based classification system
+  - Maps raw measurements to categorical descriptors (e.g., "positive", "narrow", "full", "prominent")
+  - Includes confidence scores (0-1) based on distance from threshold boundaries
+  - Thresholds based on anthropometric literature and typical facial proportions
+  - Added comprehensive unit tests: `feature-axes.test.ts` (19 tests) and `axis-classifiers.test.ts` (35 tests)
+  - All tests passing (126/126 total including 54 new axis tests)
+  - Files created: `lib/feature-axes.ts`, `lib/axis-classifiers.ts`, `__tests__/feature-axes.test.ts`, `__tests__/axis-classifiers.test.ts`
+- **Documented feature axis plan in FEATURE_AXES_PLAN.md**:
+  - Comprehensive specification for 40+ facial feature axes across 8 categories
+  - Detailed implementation plan with 6 phases (weeks 1-4)
+  - Landmark mappings for each measurement using MediaPipe FaceMesh indices
+  - Testing strategy and success criteria
+  - Referenced in AGENTS.md and CLAUDE.md for future development work
 - **Fixed segmentation convex hull merging disconnected regions (third iteration - FINAL)**:
   - Root cause: The segmentation model sometimes misclassifies a few pixels of class 6 (l_brow) on the right eyebrow, or class 7 (r_brow) on the left eyebrow
   - When `maskToOutline()` computed the convex hull of ALL class 6 pixels, it wrapped around BOTH eyebrows because there were scattered pixels on both sides

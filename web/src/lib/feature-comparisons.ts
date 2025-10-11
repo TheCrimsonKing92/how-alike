@@ -19,7 +19,7 @@ export interface AxisComparison {
 }
 
 export interface FeatureComparison {
-  feature: string;          // "eyes", "nose", "mouth", "jaw"
+  feature: string;          // "eyes", "brows", "nose", "mouth", "cheeks", "jaw", "forehead", "face shape"
   axes: AxisComparison[];
   overallAgreement: number; // 0-1 (proportion of axes that match)
 }
@@ -97,9 +97,13 @@ export function compareFeatures(
 ): FeatureComparison[] {
   return [
     compareFeature('eyes', classificationsA.eyes, classificationsB.eyes),
+    compareFeature('brows', classificationsA.brows, classificationsB.brows),
     compareFeature('nose', classificationsA.nose, classificationsB.nose),
     compareFeature('mouth', classificationsA.mouth, classificationsB.mouth),
+    compareFeature('cheeks', classificationsA.cheeks, classificationsB.cheeks),
     compareFeature('jaw', classificationsA.jaw, classificationsB.jaw),
+    compareFeature('forehead', classificationsA.forehead, classificationsB.forehead),
+    compareFeature('face shape', classificationsA.faceShape, classificationsB.faceShape),
   ];
 }
 

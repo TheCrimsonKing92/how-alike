@@ -8,9 +8,13 @@
 import type {
   FeatureMeasurements,
   EyeMeasurements,
+  BrowMeasurements,
   NoseMeasurements,
   MouthMeasurements,
+  CheekMeasurements,
   JawMeasurements,
+  ForeheadMeasurements,
+  FaceShapeMeasurements,
 } from './feature-axes';
 
 export interface AxisClassification {
@@ -455,14 +459,307 @@ export function classifyJaw(measurements: JawMeasurements): AxisClassification[]
 }
 
 // ============================================================================
+// Brow Classifications
+// ============================================================================
+
+function classifyBrowShape(ratio: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Ratio of arc height to brow width
+  if (ratio > 0.15) {
+    value = 'arched';
+    confidence = Math.min(1, (ratio - 0.15) / 0.15);
+  } else if (ratio < 0.08) {
+    value = 'straight';
+    confidence = Math.min(1, (0.08 - ratio) / 0.08);
+  } else {
+    value = 'moderate';
+    confidence = 1 - Math.abs(ratio - 0.115) / 0.035;
+  }
+
+  return {
+    axis: 'brow shape',
+    value,
+    confidence,
+    rawMeasurement: ratio,
+  };
+}
+
+function classifyBrowPosition(normalized: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Gap from brow to eye, normalized by IPD
+  if (normalized > 0.20) {
+    value = 'high-set';
+    confidence = Math.min(1, (normalized - 0.20) / 0.15);
+  } else if (normalized < 0.12) {
+    value = 'low-set';
+    confidence = Math.min(1, (0.12 - normalized) / 0.08);
+  } else {
+    value = 'mid-set';
+    confidence = 1 - Math.abs(normalized - 0.16) / 0.04;
+  }
+
+  return {
+    axis: 'brow position',
+    value,
+    confidence,
+    rawMeasurement: normalized,
+  };
+}
+
+function classifyBrowLength(ratio: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Brow width vs eye width
+  if (ratio > 1.15) {
+    value = 'extended';
+    confidence = Math.min(1, (ratio - 1.15) / 0.20);
+  } else if (ratio < 0.95) {
+    value = 'short';
+    confidence = Math.min(1, (0.95 - ratio) / 0.15);
+  } else {
+    value = 'proportional';
+    confidence = 1 - Math.abs(ratio - 1.05) / 0.10;
+  }
+
+  return {
+    axis: 'brow length',
+    value,
+    confidence,
+    rawMeasurement: ratio,
+  };
+}
+
+export function classifyBrows(measurements: BrowMeasurements): AxisClassification[] {
+  return [
+    classifyBrowShape(measurements.shape),
+    classifyBrowPosition(measurements.position),
+    classifyBrowLength(measurements.length),
+  ];
+}
+
+// ============================================================================
+// Cheek/Midface Classifications
+// ============================================================================
+
+function classifyCheekProminence(projection: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Z-depth of cheekbones relative to face plane
+  if (projection > 0.10) {
+    value = 'high';
+    confidence = Math.min(1, (projection - 0.10) / 0.15);
+  } else if (projection < 0.02) {
+    value = 'flat';
+    confidence = Math.min(1, (0.02 - projection) / 0.10);
+  } else {
+    value = 'moderate';
+    confidence = 1 - Math.abs(projection - 0.06) / 0.04;
+  }
+
+  return {
+    axis: 'zygomatic prominence',
+    value,
+    confidence,
+    rawMeasurement: projection,
+  };
+}
+
+function classifyNasolabialDepth(depth: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Depth of nasolabial folds
+  if (depth > 0.08) {
+    value = 'deep';
+    confidence = Math.min(1, (depth - 0.08) / 0.10);
+  } else if (depth < 0.03) {
+    value = 'shallow';
+    confidence = Math.min(1, (0.03 - depth) / 0.03);
+  } else {
+    value = 'average';
+    confidence = 1 - Math.abs(depth - 0.055) / 0.025;
+  }
+
+  return {
+    axis: 'nasolabial fold depth',
+    value,
+    confidence,
+    rawMeasurement: depth,
+  };
+}
+
+function classifyCheekboneHeight(ratio: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Vertical position of cheekbones
+  if (ratio > 0.45) {
+    value = 'low';
+    confidence = Math.min(1, (ratio - 0.45) / 0.20);
+  } else if (ratio < 0.30) {
+    value = 'high';
+    confidence = Math.min(1, (0.30 - ratio) / 0.15);
+  } else {
+    value = 'mid';
+    confidence = 1 - Math.abs(ratio - 0.375) / 0.075;
+  }
+
+  return {
+    axis: 'cheekbone height',
+    value,
+    confidence,
+    rawMeasurement: ratio,
+  };
+}
+
+export function classifyCheeks(measurements: CheekMeasurements): AxisClassification[] {
+  return [
+    classifyCheekProminence(measurements.prominence),
+    classifyNasolabialDepth(measurements.nasolabialDepth),
+    classifyCheekboneHeight(measurements.height),
+  ];
+}
+
+// ============================================================================
+// Forehead Classifications
+// ============================================================================
+
+function classifyForeheadHeight(normalized: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Forehead height normalized by IPD
+  if (normalized > 1.20) {
+    value = 'tall';
+    confidence = Math.min(1, (normalized - 1.20) / 0.50);
+  } else if (normalized < 0.80) {
+    value = 'short';
+    confidence = Math.min(1, (0.80 - normalized) / 0.40);
+  } else {
+    value = 'medium';
+    confidence = 1 - Math.abs(normalized - 1.00) / 0.20;
+  }
+
+  return {
+    axis: 'forehead height',
+    value,
+    confidence,
+    rawMeasurement: normalized,
+  };
+}
+
+function classifyForeheadContour(curvature: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Z-depth curvature
+  if (curvature > 0.05) {
+    value = 'rounded';
+    confidence = Math.min(1, (curvature - 0.05) / 0.10);
+  } else if (curvature < -0.02) {
+    value = 'sloped';
+    confidence = Math.min(1, Math.abs(curvature + 0.02) / 0.08);
+  } else {
+    value = 'flat';
+    confidence = 1 - Math.abs(curvature - 0.015) / 0.035;
+  }
+
+  return {
+    axis: 'forehead contour',
+    value,
+    confidence,
+    rawMeasurement: curvature,
+  };
+}
+
+export function classifyForehead(measurements: ForeheadMeasurements): AxisClassification[] {
+  return [
+    classifyForeheadHeight(measurements.height),
+    classifyForeheadContour(measurements.contour),
+  ];
+}
+
+// ============================================================================
+// Face Shape Classifications
+// ============================================================================
+
+function classifyFaceLengthWidthRatio(ratio: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Face height / jaw width
+  if (ratio > 1.6) {
+    value = 'oblong';
+    confidence = Math.min(1, (ratio - 1.6) / 0.40);
+  } else if (ratio > 1.4) {
+    value = 'oval';
+    confidence = 1 - Math.abs(ratio - 1.5) / 0.10;
+  } else if (ratio > 1.2) {
+    value = 'square';
+    confidence = 1 - Math.abs(ratio - 1.3) / 0.10;
+  } else {
+    value = 'round';
+    confidence = Math.min(1, (1.2 - ratio) / 0.30);
+  }
+
+  return {
+    axis: 'face shape ratio',
+    value,
+    confidence,
+    rawMeasurement: ratio,
+  };
+}
+
+function classifyFacialThirdsBalance(score: number): AxisClassification {
+  let value: string;
+  let confidence: number;
+
+  // Balance score: 1.0 = perfect thirds, 0.0 = very imbalanced
+  if (score > 0.85) {
+    value = 'balanced';
+    confidence = score;
+  } else if (score > 0.65) {
+    value = 'slightly imbalanced';
+    confidence = 1 - (0.85 - score) / 0.20;
+  } else {
+    value = 'imbalanced';
+    confidence = 1 - score;
+  }
+
+  return {
+    axis: 'facial thirds balance',
+    value,
+    confidence,
+    rawMeasurement: score,
+  };
+}
+
+export function classifyFaceShape(measurements: FaceShapeMeasurements): AxisClassification[] {
+  return [
+    classifyFaceLengthWidthRatio(measurements.lengthWidthRatio),
+    classifyFacialThirdsBalance(measurements.facialThirds),
+  ];
+}
+
+// ============================================================================
 // Combined Classification
 // ============================================================================
 
 export interface FeatureClassifications {
   eyes: AxisClassification[];
+  brows: AxisClassification[];
   nose: AxisClassification[];
   mouth: AxisClassification[];
+  cheeks: AxisClassification[];
   jaw: AxisClassification[];
+  forehead: AxisClassification[];
+  faceShape: AxisClassification[];
 }
 
 /**
@@ -473,8 +770,12 @@ export function classifyFeatures(
 ): FeatureClassifications {
   return {
     eyes: classifyEyes(measurements.eyes),
+    brows: classifyBrows(measurements.brows),
     nose: classifyNose(measurements.nose),
     mouth: classifyMouth(measurements.mouth),
+    cheeks: classifyCheeks(measurements.cheeks),
     jaw: classifyJaw(measurements.jaw),
+    forehead: classifyForehead(measurements.forehead),
+    faceShape: classifyFaceShape(measurements.faceShape),
   };
 }

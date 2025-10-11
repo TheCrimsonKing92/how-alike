@@ -11,7 +11,7 @@ import type {
 } from './detector-types';
 import type { Pt } from '@/lib/hints';
 import { deriveRegionHints } from '@/lib/hints';
-import { PARSING_ENABLED, PARSING_INPUT_SIZE, parsingModelUrl, parsingClassConfig } from './parsing-config';
+import { PARSING_INPUT_SIZE, parsingModelUrl, parsingClassConfig } from './parsing-config';
 import { maskToOutline } from '@/lib/mask';
 import { pickSegOutput, computeFaceCrop } from './parsing-utils';
 import type { FaceLandmarksDetectorInput, MediaPipeFaceMeshTfjsEstimationConfig, Face, Keypoint } from '@tensorflow-models/face-landmarks-detection';

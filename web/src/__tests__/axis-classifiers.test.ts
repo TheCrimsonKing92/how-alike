@@ -523,6 +523,11 @@ describe('classifyFeatures', () => {
         eyeSize: 0.20,
         interocularDistance: 0.40,
       },
+      brows: {
+        shape: 0.12,
+        position: 0.16,
+        length: 1.05,
+      },
       nose: {
         width: 0.275,
         bridgeContour: 0.01,
@@ -535,6 +540,11 @@ describe('classifyFeatures', () => {
         philtrumLength: 0.20,
         mouthWidth: 0.285,
       },
+      cheeks: {
+        prominence: 0.06,
+        nasolabialDepth: 0.05,
+        height: 0.38,
+      },
       jaw: {
         jawWidth: 1.0,
         mandibularAngle: 105,
@@ -542,18 +552,34 @@ describe('classifyFeatures', () => {
         chinWidth: 1.0,
         symmetry: 0.95,
       },
+      forehead: {
+        height: 1.00,
+        contour: 0.02,
+      },
+      faceShape: {
+        lengthWidthRatio: 1.5,
+        facialThirds: 0.88,
+      },
     };
 
     const result = classifyFeatures(measurements);
 
     expect(result.eyes).toBeDefined();
     expect(result.eyes.length).toBe(3);
+    expect(result.brows).toBeDefined();
+    expect(result.brows.length).toBe(3);
     expect(result.nose).toBeDefined();
     expect(result.nose.length).toBe(3);
     expect(result.mouth).toBeDefined();
     expect(result.mouth.length).toBe(5);
+    expect(result.cheeks).toBeDefined();
+    expect(result.cheeks.length).toBe(3);
     expect(result.jaw).toBeDefined();
     expect(result.jaw.length).toBe(5);
+    expect(result.forehead).toBeDefined();
+    expect(result.forehead.length).toBe(2);
+    expect(result.faceShape).toBeDefined();
+    expect(result.faceShape.length).toBe(2);
   });
 
   it('should include raw measurements in all classifications', () => {
@@ -563,6 +589,11 @@ describe('classifyFeatures', () => {
         eyeSize: 0.20,
         interocularDistance: 0.40,
       },
+      brows: {
+        shape: 0.12,
+        position: 0.16,
+        length: 1.05,
+      },
       nose: {
         width: 0.275,
         bridgeContour: 0.01,
@@ -575,6 +606,11 @@ describe('classifyFeatures', () => {
         philtrumLength: 0.20,
         mouthWidth: 0.285,
       },
+      cheeks: {
+        prominence: 0.06,
+        nasolabialDepth: 0.05,
+        height: 0.38,
+      },
       jaw: {
         jawWidth: 1.0,
         mandibularAngle: 105,
@@ -582,12 +618,29 @@ describe('classifyFeatures', () => {
         chinWidth: 1.0,
         symmetry: 0.95,
       },
+      forehead: {
+        height: 1.00,
+        contour: 0.02,
+      },
+      faceShape: {
+        lengthWidthRatio: 1.5,
+        facialThirds: 0.88,
+      },
     };
 
     const result = classifyFeatures(measurements);
 
     // Check all classifications have raw measurements
-    [...result.eyes, ...result.nose, ...result.mouth, ...result.jaw].forEach(classification => {
+    [
+      ...result.eyes,
+      ...result.brows,
+      ...result.nose,
+      ...result.mouth,
+      ...result.cheeks,
+      ...result.jaw,
+      ...result.forehead,
+      ...result.faceShape,
+    ].forEach(classification => {
       expect(classification.rawMeasurement).toBeDefined();
       expect(typeof classification.rawMeasurement).toBe('number');
     });
@@ -600,6 +653,11 @@ describe('classifyFeatures', () => {
         eyeSize: 0.20,
         interocularDistance: 0.40,
       },
+      brows: {
+        shape: 0.12,
+        position: 0.16,
+        length: 1.05,
+      },
       nose: {
         width: 0.275,
         bridgeContour: 0.01,
@@ -612,6 +670,11 @@ describe('classifyFeatures', () => {
         philtrumLength: 0.20,
         mouthWidth: 0.285,
       },
+      cheeks: {
+        prominence: 0.06,
+        nasolabialDepth: 0.05,
+        height: 0.38,
+      },
       jaw: {
         jawWidth: 1.0,
         mandibularAngle: 105,
@@ -619,12 +682,29 @@ describe('classifyFeatures', () => {
         chinWidth: 1.0,
         symmetry: 0.95,
       },
+      forehead: {
+        height: 1.00,
+        contour: 0.02,
+      },
+      faceShape: {
+        lengthWidthRatio: 1.5,
+        facialThirds: 0.88,
+      },
     };
 
     const result = classifyFeatures(measurements);
 
     // Check all classifications have confidence in [0, 1]
-    [...result.eyes, ...result.nose, ...result.mouth, ...result.jaw].forEach(classification => {
+    [
+      ...result.eyes,
+      ...result.brows,
+      ...result.nose,
+      ...result.mouth,
+      ...result.cheeks,
+      ...result.jaw,
+      ...result.forehead,
+      ...result.faceShape,
+    ].forEach(classification => {
       expect(classification.confidence).toBeDefined();
       expect(classification.confidence).toBeGreaterThanOrEqual(0);
       expect(classification.confidence).toBeLessThanOrEqual(1);

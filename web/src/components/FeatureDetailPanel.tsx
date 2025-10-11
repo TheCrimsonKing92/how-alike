@@ -76,37 +76,39 @@ export default function FeatureDetailPanel({
                 </svg>
               </button>
               {isExpanded && hasContent && (
-                <div className="px-3 py-2 bg-gray-50 border-t text-xs space-y-3">
-                  {details.shared.length > 0 && (
-                    <div>
-                      <div className="font-medium text-gray-700 mb-1">Shared Characteristics</div>
-                      <ul className="list-disc list-inside opacity-80">
-                        {details.shared.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {details.imageA.length > 0 && (
-                    <div>
-                      <div className="font-medium text-gray-700 mb-1">Image A</div>
-                      <ul className="list-disc list-inside opacity-80">
-                        {details.imageA.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {details.imageB.length > 0 && (
-                    <div>
-                      <div className="font-medium text-gray-700 mb-1">Image B</div>
-                      <ul className="list-disc list-inside opacity-80">
-                        {details.imageB.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                <div className="px-3 py-2 bg-gray-50 border-t text-xs">
+                  <div className="flex flex-col md:flex-row md:gap-4 space-y-3 md:space-y-0">
+                    {details.shared.length > 0 && (
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-700 mb-1">Shared Characteristics</div>
+                        <ul className="list-disc list-inside opacity-80">
+                          {details.shared.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {details.imageA.length > 0 && (
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-700 mb-1">Image A</div>
+                        <ul className="list-disc list-inside opacity-80">
+                          {details.imageA.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {details.imageB.length > 0 && (
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-700 mb-1">Image B</div>
+                        <ul className="list-disc list-inside opacity-80">
+                          {details.imageB.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

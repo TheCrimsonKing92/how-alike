@@ -19,9 +19,13 @@ describe('compareFeatures', () => {
         { axis: 'eye size', value: 'average', confidence: 0.9, rawMeasurement: 0.20 },
         { axis: 'interocular distance', value: 'balanced', confidence: 0.85, rawMeasurement: 0.40 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
@@ -30,9 +34,13 @@ describe('compareFeatures', () => {
         { axis: 'eye size', value: 'average', confidence: 0.88, rawMeasurement: 0.21 },
         { axis: 'interocular distance', value: 'balanced', confidence: 0.82, rawMeasurement: 0.39 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
@@ -48,18 +56,26 @@ describe('compareFeatures', () => {
       eyes: [
         { axis: 'canthal tilt', value: 'positive', confidence: 0.8, rawMeasurement: 5 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
       eyes: [
         { axis: 'canthal tilt', value: 'neutral', confidence: 0.75, rawMeasurement: 1 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
@@ -74,18 +90,26 @@ describe('compareFeatures', () => {
       eyes: [
         { axis: 'canthal tilt', value: 'positive', confidence: 0.8, rawMeasurement: 5 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
       eyes: [
         { axis: 'canthal tilt', value: 'positive', confidence: 0.75, rawMeasurement: 5.5 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
@@ -96,52 +120,68 @@ describe('compareFeatures', () => {
 
   it('should calculate percentage difference', () => {
     const classificationsA: FeatureClassifications = {
+      eyes: [],
+      brows: [],
       nose: [
         { axis: 'nose width', value: 'average', confidence: 0.8, rawMeasurement: 0.30 },
       ],
-      eyes: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
+      eyes: [],
+      brows: [],
       nose: [
         { axis: 'nose width', value: 'average', confidence: 0.75, rawMeasurement: 0.27 },
       ],
-      eyes: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
 
-    expect(result[1].axes[0].percentDiff).toBeDefined();
-    expect(result[1].axes[0].percentDiff).toBeGreaterThan(0);
-    expect(result[1].axes[0].percentDiff).toBeLessThan(15);
+    expect(result[2].axes[0].percentDiff).toBeDefined();
+    expect(result[2].axes[0].percentDiff).toBeGreaterThan(0);
+    expect(result[2].axes[0].percentDiff).toBeLessThan(15);
   });
 
   it('should determine direction (higher/lower)', () => {
     const classificationsA: FeatureClassifications = {
+      eyes: [],
+      brows: [],
+      nose: [],
       mouth: [
         { axis: 'lip fullness', value: 'full', confidence: 0.8, rawMeasurement: 0.19 },
       ],
-      eyes: [],
-      nose: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
+      eyes: [],
+      brows: [],
+      nose: [],
       mouth: [
         { axis: 'lip fullness', value: 'average', confidence: 0.75, rawMeasurement: 0.15 },
       ],
-      eyes: [],
-      nose: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
 
-    expect(result[2].axes[0].direction).toBe('higher');
+    expect(result[3].axes[0].direction).toBe('higher');
   });
 
   it('should calculate overall agreement for mixed results', () => {
@@ -151,9 +191,13 @@ describe('compareFeatures', () => {
         { axis: 'eye size', value: 'average', confidence: 0.9, rawMeasurement: 0.20 },
         { axis: 'interocular distance', value: 'wide-set', confidence: 0.85, rawMeasurement: 0.45 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
@@ -162,9 +206,13 @@ describe('compareFeatures', () => {
         { axis: 'eye size', value: 'narrow', confidence: 0.88, rawMeasurement: 0.17 },
         { axis: 'interocular distance', value: 'balanced', confidence: 0.82, rawMeasurement: 0.39 },
       ],
+      brows: [],
       nose: [],
       mouth: [],
+      cheeks: [],
       jaw: [],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = compareFeatures(classificationsA, classificationsB);
@@ -345,16 +393,24 @@ describe('performComparison', () => {
   it('should return complete comparison result', () => {
     const measurementsA: FeatureMeasurements = {
       eyes: { canthalTilt: 5, eyeSize: 0.20, interocularDistance: 0.40 },
+      brows: { shape: 0.12, position: 0.16, length: 1.05 },
       nose: { width: 0.30, bridgeContour: 0.01, tipProjection: -0.10 },
       mouth: { lipFullness: 0.15, cupidsBowDefinition: 0.03, lipCornerOrientation: 0, philtrumLength: 0.20, mouthWidth: 0.285 },
+      cheeks: { prominence: 0.06, nasolabialDepth: 0.05, height: 0.38 },
       jaw: { jawWidth: 1.0, mandibularAngle: 105, chinProjection: -0.05, chinWidth: 1.0, symmetry: 0.95 },
+      forehead: { height: 1.00, contour: 0.02 },
+      faceShape: { lengthWidthRatio: 1.5, facialThirds: 0.88 },
     };
 
     const measurementsB: FeatureMeasurements = {
       eyes: { canthalTilt: 4.5, eyeSize: 0.21, interocularDistance: 0.39 },
+      brows: { shape: 0.11, position: 0.15, length: 1.03 },
       nose: { width: 0.28, bridgeContour: 0.02, tipProjection: -0.12 },
       mouth: { lipFullness: 0.16, cupidsBowDefinition: 0.04, lipCornerOrientation: 2, philtrumLength: 0.19, mouthWidth: 0.290 },
+      cheeks: { prominence: 0.07, nasolabialDepth: 0.04, height: 0.39 },
       jaw: { jawWidth: 1.02, mandibularAngle: 107, chinProjection: -0.06, chinWidth: 1.02, symmetry: 0.93 },
+      forehead: { height: 0.98, contour: 0.03 },
+      faceShape: { lengthWidthRatio: 1.52, facialThirds: 0.86 },
     };
 
     const classificationsA: FeatureClassifications = {
@@ -363,15 +419,19 @@ describe('performComparison', () => {
         { axis: 'eye size', value: 'average', confidence: 0.9, rawMeasurement: 0.20 },
         { axis: 'interocular distance', value: 'balanced', confidence: 0.85, rawMeasurement: 0.40 },
       ],
+      brows: [],
       nose: [
         { axis: 'nose width', value: 'average', confidence: 0.8, rawMeasurement: 0.30 },
       ],
       mouth: [
         { axis: 'lip fullness', value: 'average', confidence: 0.8, rawMeasurement: 0.15 },
       ],
+      cheeks: [],
       jaw: [
         { axis: 'jaw width', value: 'balanced', confidence: 0.9, rawMeasurement: 1.0 },
       ],
+      forehead: [],
+      faceShape: [],
     };
 
     const classificationsB: FeatureClassifications = {
@@ -380,21 +440,25 @@ describe('performComparison', () => {
         { axis: 'eye size', value: 'average', confidence: 0.88, rawMeasurement: 0.21 },
         { axis: 'interocular distance', value: 'balanced', confidence: 0.82, rawMeasurement: 0.39 },
       ],
+      brows: [],
       nose: [
         { axis: 'nose width', value: 'average', confidence: 0.75, rawMeasurement: 0.28 },
       ],
       mouth: [
         { axis: 'lip fullness', value: 'average', confidence: 0.77, rawMeasurement: 0.16 },
       ],
+      cheeks: [],
       jaw: [
         { axis: 'jaw width', value: 'balanced', confidence: 0.88, rawMeasurement: 1.02 },
       ],
+      forehead: [],
+      faceShape: [],
     };
 
     const result = performComparison(measurementsA, measurementsB, classificationsA, classificationsB);
 
     expect(result.comparisons).toBeDefined();
-    expect(result.comparisons.length).toBe(4);
+    expect(result.comparisons.length).toBe(8);
     expect(result.sharedAxes).toBeDefined();
     expect(result.congruenceScore).toBeGreaterThan(0);
     expect(result.congruenceScore).toBeLessThanOrEqual(1);

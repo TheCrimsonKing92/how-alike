@@ -51,6 +51,20 @@ const LANDMARKS = {
   foreheadTop: 10,
   foreheadLeft: 109,
   foreheadRight: 338,
+
+  // Brows (MediaPipe eyebrow landmarks)
+  leftBrowInner: 70,
+  leftBrowMid: 107,
+  leftBrowOuter: 66,
+  rightBrowInner: 300,
+  rightBrowMid: 336,
+  rightBrowOuter: 296,
+
+  // Cheeks
+  leftCheekbone: 234,
+  rightCheekbone: 454,
+  leftNasolabialFold: 36,
+  rightNasolabialFold: 266,
 };
 
 /**
@@ -327,14 +341,238 @@ export function extractJawMeasurements(
 }
 
 // ============================================================================
+// Brows
+// ============================================================================
+
+export interface BrowMeasurements {
+  shape: number;               // arc height ratio (0=straight, 1=highly arched)
+  position: number;            // vertical distance from eyes (normalized)
+  length: number;              // horizontal span ratio to eye width
+}
+
+/**
+ * Extract eyebrow measurements from landmarks
+ */
+export function extractBrowMeasurements(
+  landmarks: Point[],
+  leftEye: Point,
+  rightEye: Point
+): BrowMeasurements {
+  const leftBrowInner = landmarks[LANDMARKS.leftBrowInner];
+  const leftBrowMid = landmarks[LANDMARKS.leftBrowMid];
+  const leftBrowOuter = landmarks[LANDMARKS.leftBrowOuter];
+  const rightBrowInner = landmarks[LANDMARKS.rightBrowInner];
+  const rightBrowMid = landmarks[LANDMARKS.rightBrowMid];
+  const rightBrowOuter = landmarks[LANDMARKS.rightBrowOuter];
+
+  const leftEyeTop = landmarks[LANDMARKS.leftEyeTop];
+  const rightEyeTop = landmarks[LANDMARKS.rightEyeTop];
+  const leftEyeInner = landmarks[LANDMARKS.leftEyeInner];
+  const leftEyeOuter = landmarks[LANDMARKS.leftEyeOuter];
+  const rightEyeInner = landmarks[LANDMARKS.rightEyeInner];
+  const rightEyeOuter = landmarks[LANDMARKS.rightEyeOuter];
+
+  const ipd = interocularDistance(leftEye, rightEye);
+
+  // Shape: arc height of brow (distance from mid-brow to line between inner/outer)
+  const leftBrowWidth = distance(leftBrowInner, leftBrowOuter);
+  const rightBrowWidth = distance(rightBrowInner, rightBrowOuter);
+
+  // Compute baseline (line between inner and outer brow)
+  const leftBaselineY = (leftBrowInner.y + leftBrowOuter.y) / 2;
+  const rightBaselineY = (rightBrowInner.y + rightBrowOuter.y) / 2;
+
+  // Arc height: vertical deviation of mid-brow from baseline
+  const leftArcHeight = Math.abs(leftBrowMid.y - leftBaselineY);
+  const rightArcHeight = Math.abs(rightBrowMid.y - rightBaselineY);
+
+  // Normalize by brow width
+  const leftShape = leftArcHeight / (leftBrowWidth || 1);
+  const rightShape = rightArcHeight / (rightBrowWidth || 1);
+  const shape = (leftShape + rightShape) / 2;
+
+  // Position: vertical distance from brow to eye top
+  const leftGap = distance(leftBrowMid, leftEyeTop);
+  const rightGap = distance(rightBrowMid, rightEyeTop);
+  const avgGap = (leftGap + rightGap) / 2;
+  const position = avgGap / ipd;
+
+  // Length: horizontal span of brow vs eye width
+  const leftEyeWidth = distance(leftEyeInner, leftEyeOuter);
+  const rightEyeWidth = distance(rightEyeInner, rightEyeOuter);
+  const avgEyeWidth = (leftEyeWidth + rightEyeWidth) / 2;
+  const avgBrowWidth = (leftBrowWidth + rightBrowWidth) / 2;
+  const length = avgBrowWidth / (avgEyeWidth || 1);
+
+  return {
+    shape,
+    position,
+    length,
+  };
+}
+
+// ============================================================================
+// Cheeks/Midface
+// ============================================================================
+
+export interface CheekMeasurements {
+  prominence: number;           // z-depth of cheekbones
+  nasolabialDepth: number;      // depth of nasolabial folds
+  height: number;               // vertical position of cheekbones
+}
+
+/**
+ * Extract cheek/midface measurements from landmarks
+ */
+export function extractCheekMeasurements(
+  landmarks: Point[],
+  leftEye: Point,
+  rightEye: Point
+): CheekMeasurements {
+  const leftCheekbone = landmarks[LANDMARKS.leftCheekbone];
+  const rightCheekbone = landmarks[LANDMARKS.rightCheekbone];
+  const leftNasolabialFold = landmarks[LANDMARKS.leftNasolabialFold];
+  const rightNasolabialFold = landmarks[LANDMARKS.rightNasolabialFold];
+  const chin = landmarks[LANDMARKS.chinCenter];
+
+  const ipd = interocularDistance(leftEye, rightEye);
+
+  // Prominence: z-depth of cheekbones relative to face plane
+  const faceZ = ((leftEye.z ?? 0) + (rightEye.z ?? 0)) / 2;
+  const leftCheekZ = leftCheekbone.z ?? 0;
+  const rightCheekZ = rightCheekbone.z ?? 0;
+  const avgCheekZ = (leftCheekZ + rightCheekZ) / 2;
+  const prominence = (avgCheekZ - faceZ) / ipd;
+
+  // Nasolabial fold depth: z-depth of fold landmarks
+  const leftFoldZ = leftNasolabialFold.z ?? 0;
+  const rightFoldZ = rightNasolabialFold.z ?? 0;
+  const avgFoldZ = (leftFoldZ + rightFoldZ) / 2;
+  const nasolabialDepth = (faceZ - avgFoldZ) / ipd;
+
+  // Cheekbone height: vertical position relative to eye-chin distance
+  const eyeY = (leftEye.y + rightEye.y) / 2;
+  const cheekY = (leftCheekbone.y + rightCheekbone.y) / 2;
+  const chinY = chin.y;
+  const faceHeight = Math.abs(chinY - eyeY);
+  const cheekPos = Math.abs(cheekY - eyeY);
+  const height = cheekPos / (faceHeight || 1);
+
+  return {
+    prominence,
+    nasolabialDepth,
+    height,
+  };
+}
+
+// ============================================================================
+// Forehead
+// ============================================================================
+
+export interface ForeheadMeasurements {
+  height: number;              // vertical distance hairline to brows
+  contour: number;             // curvature (z-depth deviation)
+}
+
+/**
+ * Extract forehead measurements from landmarks
+ */
+export function extractForeheadMeasurements(
+  landmarks: Point[],
+  leftEye: Point,
+  rightEye: Point
+): ForeheadMeasurements {
+  const foreheadTop = landmarks[LANDMARKS.foreheadTop];
+  const leftBrowMid = landmarks[LANDMARKS.leftBrowMid];
+  const rightBrowMid = landmarks[LANDMARKS.rightBrowMid];
+
+  const ipd = interocularDistance(leftEye, rightEye);
+
+  // Height: vertical distance from top of forehead to brow line
+  const browY = (leftBrowMid.y + rightBrowMid.y) / 2;
+  const foreheadHeight = Math.abs(foreheadTop.y - browY);
+  const height = foreheadHeight / ipd;
+
+  // Contour: z-depth of forehead relative to face plane
+  const faceZ = ((leftEye.z ?? 0) + (rightEye.z ?? 0)) / 2;
+  const foreheadZ = foreheadTop.z ?? 0;
+  const contour = (foreheadZ - faceZ) / ipd;
+
+  return {
+    height,
+    contour,
+  };
+}
+
+// ============================================================================
+// Face Shape (Global Metrics)
+// ============================================================================
+
+export interface FaceShapeMeasurements {
+  lengthWidthRatio: number;     // face height / jaw width
+  facialThirds: number;         // balance of upper/mid/lower face (0-1, 1=perfect)
+}
+
+/**
+ * Extract global face shape measurements from landmarks
+ */
+export function extractFaceShapeMeasurements(
+  landmarks: Point[],
+  leftEye: Point,
+  rightEye: Point
+): FaceShapeMeasurements {
+  const foreheadTop = landmarks[LANDMARKS.foreheadTop];
+  const chin = landmarks[LANDMARKS.chinCenter];
+  const leftBrowMid = landmarks[LANDMARKS.leftBrowMid];
+  const rightBrowMid = landmarks[LANDMARKS.rightBrowMid];
+  const noseBridge = landmarks[LANDMARKS.noseBridgeLower];
+
+  const fw = faceWidth(landmarks);
+
+  // Length-width ratio: overall face shape descriptor
+  const faceHeight = distance(foreheadTop, chin);
+  const lengthWidthRatio = faceHeight / (fw || 1);
+
+  // Facial thirds: balance of forehead, midface, lower face
+  const browY = (leftBrowMid.y + rightBrowMid.y) / 2;
+  const noseBaseY = noseBridge.y;
+  const chinY = chin.y;
+  const foreheadTopY = foreheadTop.y;
+
+  const upperThird = Math.abs(browY - foreheadTopY);
+  const midThird = Math.abs(noseBaseY - browY);
+  const lowerThird = Math.abs(chinY - noseBaseY);
+
+  // Ideal is 1:1:1 ratio
+  const total = upperThird + midThird + lowerThird;
+  const ideal = total / 3;
+  const deviation = (
+    Math.abs(upperThird - ideal) +
+    Math.abs(midThird - ideal) +
+    Math.abs(lowerThird - ideal)
+  ) / total;
+
+  const facialThirds = Math.max(0, 1 - deviation);
+
+  return {
+    lengthWidthRatio,
+    facialThirds,
+  };
+}
+
+// ============================================================================
 // Combined Feature Measurements
 // ============================================================================
 
 export interface FeatureMeasurements {
   eyes: EyeMeasurements;
+  brows: BrowMeasurements;
   nose: NoseMeasurements;
   mouth: MouthMeasurements;
+  cheeks: CheekMeasurements;
   jaw: JawMeasurements;
+  forehead: ForeheadMeasurements;
+  faceShape: FaceShapeMeasurements;
 }
 
 /**
@@ -347,8 +585,12 @@ export function extractFeatureMeasurements(
 ): FeatureMeasurements {
   return {
     eyes: extractEyeMeasurements(landmarks, leftEye, rightEye),
+    brows: extractBrowMeasurements(landmarks, leftEye, rightEye),
     nose: extractNoseMeasurements(landmarks, leftEye, rightEye),
     mouth: extractMouthMeasurements(landmarks, leftEye, rightEye),
+    cheeks: extractCheekMeasurements(landmarks, leftEye, rightEye),
     jaw: extractJawMeasurements(landmarks, leftEye, rightEye),
+    forehead: extractForeheadMeasurements(landmarks, leftEye, rightEye),
+    faceShape: extractFaceShapeMeasurements(landmarks, leftEye, rightEye),
   };
 }

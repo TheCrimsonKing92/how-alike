@@ -126,6 +126,29 @@ The approach is incremental -- each stage produces a usable, testable version th
 
 ---
 
+## Code Style Preferences
+
+### JavaScript/TypeScript
+- **Prefer functional array methods** (`filter`, `map`, `reduce`) over imperative loops (`forEach` + `push`)
+- While imperative operations aren't prohibited, functional style should be prioritized for clarity and immutability
+
+Example:
+```typescript
+// Preferred
+const agreements = axes.filter(axis => axis.agreement);
+const shared = agreements.map(axis => `Both have ${axis.valueA}`);
+
+// Avoid (unless necessary)
+const shared = [];
+for (const axis of axes) {
+  if (axis.agreement) {
+    shared.push(`Both have ${axis.valueA}`);
+  }
+}
+```
+
+---
+
 ## Summary
-The implementation path emphasizes **progressive capability** -- every milestone yields a functional product.  
+The implementation path emphasizes **progressive capability** -- every milestone yields a functional product.
 Starting from a simple, explainable geometry-based MVP, the app evolves into a fast, private, offline-ready tool that intelligently compares facial resemblance with a modern, mobile-friendly UX.

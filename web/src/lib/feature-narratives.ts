@@ -66,10 +66,26 @@ export function narrativeForFeature(comparison: FeatureComparison): string {
 }
 
 /**
- * Generate detailed axis-by-axis narratives for a feature
+ * Detailed narrative organized by shared/distinctive characteristics
  */
-export function detailedNarrativeForFeature(comparison: FeatureComparison): string[] {
-  return comparison.axes.map(axis => narrativeForAxis(axis));
+export interface DetailedNarrative {
+  shared: string[];
+  imageA: string[];
+  imageB: string[];
+}
+
+/**
+ * Generate detailed axis-by-axis narratives for a feature, organized by similarity
+ */
+export function detailedNarrativeForFeature(comparison: FeatureComparison): DetailedNarrative {
+  const agreements = comparison.axes.filter(axis => axis.agreement);
+  const disagreements = comparison.axes.filter(axis => !axis.agreement);
+
+  const shared = agreements.map(axis => `Both have ${axis.valueA} ${axis.axis}`);
+  const imageA = disagreements.map(axis => `${capitalize(axis.axis)}: ${axis.valueA}`);
+  const imageB = disagreements.map(axis => `${capitalize(axis.axis)}: ${axis.valueB}`);
+
+  return { shared, imageA, imageB };
 }
 
 /**
@@ -202,7 +218,7 @@ function capitalize(str: string): string {
 export interface NarrativeResult {
   overall: string;
   featureSummaries: Record<string, string>;
-  axisDetails: Record<string, string[]>;
+  axisDetails: Record<string, DetailedNarrative>;
   sharedCharacteristics: string;
 }
 
@@ -218,7 +234,7 @@ export function generateNarrative(
   const sharedCharacteristics = sharedCharacteristicsNarrative(sharedAxes);
 
   const featureSummaries: Record<string, string> = {};
-  const axisDetails: Record<string, string[]> = {};
+  const axisDetails: Record<string, DetailedNarrative> = {};
 
   for (const comparison of comparisons) {
     featureSummaries[comparison.feature] = narrativeForFeature(comparison);

@@ -51,7 +51,9 @@ export default function FeatureDetailPanel({
         {features.map((feature) => {
           const isExpanded = expandedFeatures.has(feature);
           const summary = narrative.featureSummaries[feature];
-          const details = narrative.axisDetails[feature] || [];
+          const details = narrative.axisDetails[feature];
+
+          const hasContent = details && (details.shared.length > 0 || details.imageA.length > 0 || details.imageB.length > 0);
 
           return (
             <div key={feature} className="border rounded-md overflow-hidden">
@@ -73,13 +75,38 @@ export default function FeatureDetailPanel({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {isExpanded && details.length > 0 && (
-                <div className="px-3 py-2 bg-gray-50 border-t text-xs space-y-1">
-                  {details.map((detail, idx) => (
-                    <div key={idx} className="opacity-80">
-                      • {detail}
+              {isExpanded && hasContent && (
+                <div className="px-3 py-2 bg-gray-50 border-t text-xs space-y-3">
+                  {details.shared.length > 0 && (
+                    <div>
+                      <div className="font-medium text-gray-700 mb-1">Shared Characteristics</div>
+                      {details.shared.map((item, idx) => (
+                        <div key={idx} className="opacity-80">
+                          • {item}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {details.imageA.length > 0 && (
+                    <div>
+                      <div className="font-medium text-gray-700 mb-1">Image A</div>
+                      {details.imageA.map((item, idx) => (
+                        <div key={idx} className="opacity-80">
+                          • {item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {details.imageB.length > 0 && (
+                    <div>
+                      <div className="font-medium text-gray-700 mb-1">Image B</div>
+                      {details.imageB.map((item, idx) => (
+                        <div key={idx} className="opacity-80">
+                          • {item}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

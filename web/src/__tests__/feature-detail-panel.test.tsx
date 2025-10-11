@@ -55,8 +55,8 @@ describe('FeatureDetailPanel', () => {
         nose: 'Nose differ significantly',
       },
       axisDetails: {
-        eyes: [],
-        nose: [],
+        eyes: { shared: [], imageA: [], imageB: [] },
+        nose: { shared: [], imageA: [], imageB: [] },
       },
     };
 
@@ -77,7 +77,11 @@ describe('FeatureDetailPanel', () => {
         eyes: 'Eyes are similar',
       },
       axisDetails: {
-        eyes: ['Both have positive canthal tilt', 'Eye size: average vs wide (subtle difference)'],
+        eyes: {
+          shared: ['Both have positive canthal tilt'],
+          imageA: ['Eye size: average'],
+          imageB: ['Eye size: wide'],
+        },
       },
     };
 
@@ -90,9 +94,13 @@ describe('FeatureDetailPanel', () => {
     const button = screen.getByRole('button', { name: /eyes/i });
     await user.click(button);
 
-    // Details should now be visible
+    // Details should now be visible with sections
+    expect(screen.getByText('Shared Characteristics')).toBeInTheDocument();
     expect(screen.getByText('• Both have positive canthal tilt')).toBeInTheDocument();
-    expect(screen.getByText('• Eye size: average vs wide (subtle difference)')).toBeInTheDocument();
+    expect(screen.getByText('Image A')).toBeInTheDocument();
+    expect(screen.getByText('• Eye size: average')).toBeInTheDocument();
+    expect(screen.getByText('Image B')).toBeInTheDocument();
+    expect(screen.getByText('• Eye size: wide')).toBeInTheDocument();
   });
 
   it('collapses expanded feature on second click', async () => {
@@ -104,7 +112,11 @@ describe('FeatureDetailPanel', () => {
         eyes: 'Eyes are similar',
       },
       axisDetails: {
-        eyes: ['Both have positive canthal tilt'],
+        eyes: {
+          shared: ['Both have positive canthal tilt'],
+          imageA: [],
+          imageB: [],
+        },
       },
     };
 
@@ -131,8 +143,16 @@ describe('FeatureDetailPanel', () => {
         nose: 'Nose differ',
       },
       axisDetails: {
-        eyes: ['Canthal tilt matches'],
-        nose: ['Nose width differs'],
+        eyes: {
+          shared: ['Canthal tilt matches'],
+          imageA: [],
+          imageB: [],
+        },
+        nose: {
+          shared: [],
+          imageA: ['Nose width: narrow'],
+          imageB: ['Nose width: broad'],
+        },
       },
     };
 
@@ -144,12 +164,13 @@ describe('FeatureDetailPanel', () => {
     // Expand eyes
     await user.click(eyesButton);
     expect(screen.getByText('• Canthal tilt matches')).toBeInTheDocument();
-    expect(screen.queryByText('• Nose width differs')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nose width: narrow/)).not.toBeInTheDocument();
 
     // Expand nose (both should remain open)
     await user.click(noseButton);
     expect(screen.getByText('• Canthal tilt matches')).toBeInTheDocument();
-    expect(screen.getByText('• Nose width differs')).toBeInTheDocument();
+    expect(screen.getByText('• Nose width: narrow')).toBeInTheDocument();
+    expect(screen.getByText('• Nose width: broad')).toBeInTheDocument();
   });
 
   it('handles empty axis details gracefully', async () => {
@@ -161,7 +182,11 @@ describe('FeatureDetailPanel', () => {
         eyes: 'Eyes are similar',
       },
       axisDetails: {
-        eyes: [],
+        eyes: {
+          shared: [],
+          imageA: [],
+          imageB: [],
+        },
       },
     };
 
@@ -185,10 +210,10 @@ describe('FeatureDetailPanel', () => {
         jaw: 'Similar',
       },
       axisDetails: {
-        eyes: [],
-        nose: [],
-        mouth: [],
-        jaw: [],
+        eyes: { shared: [], imageA: [], imageB: [] },
+        nose: { shared: [], imageA: [], imageB: [] },
+        mouth: { shared: [], imageA: [], imageB: [] },
+        jaw: { shared: [], imageA: [], imageB: [] },
       },
     };
 

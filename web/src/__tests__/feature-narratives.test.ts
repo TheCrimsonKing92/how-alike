@@ -128,7 +128,7 @@ describe('narrativeForFeature', () => {
 });
 
 describe('detailedNarrativeForFeature', () => {
-  it('should generate narrative for each axis', () => {
+  it('should organize narratives by shared and distinctive characteristics', () => {
     const comparison: FeatureComparison = {
       feature: 'eyes',
       axes: [
@@ -140,9 +140,12 @@ describe('detailedNarrativeForFeature', () => {
 
     const result = detailedNarrativeForFeature(comparison);
 
-    expect(result).toHaveLength(2);
-    expect(result[0]).toContain('canthal tilt');
-    expect(result[1]).toContain('eye size');
+    expect(result.shared).toHaveLength(1);
+    expect(result.shared[0]).toContain('canthal tilt');
+    expect(result.imageA).toHaveLength(1);
+    expect(result.imageA[0]).toContain('Eye size: average');
+    expect(result.imageB).toHaveLength(1);
+    expect(result.imageB[0]).toContain('Eye size: wide');
   });
 });
 
@@ -370,8 +373,9 @@ describe('generateNarrative', () => {
     expect(result.featureSummaries['eyes']).toBeTruthy();
     expect(result.featureSummaries['nose']).toBeTruthy();
     expect(result.axisDetails).toBeDefined();
-    expect(result.axisDetails['eyes']).toHaveLength(2);
-    expect(result.axisDetails['nose']).toHaveLength(1);
+    expect(result.axisDetails['eyes']).toBeDefined();
+    expect(result.axisDetails['eyes'].shared.length + result.axisDetails['eyes'].imageA.length + result.axisDetails['eyes'].imageB.length).toBe(2);
+    expect(result.axisDetails['nose']).toBeDefined();
     expect(result.sharedCharacteristics).toBeTruthy();
   });
 

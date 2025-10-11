@@ -29,10 +29,16 @@ export type MaskOverlay = {
   crop: { sx: number; sy: number; sw: number; sh: number };
 };
 
+export type DetailedNarrative = {
+  shared: string[];
+  imageA: string[];
+  imageB: string[];
+};
+
 export type FeatureNarrative = {
   overall: string;
   featureSummaries: Record<string, string>;
-  axisDetails: Record<string, string[]>;
+  axisDetails: Record<string, DetailedNarrative>;
   sharedCharacteristics?: string;
 };
 

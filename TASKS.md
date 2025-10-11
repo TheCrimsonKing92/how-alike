@@ -4,6 +4,23 @@
 - Visual QA: test segmentation-based scoring on diverse images to validate that similarity scores now reflect actual visual feature overlap rather than just landmark geometry
 
 ## Done (recent)
+- **Implemented Phase 3 of detailed feature axis analysis** (FEATURE_AXES_PLAN.md):
+  - Created `web/src/lib/feature-comparisons.ts` with axis comparison functions
+  - Compares two faces across all 16 axes to determine agreement/disagreement
+  - Computes similarity scores based on raw measurements (0-1 scale)
+  - Calculates percentage differences and direction (higher/lower)
+  - Generates overall agreement scores per feature category
+  - Provides morphological congruence score (overall similarity metric)
+  - Includes shared axis values and feature agreement summaries
+  - Created `web/src/lib/feature-narratives.ts` with natural language generation
+  - Generates human-readable descriptions for each axis comparison
+  - Creates feature-level summaries (e.g., "Eyes are highly similar")
+  - Produces overall narrative with morphological congruence assessment
+  - Supports dimensional comparisons (e.g., "Subject A's nose is 8% wider")
+  - Includes contrast narratives highlighting specific differences
+  - Added comprehensive unit tests: `feature-comparisons.test.ts` (19 tests) and `feature-narratives.test.ts` (25 tests)
+  - All tests passing (170/170 total including 44 new comparison/narrative tests)
+  - Files created: `lib/feature-comparisons.ts`, `lib/feature-narratives.ts`, `__tests__/feature-comparisons.test.ts`, `__tests__/feature-narratives.test.ts`
 - **Implemented Phase 1 & 2 of detailed feature axis analysis** (FEATURE_AXES_PLAN.md):
   - Created `web/src/lib/feature-axes.ts` with landmark-based measurement extraction functions
   - Extracts 16 detailed measurements across 4 feature categories: eyes (3 axes), nose (3 axes), mouth (5 axes), jaw (5 axes)

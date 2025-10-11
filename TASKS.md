@@ -1,9 +1,23 @@
 ﻿# Tasks & Work Log
 
 ## Now
-- Visual QA: test segmentation-based scoring on diverse images to validate that similarity scores now reflect actual visual feature overlap rather than just landmark geometry
+- Visual QA: test segmentation-based scoring and detailed feature narratives on diverse images to validate that scores and descriptions accurately reflect morphological similarity
 
 ## Done (recent)
+- **Implemented Phase 6: UI for detailed feature narratives**:
+  - Created `web/src/components/FeatureDetailPanel.tsx` with expandable feature sections
+  - Displays morphological congruence score at top level
+  - Shows overall narrative summarizing face similarity
+  - Presents shared characteristics (common axes where both faces agree)
+  - Features (eyes, nose, mouth, jaw) expand to reveal axis-by-axis details
+  - Single-feature expand/collapse interaction (one open at a time)
+  - State management in `page.tsx` captures `featureNarrative` and `congruenceScore` from worker
+  - Added comprehensive unit tests: `feature-detail-panel.test.tsx` (10 tests)
+  - All tests passing (179/180, with 1 pre-existing parsing-adapter failure)
+  - Files created: `components/FeatureDetailPanel.tsx`, `__tests__/feature-detail-panel.test.tsx`
+  - Files modified: `app/page.tsx` (state + imports)
+  - End-to-end flow: worker computes narratives → page captures → component displays
+
 - **Implemented Phase 5: Worker integration + simultaneous parsing** (FEATURE_AXES_PLAN.md):
   - Refactored worker to parse both images simultaneously using `Promise.all()` for better performance
   - Integrated detailed feature axis analysis into worker pipeline

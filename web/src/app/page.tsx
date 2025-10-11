@@ -2,10 +2,11 @@
 import React from "react";
 import UploadPanel from "@/components/UploadPanel";
 import ResultsPanel from "@/components/ResultsPanel";
+import FeatureDetailPanel from "@/components/FeatureDetailPanel";
 import OverlayControls, { BufferSettings } from "@/components/OverlayControls";
 import ImageOverlayPanel from "@/components/ImageOverlayPanel";
 import type { OverlayPoint } from "@/components/CanvasPanel";
-import type { AnalyzeResponse, MaskOverlay } from "@/workers/types";
+import type { AnalyzeResponse, MaskOverlay, FeatureNarrative } from "@/workers/types";
 import AdapterToggle from "@/components/AdapterToggle";
 
 export default function Home() {
@@ -33,6 +34,8 @@ export default function Home() {
   const [maskClass, setMaskClass] = React.useState<number | null>(null);
   const [showSegmentation, setShowSegmentation] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const [featureNarrative, setFeatureNarrative] = React.useState<FeatureNarrative | undefined>(undefined);
+  const [congruenceScore, setCongruenceScore] = React.useState<number | undefined>(undefined);
 
   const workerRef = React.useRef<Worker | null>(null);
   const [progress, setProgress] = React.useState<string>("");
@@ -95,6 +98,8 @@ export default function Home() {
     setOrtB(undefined);
     setMaskA(undefined);
     setMaskB(undefined);
+    setFeatureNarrative(undefined);
+    setCongruenceScore(undefined);
   };
 
   const onFiles = async (fa: File | null, fb: File | null) => {
@@ -133,6 +138,8 @@ export default function Home() {
             setOrtB(msg.ortB);
             setMaskA(msg.maskA);
             setMaskB(msg.maskB);
+            setFeatureNarrative(msg.featureNarrative);
+            setCongruenceScore(msg.congruenceScore);
             w.removeEventListener("message", onMessage as EventListener);
             resolve();
           } else if (msg.type === "ERROR") {
@@ -153,6 +160,8 @@ export default function Home() {
       setTexts(undefined);
       setMaskA(undefined);
       setMaskB(undefined);
+      setFeatureNarrative(undefined);
+      setCongruenceScore(undefined);
     } finally {
       setLoading(false);
       setProgress("");
@@ -167,6 +176,7 @@ export default function Home() {
           {loading ? <p className="text-sm">Analyzing�?� {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <ResultsPanel scores={scores} overall={overall} texts={texts} />
+          <FeatureDetailPanel narrative={featureNarrative} congruenceScore={congruenceScore} />
           <div className="mt-4">
             <OverlayControls value={buffers} onChange={setBuffers} />
           </div>

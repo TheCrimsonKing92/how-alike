@@ -13,7 +13,12 @@ export default function FeatureDetailPanel({
 
   if (!narrative) return null;
 
-  const features = Object.keys(narrative.featureSummaries);
+  // Sort features by congruence score (descending)
+  const features = Object.keys(narrative.featureSummaries).sort((a, b) => {
+    const agreementA = narrative.axisDetails[a]?.agreement ?? 0;
+    const agreementB = narrative.axisDetails[b]?.agreement ?? 0;
+    return agreementB - agreementA; // Descending order
+  });
 
   const toggleFeature = (feature: string) => {
     setExpandedFeatures((prev) => {
@@ -28,26 +33,29 @@ export default function FeatureDetailPanel({
   };
 
   return (
-    <section aria-label="Feature Analysis" className="w-full mt-6">
-      <h3 className="text-lg font-semibold mb-2">Detailed Feature Analysis</h3>
+    <section aria-label="Feature Analysis" className="w-full mt-4">
+      <h3 className="text-base font-semibold mb-2">Detailed Feature Analysis</h3>
 
       {typeof congruenceScore === "number" && (
-        <p className="text-sm mb-3">
-          Morphological congruence: {(congruenceScore * 100).toFixed(1)}%
-        </p>
+        <div className="mb-3 pb-2 border-b">
+          <div className="text-sm opacity-70">Overall Congruence</div>
+          <div className="text-2xl font-bold">
+            {(congruenceScore * 100).toFixed(1)}%
+          </div>
+        </div>
       )}
 
-      <div className="text-sm mb-4 opacity-90">
+      <div className="text-sm mb-2 opacity-90">
         {narrative.overall}
       </div>
 
       {narrative.sharedCharacteristics && (
-        <div className="text-sm mb-4 opacity-80 italic">
+        <div className="text-xs mb-3 opacity-75 italic">
           {narrative.sharedCharacteristics}
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {features.map((feature) => {
           const isExpanded = expandedFeatures.has(feature);
           const summary = narrative.featureSummaries[feature];
@@ -56,18 +64,25 @@ export default function FeatureDetailPanel({
           const hasContent = details && (details.shared.length > 0 || details.imageA.length > 0 || details.imageB.length > 0);
 
           return (
-            <div key={feature} className="border rounded-md overflow-hidden">
+            <div key={feature} className="border rounded overflow-hidden">
               <button
                 type="button"
-                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 transition"
+                className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-gray-50 transition"
                 onClick={() => toggleFeature(feature)}
               >
-                <div className="flex-1">
-                  <div className="font-medium capitalize text-sm">{feature}</div>
-                  <div className="text-xs opacity-75 mt-0.5">{summary}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium capitalize text-xs">{feature}</span>
+                    {typeof details?.agreement === "number" && (
+                      <span className="text-xs font-semibold opacity-60">
+                        {(details.agreement * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs opacity-70 truncate">{summary}</div>
                 </div>
                 <svg
-                  className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                  className={`w-3.5 h-3.5 ml-2 flex-shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -76,34 +91,34 @@ export default function FeatureDetailPanel({
                 </svg>
               </button>
               {isExpanded && hasContent && (
-                <div className="px-3 py-2 bg-gray-50 border-t text-xs">
-                  <div className="flex flex-col md:flex-row md:gap-4 space-y-3 md:space-y-0">
+                <div className="px-2.5 py-2 bg-gray-50 border-t text-xs">
+                  <div className="flex flex-col md:flex-row md:gap-3 space-y-2 md:space-y-0">
                     {details.shared.length > 0 && (
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-700 mb-1">Shared Characteristics</div>
-                        <ul className="list-disc list-inside opacity-80">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-700 text-xs mb-0.5">Shared</div>
+                        <ul className="list-disc list-inside opacity-75 text-xs space-y-0.5">
                           {details.shared.map((item, idx) => (
-                            <li key={idx}>{item}</li>
+                            <li key={idx} className="leading-tight">{item}</li>
                           ))}
                         </ul>
                       </div>
                     )}
                     {details.imageA.length > 0 && (
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-700 mb-1">Image A</div>
-                        <ul className="list-disc list-inside opacity-80">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-700 text-xs mb-0.5">Image A</div>
+                        <ul className="list-disc list-inside opacity-75 text-xs space-y-0.5">
                           {details.imageA.map((item, idx) => (
-                            <li key={idx}>{item}</li>
+                            <li key={idx} className="leading-tight">{item}</li>
                           ))}
                         </ul>
                       </div>
                     )}
                     {details.imageB.length > 0 && (
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-700 mb-1">Image B</div>
-                        <ul className="list-disc list-inside opacity-80">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-700 text-xs mb-0.5">Image B</div>
+                        <ul className="list-disc list-inside opacity-75 text-xs space-y-0.5">
                           {details.imageB.map((item, idx) => (
-                            <li key={idx}>{item}</li>
+                            <li key={idx} className="leading-tight">{item}</li>
                           ))}
                         </ul>
                       </div>

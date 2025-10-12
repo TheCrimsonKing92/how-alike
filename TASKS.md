@@ -4,6 +4,15 @@
 - Visual QA: test segmentation-based scoring and detailed feature narratives on diverse images to validate that scores and descriptions accurately reflect morphological similarity
 
 ## Done (recent)
+- **UI optimization: full-width feature analysis with prominent congruence display**:
+  - Moved `FeatureDetailPanel` outside two-column grid to span full page width (constrained only by page max-w-6xl)
+  - Repositioned overall congruence score as dedicated section at top of panel (large 2xl font, border separator)
+  - Added per-feature congruence percentages next to each feature name
+  - Implemented descending sort by congruence score (most similar features appear first)
+  - Simplified label from "Overall Morphological Congruence" to "Overall Congruence"
+  - Updated tests to match new UI structure
+  - Files modified: `app/page.tsx` (panel positioning), `FeatureDetailPanel.tsx` (layout, sorting, scoring display), `feature-detail-panel.test.tsx` (test assertions)
+  - Eliminates vertical space waste by using full screen width for detailed analysis
 - **Expanded morphological features from 4 to 8 categories with horizontal layout**:
   - Added 4 new feature categories: brows (shape, position, length), cheeks (prominence, nasolabial depth, height), forehead (height, contour), face shape (length-width ratio, facial thirds)
   - Implemented 12 new classification functions in `axis-classifiers.ts` for new measurement axes

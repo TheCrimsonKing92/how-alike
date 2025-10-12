@@ -176,7 +176,6 @@ export default function Home() {
           {loading ? <p className="text-sm">Analyzing�?� {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <ResultsPanel scores={scores} overall={overall} texts={texts} hasDetailedAnalysis={!!featureNarrative} />
-          <FeatureDetailPanel narrative={featureNarrative} congruenceScore={congruenceScore} />
           <div className="mt-4">
             <OverlayControls value={buffers} onChange={setBuffers} />
           </div>
@@ -281,6 +280,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <FeatureDetailPanel narrative={featureNarrative} congruenceScore={congruenceScore} />
       <section aria-label="Visualization" className="w-full grid gap-6 md:grid-cols-2">
         <ImageOverlayPanel
           title="Image A"

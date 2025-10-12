@@ -72,6 +72,7 @@ export interface DetailedNarrative {
   shared: string[];
   imageA: string[];
   imageB: string[];
+  agreement?: number; // 0-1 score for this feature's overall agreement
 }
 
 /**
@@ -88,7 +89,7 @@ export function detailedNarrativeForFeature(comparison: FeatureComparison): Deta
   const imageA = disagreements.map(axis => `${capitalize(axis.valueA)} ${axis.axis}`);
   const imageB = disagreements.map(axis => `${capitalize(axis.valueB)} ${axis.axis}`);
 
-  return { shared, imageA, imageB };
+  return { shared, imageA, imageB, agreement: comparison.overallAgreement };
 }
 
 /**

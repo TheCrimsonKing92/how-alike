@@ -19,7 +19,7 @@ describe('FeatureDetailPanel', () => {
 
     render(<FeatureDetailPanel narrative={narrative} congruenceScore={0.88} />);
 
-    expect(screen.getByText(/Morphological congruence: 88.0%/i)).toBeInTheDocument();
+    expect(screen.getByText('88.0%')).toBeInTheDocument();
   });
 
   it('displays overall narrative', () => {
@@ -95,7 +95,7 @@ describe('FeatureDetailPanel', () => {
     await user.click(button);
 
     // Details should now be visible with sections
-    expect(screen.getByText('Shared Characteristics')).toBeInTheDocument();
+    expect(screen.getByText('Shared')).toBeInTheDocument();
     expect(screen.getByText('Positive canthal tilt')).toBeInTheDocument();
     expect(screen.getByText('Image A')).toBeInTheDocument();
     expect(screen.getByText('Average eye size')).toBeInTheDocument();

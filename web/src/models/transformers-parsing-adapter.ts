@@ -59,7 +59,7 @@ async function coreDetector() {
     const model = face.SupportedModels.MediaPipeFaceMesh;
     detectorPromise = face.createDetector(model, { runtime: 'tfjs', refineLandmarks: true });
   }
-  return detectorPromise as Awaited<typeof detectorPromise>;
+  return await detectorPromise;
 }
 
 export const transformersParsingAdapter: DetectorAdapter = {
@@ -118,8 +118,20 @@ export const transformersParsingAdapter: DetectorAdapter = {
       const processorKey = '__transformersParsingProcessor__';
       const store = globalThis as Record<string, unknown>;
 
-      type ModelType = { generate?: (inputs: any) => Promise<any>; (inputs: any): Promise<any> };
-      type ProcessorType = (images: any) => Promise<any>;
+      type TensorLike = { dims: number[]; data: Float32Array | Uint8Array };
+      type ModelInputs = { pixel_values: TensorLike };
+      type ModelOutputs = { logits: TensorLike };
+      type ProcessedOutputs = Array<{ segmentation: TensorLike }>;
+      type ModelType = {
+        (inputs: ModelInputs): Promise<ModelOutputs>;
+        generate?: (inputs: ModelInputs) => Promise<ModelOutputs>;
+      };
+      type ProcessorType = {
+        (images: unknown): Promise<ModelInputs>;
+        feature_extractor?: {
+          post_process_semantic_segmentation: (outputs: ModelOutputs, sizes: number[][]) => ProcessedOutputs;
+        };
+      };
 
       let model = store[modelKey] as ModelType | undefined;
       let processor = store[processorKey] as ProcessorType | undefined;
@@ -221,10 +233,14 @@ export const transformersParsingAdapter: DetectorAdapter = {
 
       // Use the documented post-processing method to upsample and apply argmax
       // This handles bilinear interpolation and argmax internally
-      const processed = processor.feature_extractor.post_process_semantic_segmentation(
+      const processed = processor.feature_extractor?.post_process_semantic_segmentation(
         outputs,
         [[ih, iw]] // Array of target sizes (one per batch item) - full image size
       );
+
+      if (!processed) {
+        throw new Error('Processor missing feature_extractor.post_process_semantic_segmentation method');
+      }
 
       // Extract the segmentation tensor (already upsampled and argmax'd)
       const segmentationTensor = processed[0].segmentation;

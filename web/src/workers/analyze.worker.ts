@@ -10,6 +10,8 @@ import { extractFeatureMeasurements } from '@/lib/feature-axes';
 import { classifyFeatures } from '@/lib/axis-classifiers';
 import { performComparison } from '@/lib/feature-comparisons';
 import { generateNarrative } from '@/lib/feature-narratives';
+import { initAgeClassifier, estimateAge, extractFaceCrop, computeAgePenalty } from '@/lib/age-estimation';
+import { estimateFacePose, normalizeLandmarksToFrontal, poseAngularDistance, formatPose } from '@/lib/pose-estimation';
 import type { RegionPoly, MaskOverlay } from './types';
 import type { RegionHintsArray } from '@/models/detector-types';
 import type { AnalyzeMessage, AnalyzeResponse } from './types';
@@ -33,6 +35,29 @@ async function preprocessBitmap(bmp: ImageBitmap, maxDim = 1280) {
 }
 
 type KP = { x: number; y: number; z?: number };
+
+function formatMaturityDebugInfo(congruenceResult: {
+  maturityA?: { score: number; confidence: number };
+  maturityB?: { score: number; confidence: number };
+  agePenalty?: number;
+  ageWarning?: string;
+}) {
+  if (!congruenceResult.maturityA || !congruenceResult.maturityB) return {};
+
+  const maturityGap = Math.abs(
+    congruenceResult.maturityA.score - congruenceResult.maturityB.score
+  );
+
+  return {
+    maturityA: congruenceResult.maturityA.score.toFixed(2),
+    maturityB: congruenceResult.maturityB.score.toFixed(2),
+    maturityGap: maturityGap.toFixed(2),
+    confidenceA: congruenceResult.maturityA.confidence.toFixed(2),
+    confidenceB: congruenceResult.maturityB.confidence.toFixed(2),
+    agePenalty: (congruenceResult.agePenalty ?? 0).toFixed(3),
+    ageWarning: congruenceResult.ageWarning || '(none)',
+  };
+}
 
 async function computeOutlinePolys(
   points: { x: number; y: number }[],
@@ -289,7 +314,10 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         const adapter = data.payload?.adapter;
         if (adapter) setAdapter(adapter);
       } catch {}
-      await getDetector();
+      await Promise.all([
+        getDetector(),
+        initAgeClassifier()
+      ]);
       return;
     }
     if (data.type === 'ANALYZE') {
@@ -322,9 +350,38 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const kpsA: KP[] = fA.keypoints ?? (fA.scaledMesh ?? []).map((p) => ({ x: p[0], y: p[1], z: p[2] }));
       const kpsB: KP[] = fB.keypoints ?? (fB.scaledMesh ?? []).map((p) => ({ x: p[0], y: p[1], z: p[2] }));
 
-      const ptsA = fromKeypoints(kpsA);
-      const ptsB = fromKeypoints(kpsB);
+      // Estimate pose and normalize to frontal view before comparison
+      const poseA = estimateFacePose(kpsA);
+      const poseB = estimateFacePose(kpsB);
 
+      // Apply frontal normalization to reduce pose-related errors in comparison
+      const normalizedKpsA = normalizeLandmarksToFrontal(kpsA, poseA);
+      const normalizedKpsB = normalizeLandmarksToFrontal(kpsB, poseB);
+
+      // Compute pose disparity for warning
+      const poseDisparity = poseAngularDistance(poseA, poseB);
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('[worker] pose estimation:', {
+          faceA: formatPose(poseA),
+          faceB: formatPose(poseB),
+          disparity: poseDisparity.toFixed(1) + '°',
+          confidenceA: poseA.confidence.toFixed(2),
+          confidenceB: poseB.confidence.toFixed(2),
+        });
+      }
+
+      // Use ORIGINAL keypoints for visualization (outlines must match un-transformed images)
+      const originalPtsA = fromKeypoints(kpsA);
+      const originalPtsB = fromKeypoints(kpsB);
+      const originalLeftA = eyeCenterFromIndices(originalPtsA, LEFT_EYE_CENTER_INDICES);
+      const originalRightA = eyeCenterFromIndices(originalPtsA, RIGHT_EYE_CENTER_INDICES);
+      const originalLeftB = eyeCenterFromIndices(originalPtsB, LEFT_EYE_CENTER_INDICES);
+      const originalRightB = eyeCenterFromIndices(originalPtsB, RIGHT_EYE_CENTER_INDICES);
+
+      // Use NORMALIZED keypoints for comparison (to reduce pose-related errors)
+      const ptsA = fromKeypoints(normalizedKpsA);
+      const ptsB = fromKeypoints(normalizedKpsB);
       const leftA = eyeCenterFromIndices(ptsA, LEFT_EYE_CENTER_INDICES);
       const rightA = eyeCenterFromIndices(ptsA, RIGHT_EYE_CENTER_INDICES);
       const leftB = eyeCenterFromIndices(ptsB, LEFT_EYE_CENTER_INDICES);
@@ -335,12 +392,10 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
 
       post({ type: 'PROGRESS', jobId, stage: 'score' });
 
-      // Compute outlines BEFORE transferring canvas to ImageBitmap
-      // (transfer detaches the canvas, making it unusable)
-      // Parse both images simultaneously for better performance
+      // Compute outlines from ORIGINAL keypoints (so they align with un-transformed images)
       const [outlineA, outlineB] = await Promise.all([
-        computeOutlinePolys(ptsA, leftA, rightA, kpsA, cnvA),
-        computeOutlinePolys(ptsB, leftB, rightB, kpsB, cnvB),
+        computeOutlinePolys(originalPtsA, originalLeftA, originalRightA, kpsA, cnvA),
+        computeOutlinePolys(originalPtsB, originalLeftB, originalRightB, kpsB, cnvB),
       ]);
 
       // Use segmentation-based scoring if masks are available, otherwise fall back to Procrustes
@@ -415,9 +470,51 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         }
       }
 
+      // Estimate ages using ML classifier (if available)
+      let ageEstimateA, ageEstimateB, ageGap: number | undefined;
+      try {
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[worker] extracting face crops for age estimation');
+        }
+        // Use original landmarks for face crop (must match un-transformed images)
+        const faceCropA = extractFaceCrop(cnvA, originalPtsA);
+        const faceCropB = extractFaceCrop(cnvB, originalPtsB);
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[worker] starting age estimation (face A will be #1, face B will be #2)');
+        }
+        [ageEstimateA, ageEstimateB] = await Promise.all([
+          estimateAge(faceCropA),
+          estimateAge(faceCropB)
+        ]);
+
+        const agePenaltyResult = computeAgePenalty(ageEstimateA, ageEstimateB);
+        ageGap = agePenaltyResult.ageGap;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info('[worker] age estimation:', {
+            ageA: `${ageEstimateA.age.toFixed(1)} years (${ageEstimateA.gender})`,
+            ageB: `${ageEstimateB.age.toFixed(1)} years (${ageEstimateB.gender})`,
+            confidenceA: ageEstimateA.confidence.toFixed(2),
+            confidenceB: ageEstimateB.confidence.toFixed(2),
+            ageGap: ageGap.toFixed(1),
+            penalty: (agePenaltyResult.penalty * 100).toFixed(1) + '%',
+            warning: agePenaltyResult.warning || '(none)'
+          });
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[worker] ML age estimation unavailable or failed, will use landmark-based fallback:', e);
+        }
+        // ageEstimateA and ageEstimateB remain undefined, performComparison will use legacy method
+      }
+
       // Compute detailed feature axis analysis
       let featureNarrative: { overall: string; featureSummaries: Record<string, string>; axisDetails: Record<string, string[]> } | undefined;
       let congruenceScore: number | undefined;
+      let ageWarning: string | undefined;
+      let maturityA, maturityB;
+      let agePenalty: number | undefined;
 
       try {
         // Extract measurements from both faces
@@ -428,19 +525,60 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         const classificationsA = classifyFeatures(measurementsA);
         const classificationsB = classifyFeatures(measurementsB);
 
-        // Perform comparison and generate narratives
-        const comparison = performComparison(measurementsA, measurementsB, classificationsA, classificationsB);
+        // Perform comparison and generate narratives (with ML age-aware scoring if available)
+        const comparison = performComparison(
+          measurementsA,
+          measurementsB,
+          classificationsA,
+          classificationsB,
+          ptsA,
+          ptsB,
+          ageEstimateA && ageEstimateB ? { ageEstimateA, ageEstimateB } : undefined
+        );
         const narrative = generateNarrative(comparison.comparisons, comparison.sharedAxes, comparison.congruenceScore);
 
         featureNarrative = narrative;
         congruenceScore = comparison.congruenceScore;
 
+        // Extract age-aware information
+        if (comparison.congruenceResult) {
+          ageWarning = comparison.congruenceResult.ageWarning;
+          maturityA = comparison.congruenceResult.maturityA;
+          maturityB = comparison.congruenceResult.maturityB;
+          agePenalty = comparison.congruenceResult.agePenalty;
+        }
+
         if (process.env.NODE_ENV !== 'production') {
-          console.info('[worker] detailed feature analysis:', {
+          const debugInfo: {
+            congruence: string;
+            sharedAxes: number;
+            overall: string;
+            ageMethod?: string;
+            maturityA?: string;
+            maturityB?: string;
+            maturityGap?: string;
+            confidenceA?: string;
+            confidenceB?: string;
+            agePenalty?: string;
+            ageWarning?: string;
+          } = {
             congruence: comparison.congruenceScore.toFixed(2),
             sharedAxes: comparison.sharedAxes.length,
             overall: narrative.overall,
-          });
+          };
+
+          // Show which age detection method was used
+          if (ageEstimateA && ageEstimateB) {
+            debugInfo.ageMethod = 'ML (ViT)';
+          } else if (comparison.congruenceResult?.maturityA && comparison.congruenceResult?.maturityB) {
+            debugInfo.ageMethod = 'landmark-based (deprecated)';
+            // Show legacy maturity info if used
+            Object.assign(debugInfo, formatMaturityDebugInfo(comparison.congruenceResult));
+          } else {
+            debugInfo.ageMethod = 'none';
+          }
+
+          console.info('[worker] detailed feature analysis:', debugInfo);
         }
       } catch (e) {
         if (process.env.NODE_ENV !== 'production') {
@@ -458,6 +596,12 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const ipdB = Math.hypot(rightB.x - leftB.x, rightB.y - leftB.y) || 1;
       // For outlines, avoid offsetting which can distort alignment.
       // Keep points as-is and let the overlay do stroke hit-testing.
+
+      // Generate pose warning if disparity is significant
+      let poseWarning: string | undefined;
+      if (poseDisparity > 30) {
+        poseWarning = `Photos taken at significantly different angles (${poseDisparity.toFixed(0)}° difference). Comparison accuracy may be reduced.`;
+      }
 
       post({
         type: 'RESULT',
@@ -482,6 +626,17 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         maskB: outlineB.mask,
         featureNarrative,
         congruenceScore,
+        ageWarning,
+        maturityA,
+        maturityB,
+        agePenalty,
+        ageEstimateA,
+        ageEstimateB,
+        ageGap,
+        poseA,
+        poseB,
+        poseDisparity,
+        poseWarning,
       });
       return;
     }

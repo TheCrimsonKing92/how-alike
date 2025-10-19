@@ -60,6 +60,22 @@ function compareAxis(
 }
 
 /**
+ * Compute hybrid score for an axis: blend categorical agreement with continuous similarity
+ *
+ * This prevents false 100% scores when two measurements fall in the same category
+ * but have significantly different raw values (e.g., both "average" but 0.38 vs 0.45).
+ *
+ * Formula: 40% categorical (same/different bin) + 60% continuous (actual measurement distance)
+ */
+function computeHybridAxisScore(axis: AxisComparison): number {
+  const categoricalScore = axis.agreement ? 1.0 : 0.0;
+  const continuousScore = axis.similarity; // Already computed from raw measurements
+
+  // Weighted blend: categorical provides base similarity, continuous adds precision
+  return categoricalScore * 0.4 + continuousScore * 0.6;
+}
+
+/**
  * Compare a feature category (e.g., all eye axes)
  */
 function compareFeature(
@@ -77,9 +93,13 @@ function compareFeature(
     }
   }
 
-  // Compute overall agreement
-  const matchingAxes = axes.filter(a => a.agreement).length;
-  const overallAgreement = axes.length > 0 ? matchingAxes / axes.length : 0;
+  // Compute overall agreement using hybrid scoring
+  // This combines categorical agreement (same bin) with continuous similarity (actual distance)
+  let totalScore = 0;
+  for (const axis of axes) {
+    totalScore += computeHybridAxisScore(axis);
+  }
+  const overallAgreement = axes.length > 0 ? totalScore / axes.length : 0;
 
   return {
     feature: featureName,

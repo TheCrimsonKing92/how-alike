@@ -48,7 +48,10 @@ describe('compareFeatures', () => {
     expect(result[0].feature).toBe('eyes');
     expect(result[0].axes.length).toBe(3);
     expect(result[0].axes.every(a => a.agreement)).toBe(true);
-    expect(result[0].overallAgreement).toBe(1.0);
+    // Hybrid scoring: even with categorical agreement, slight measurement differences
+    // reduce score from 1.0 to ~0.96 (40% categorical + 60% continuous)
+    expect(result[0].overallAgreement).toBeGreaterThan(0.95);
+    expect(result[0].overallAgreement).toBeLessThan(1.0);
   });
 
   it('should detect axis disagreement when categories differ', () => {
@@ -217,8 +220,10 @@ describe('compareFeatures', () => {
 
     const result = compareFeatures(classificationsA, classificationsB);
 
-    // 1 out of 3 axes agree
-    expect(result[0].overallAgreement).toBeCloseTo(1 / 3, 2);
+    // With hybrid scoring: 1 axis agrees (gets hybrid score ~0.95), 2 disagree (get continuous scores ~0.7-0.8)
+    // Total: roughly (0.95 + 0.75 + 0.75) / 3 ≈ 0.65 instead of pure categorical 1/3 = 0.33
+    expect(result[0].overallAgreement).toBeGreaterThan(0.5);
+    expect(result[0].overallAgreement).toBeLessThan(0.75);
   });
 });
 

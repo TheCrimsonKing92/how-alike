@@ -36,6 +36,9 @@ export default function Home() {
   const [mounted, setMounted] = React.useState(false);
   const [featureNarrative, setFeatureNarrative] = React.useState<FeatureNarrative | undefined>(undefined);
   const [congruenceScore, setCongruenceScore] = React.useState<number | undefined>(undefined);
+  const [ageWarning, setAgeWarning] = React.useState<string | undefined>(undefined);
+  const [agePenalty, setAgePenalty] = React.useState<number | undefined>(undefined);
+  const [poseWarning, setPoseWarning] = React.useState<string | undefined>(undefined);
 
   const workerRef = React.useRef<Worker | null>(null);
   const [progress, setProgress] = React.useState<string>("");
@@ -100,6 +103,9 @@ export default function Home() {
     setMaskB(undefined);
     setFeatureNarrative(undefined);
     setCongruenceScore(undefined);
+    setAgeWarning(undefined);
+    setAgePenalty(undefined);
+    setPoseWarning(undefined);
   };
 
   const onFiles = async (fa: File | null, fb: File | null) => {
@@ -140,6 +146,9 @@ export default function Home() {
             setMaskB(msg.maskB);
             setFeatureNarrative(msg.featureNarrative);
             setCongruenceScore(msg.congruenceScore);
+            setAgeWarning(msg.ageWarning);
+            setAgePenalty(msg.agePenalty);
+            setPoseWarning(msg.poseWarning);
             w.removeEventListener("message", onMessage as EventListener);
             resolve();
           } else if (msg.type === "ERROR") {
@@ -162,6 +171,9 @@ export default function Home() {
       setMaskB(undefined);
       setFeatureNarrative(undefined);
       setCongruenceScore(undefined);
+      setAgeWarning(undefined);
+      setAgePenalty(undefined);
+      setPoseWarning(undefined);
     } finally {
       setLoading(false);
       setProgress("");
@@ -173,8 +185,38 @@ export default function Home() {
       <div className="grid gap-8 md:grid-cols-2">
         <UploadPanel onFiles={onFiles} />
         <div>
-          {loading ? <p className="text-sm">Analyzing�?� {progress}</p> : null}
+          {loading ? <p className="text-sm">Analyzing... {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {ageWarning ? (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-1">Age Difference Detected</h3>
+                  <p className="text-sm text-amber-700">{ageWarning}</p>
+                  {typeof agePenalty === 'number' && agePenalty > 0 ? (
+                    <p className="text-xs text-amber-600 mt-1">Similarity score adjusted by {(agePenalty * 100).toFixed(0)}% to account for age difference.</p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {poseWarning ? (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-blue-800 mb-1">Pose Variation Detected</h3>
+                  <p className="text-sm text-blue-700">{poseWarning}</p>
+                  <p className="text-xs text-blue-600 mt-1">Landmarks have been normalized to frontal view for comparison.</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
           <ResultsPanel scores={scores} overall={overall} texts={texts} hasDetailedAnalysis={!!featureNarrative} />
           <div className="mt-4">
             <OverlayControls value={buffers} onChange={setBuffers} />

@@ -46,6 +46,7 @@ export default function ImageOverlayPanel({
   mask,
   maskClass,
   showFullSegmentation,
+  showOutlines = true,
 }: {
   title: string;
   bitmap?: ImageBitmap;
@@ -54,6 +55,7 @@ export default function ImageOverlayPanel({
   mask?: MaskOverlay;
   maskClass?: number | null;
   showFullSegmentation?: boolean;
+  showOutlines?: boolean;
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [hover, setHover] = React.useState<{ region: string; x: number; y: number } | null>(null);
@@ -191,8 +193,8 @@ export default function ImageOverlayPanel({
         );
         ctx.restore();
       }
-      // Skip region outlines when showing full segmentation
-      if (regions && !showFullSegmentation) {
+      // Skip region outlines when showing full segmentation or when outlines are disabled
+      if (regions && showOutlines && !showFullSegmentation) {
         // Draw order: eyes, nose, mouth, jaw, brows (brows on top for visibility/hover)
         const order = ['eyes','nose','mouth','jaw','brows'];
         const sorted = [...regions].sort((a,b)=> order.indexOf(a.region)-order.indexOf(b.region));
@@ -238,7 +240,7 @@ export default function ImageOverlayPanel({
         }
       }
     },
-    [bitmap, regions, mask, maskCanvas, fullSegCanvas, scoreMap, showFullSegmentation]
+    [bitmap, regions, mask, maskCanvas, fullSegCanvas, scoreMap, showFullSegmentation, showOutlines]
   );
 
   React.useEffect(() => {
@@ -247,7 +249,7 @@ export default function ImageOverlayPanel({
 
   const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas || !regions) return;
+    if (!canvas || !regions || !showOutlines) return;
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
     const y = ((e.clientY - rect.top) * canvas.height) / rect.height;

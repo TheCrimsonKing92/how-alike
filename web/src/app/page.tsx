@@ -33,12 +33,20 @@ export default function Home() {
   const [maskB, setMaskB] = React.useState<MaskOverlay | undefined>(undefined);
   const [maskClass, setMaskClass] = React.useState<number | null>(null);
   const [showSegmentation, setShowSegmentation] = React.useState(false);
+  const [showOutlines, setShowOutlines] = React.useState(true);
   const [mounted, setMounted] = React.useState(false);
   const [featureNarrative, setFeatureNarrative] = React.useState<FeatureNarrative | undefined>(undefined);
   const [congruenceScore, setCongruenceScore] = React.useState<number | undefined>(undefined);
   const [ageWarning, setAgeWarning] = React.useState<string | undefined>(undefined);
   const [agePenalty, setAgePenalty] = React.useState<number | undefined>(undefined);
   const [poseWarning, setPoseWarning] = React.useState<string | undefined>(undefined);
+
+  // Derived state for UI controls
+  const hasResults = !!imageA && !!imageB;
+  const outlinesEnabled = showOutlines && !showSegmentation && hasResults;
+  const segmentationEnabled = showSegmentation && hasResults;
+  const outlinesDisabled = showSegmentation || !hasResults;
+  const segmentationDisabled = !hasResults;
 
   const workerRef = React.useRef<Worker | null>(null);
   const [progress, setProgress] = React.useState<string>("");
@@ -259,17 +267,48 @@ export default function Home() {
               </p>
             ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                className={`rounded border px-3 py-1.5 text-sm font-medium transition ${
-                  showSegmentation
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-                onClick={() => setShowSegmentation(!showSegmentation)}
-              >
-                {showSegmentation ? "Hide" : "Show"} Face Parsing
-              </button>
+              <div className="relative group inline-block">
+                <button
+                  type="button"
+                  className={`rounded border px-3 py-1.5 text-sm font-medium transition ${
+                    outlinesEnabled
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  } ${outlinesDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={() => setShowOutlines(!showOutlines)}
+                  disabled={outlinesDisabled}
+                >
+                  {outlinesEnabled ? "Hide" : "Show"} Feature Outlines
+                </button>
+                {outlinesDisabled && (
+                  <span className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded whitespace-nowrap pointer-events-none">
+                    {!hasResults
+                      ? "Upload and analyze two images first"
+                      : "Cannot show outlines when face parsing is enabled"}
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></span>
+                  </span>
+                )}
+              </div>
+              <div className="relative group inline-block">
+                <button
+                  type="button"
+                  className={`rounded border px-3 py-1.5 text-sm font-medium transition ${
+                    segmentationEnabled
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  } ${segmentationDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={() => setShowSegmentation(!showSegmentation)}
+                  disabled={segmentationDisabled}
+                >
+                  {segmentationEnabled ? "Hide" : "Show"} Face Parsing
+                </button>
+                {segmentationDisabled && (
+                  <span className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs text-white bg-gray-900 rounded whitespace-nowrap pointer-events-none">
+                    Upload and analyze two images first
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></span>
+                  </span>
+                )}
+              </div>
             </div>
             {process.env.NODE_ENV !== "production" ? (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -332,6 +371,7 @@ export default function Home() {
           mask={maskA}
           maskClass={typeof maskClass === "number" ? maskClass : undefined}
           showFullSegmentation={showSegmentation}
+          showOutlines={showOutlines}
         />
         <ImageOverlayPanel
           title="Image B"
@@ -341,6 +381,7 @@ export default function Home() {
           mask={maskB}
           maskClass={typeof maskClass === "number" ? maskClass : undefined}
           showFullSegmentation={showSegmentation}
+          showOutlines={showOutlines}
         />
       </section>
     </div>

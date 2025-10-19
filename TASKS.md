@@ -1,10 +1,46 @@
 ﻿# Tasks & Work Log
 
 ## Now
-- Visual QA: test segmentation-based scoring and detailed feature narratives on diverse images to validate that scores and descriptions accurately reflect morphological similarity
+- See **NEXT_IMPROVEMENTS.md** for comprehensive roadmap of planned enhancements (pose robustness, age model upgrade, deep feature embeddings, occlusion handling)
 
 ## Done (recent)
-- **UI optimization: full-width feature analysis with prominent congruence display**:
+- **Implemented gender-specific age calibration (9.9% improvement)**:
+  - Created `web/scripts/fit-gender-calibration.mjs` to fit separate male/female calibration curves
+  - Split 144 UTKFace samples by gender (67 male, 76 female) and fitted independent 3-segment piecewise regressions
+  - Male calibration: MAE 11.66 years (thresholds: 29.7, 44.3)
+  - Female calibration: MAE 14.09 years (thresholds: 49.7, 54.8)
+  - Combined MAE: 13.15 years vs 14.59 years unified (1.44 year improvement, 9.9% reduction)
+  - Updated `web/src/lib/age-estimation.ts` with dual constants (AGE_CALIBRATION_MALE, AGE_CALIBRATION_FEMALE)
+  - Modified `calibratePredictedAge()` to accept gender parameter and select appropriate curve
+  - Updated `estimateAge()` to pass predicted gender to calibration function
+  - Updated all unit tests in `age-estimation.test.ts` to test both gender curves independently
+  - All 236 tests passing (19 age estimation tests, including gender-specific calibration tests)
+  - Gender-specific calibration reduces systematic bias in age estimation across demographics
+  - Next step: Age model upgrade for further improvement (current 13.15y MAE → target <5y MAE for adults)
+- **Completed 3-segment piecewise age calibration**:
+  - Collected 143 UTKFace samples through browser pipeline (face detection + IPD crop)
+  - Fitted 3-segment piecewise linear regression for better age range coverage
+  - Final MAE: 14.6 years overall (Children 14.6y, Teens 6.3y, Young Adults 8.7y, Middle Age 19.2y, Seniors 33.8y)
+  - Thresholds: 30.6 (low→mid) and 49.7 (mid→high)
+  - Updated constants in `web/src/lib/age-estimation.ts`
+  - Created comprehensive calibration tooling:
+    - `web/src/app/calibrate/page.tsx` - Manual calibration UI
+    - `web/scripts/batch-calibrate.mjs` - Playwright automation for batch data collection
+    - `web/scripts/fit-calibration.mjs` - Multi-model regression fitting (linear, polynomial, 2-segment, 3-segment)
+    - `scripts/select-from-extracted.mjs` - Image selection for diverse age coverage
+    - `scripts/select-children.mjs` - Child-specific image selection
+  - Analyzed raw prediction variance to identify model limitations vs calibration issues
+  - Documented findings: Very young children (0-2) have high model variance (CV 34-40%) indicating model limitation
+  - Files: `calibration-data-all.csv` (143 samples), `calibration-results.json`, `AGE_CALIBRATION_PLAN.md`
+  - Identified next steps: gender-specific calibration and/or age model replacement for further improvements
+
+## Done (recent)
+- **Age calibration fixtures:** Added UTKFace-stratified sample set (ages 1-116 with 0-9 coverage), copied 55 images into `web/src/__tests__/fixtures/age-calibration/`, and generated `metadata.json` entries via `scripts/ingest-utkface.mjs` with added 3-9 year samples for decade balance.
+- Age evaluation harness: produces MAE/RMSE plus linear, quadratic, segmented calibrations; segmented fit currently best (MAE 24.7) and applied to runtime age estimator.
+- Added `scripts/estimate-age-pair.mjs` CLI to run age estimation on two arbitrary images (raw + calibrated ages, gender predictions, gap).
+- Baseline age estimation evaluation harness (`scripts/evaluate-age-estimator.mjs`) with MAE/RMSE per-decade report and JSON results.
+
+-- **UI optimization: full-width feature analysis with prominent congruence display**:
   - Moved `FeatureDetailPanel` outside two-column grid to span full page width (constrained only by page max-w-6xl)
   - Repositioned overall congruence score as dedicated section at top of panel (large 2xl font, border separator)
   - Added per-feature congruence percentages next to each feature name

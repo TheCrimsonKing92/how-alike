@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - heading "How Alike" [level=1] [ref=e4]
+      - navigation [ref=e5]: Privacy-first, on-device analysis
+  - main [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - region "Upload" [ref=e9]:
+          - heading "Upload or Capture" [level=2] [ref=e10]
+          - paragraph [ref=e11]: Choose two front-facing, well-lit photos.
+          - generic [ref=e12]:
+            - button "Select first photo" [ref=e13]
+            - button "Select second photo" [ref=e14]
+            - generic [ref=e15]:
+              - button "Analyze" [disabled]
+              - button "Use Camera (soon)" [disabled]
+        - generic [ref=e16]:
+          - region "Results" [ref=e17]:
+            - heading "Segmentation-Based Similarity" [level=2] [ref=e18]
+            - paragraph [ref=e19]: Run an analysis to see results.
+            - list
+          - button "Show overlay tuning" [ref=e22]
+          - generic [ref=e23]:
+            - generic "Detector Adapter" [ref=e24]:
+              - generic [ref=e25]: Adapter
+              - combobox "Adapter" [ref=e26]:
+                - option "Transformers.js (SegFormer)" [selected]
+                - option "ONNX Runtime (ResNet34)"
+                - option "Landmarks only (MediaPipe)"
+            - button "Show Face Parsing" [ref=e28]
+            - generic [ref=e29]:
+              - generic [ref=e30]: Debug mask overlay
+              - combobox "Debug mask overlay" [ref=e31]:
+                - option "Off" [selected]
+                - option "Class 10 (nose)"
+                - option "Class 6 (glasses)"
+              - spinbutton [ref=e32]
+              - button "Clear" [ref=e33]
+      - region "Visualization" [ref=e34]:
+        - region "Image A" [ref=e35]:
+          - heading "Image A" [level=3] [ref=e36]
+        - region "Image B" [ref=e39]:
+          - heading "Image B" [level=3] [ref=e40]
+  - contentinfo [ref=e43]:
+    - generic [ref=e44]: © 2025 How Alike
+```

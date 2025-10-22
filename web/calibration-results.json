@@ -1,0 +1,41 @@
+{
+  "dataPoints": 21,
+  "models": [
+    {
+      "name": "Piecewise",
+      "mae": 11.734888173402087,
+      "rmse": 16.543090779110948,
+      "params": {
+        "threshold": 27.8,
+        "lowSlope": 9.082896351667705,
+        "lowIntercept": -186.41191565323444,
+        "highSlope": 1.5322669107974183,
+        "highIntercept": -36.25943759201264
+      }
+    },
+    {
+      "name": "Polynomial",
+      "mae": 16.538612354875916,
+      "rmse": 20.486012564297795,
+      "params": {
+        "a": 81.76441181085166,
+        "b": -3.0625413355960935,
+        "c": 0.04246421997963886
+      }
+    },
+    {
+      "name": "Linear",
+      "mae": 18.587111581109152,
+      "rmse": 22.355824869326945,
+      "params": {
+        "slope": 0.9227056421359724,
+        "intercept": -2.0614589886078236
+      }
+    }
+  ],
+  "recommendation": {
+    "model": "Piecewise",
+    "mae": 11.734888173402087,
+    "code": "\nconst AGE_CALIBRATION = {\n  threshold: 27.8,\n  lowSlope: 9.0829,\n  lowIntercept: -186.41,\n  highSlope: 1.5323,\n  highIntercept: -36.26,\n  minAge: 0,\n  maxAge: 120,\n};\n\nexport function calibratePredictedAge(rawAge: number): number {\n  const { threshold, lowSlope, lowIntercept, highSlope, highIntercept, minAge, maxAge } = AGE_CALIBRATION;\n  const calibrated =\n    rawAge <= threshold\n      ? lowSlope * rawAge + lowIntercept\n      : highSlope * rawAge + highIntercept;\n  return clamp(calibrated, minAge, maxAge);\n}"
+  }
+}

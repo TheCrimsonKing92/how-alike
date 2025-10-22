@@ -16,6 +16,13 @@ The app emphasizes explainable similarity (not biometric identity) through regio
 - When finished, provide a brief summary of what was accomplished
 - Save detailed explanations for when the user explicitly requests them
 
+## Problem-Solving Standards
+
+- **Never suggest settling for inferior solutions** - Do not recommend reverting to a lower-quality approach or settling for "good enough" without explicit user direction
+- You may ask if the user wants to consider alternatives, but be prepared to continue pursuing the optimal solution
+- Exhaust all reasonable options before suggesting compromise
+- When blocked, propose next debugging steps rather than abandoning the goal
+
 ## Development Commands
 
 All commands run from the `web/` directory:
@@ -150,6 +157,42 @@ Run `npm test` locally during development. After moving files or changing import
 - Prefer explicit type imports: `import type { Foo } from './types'`
 - Use branded types for domain concepts (e.g., `RegionHintsArray` extends `Array<RegionPoly>` with metadata fields)
 
+### Code Style Preferences
+
+**JavaScript/TypeScript**:
+- **Prefer functional array methods** (`filter`, `map`, `reduce`) over imperative loops (`forEach` + `push`)
+- While imperative operations aren't prohibited, functional style should be prioritized for clarity and immutability
+
+Example:
+```typescript
+// Preferred
+const agreements = axes.filter(axis => axis.agreement);
+const shared = agreements.map(axis => `Both have ${axis.valueA}`);
+
+// Avoid (unless necessary)
+const shared = [];
+for (const axis of axes) {
+  if (axis.agreement) {
+    shared.push(`Both have ${axis.valueA}`);
+  }
+}
+```
+
+**HTML/JSX**:
+- **Use semantic HTML for visual elements** - never embed Unicode characters for visual formatting
+- Lists must use `<ul>` and `<li>` tags, not text prefixes like "• "
+
+Example:
+```tsx
+// Preferred
+<ul className="list-disc list-inside">
+  {items.map(item => <li key={item.id}>{item.text}</li>)}
+</ul>
+
+// Avoid
+{items.map(item => <div key={item.id}>• {item.text}</div>)}
+```
+
 ### Performance Targets
 
 - Model load: <2s on mid-range phones
@@ -195,9 +238,11 @@ Read these before making architectural changes:
 
 - `PROJECT.md` — Project vision and use cases
 - `ARCHITECTURE.md` — High-level system design
-- `IMPLEMENTATION.md` — Stage-by-stage development plan
-- `FEATURE_AXES_PLAN.md` — Detailed feature axis analysis implementation plan
 - `AGENTS.md` — Agent-specific rules and workflow guidance
+- `TASKS.md` — Work log and current tasks
+- `CALIBRATION_STATUS.md` — Age calibration status
+- `NEXT_IMPROVEMENTS.md` — Future enhancement roadmap
+- `docs/archive/` — Historical planning documents (feature axes, age calibration, implementation stages)
 
 **IMPORTANT**: Keep `CLAUDE.md` and `AGENTS.md` synchronized. When updating workflow guidance, testing requirements, or development practices, apply changes to both files to maintain consistency. CLAUDE.md provides high-level guidance for new Claude Code instances, while AGENTS.md contains detailed rules for ongoing work.
 

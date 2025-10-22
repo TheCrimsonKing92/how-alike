@@ -6,6 +6,7 @@ describe('parsing-adapter ORT integration (mocked)', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
     // Clear cached ORT session stored by parsing-adapter between runs
     delete (globalThis as any)['__parsingSession__'];
   });
@@ -26,6 +27,13 @@ describe('parsing-adapter ORT integration (mocked)', () => {
     }));
     // Ensure adapter uses the test size so output dims match S
     process.env.NEXT_PUBLIC_PARSING_INPUT = String(S);
+    const buffer = new ArrayBuffer(16);
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => buffer,
+    } as unknown as Response)));
+
     vi.doMock('onnxruntime-web', () => {
       class Tensor { constructor(public type: string, public data: Float32Array, public dims: number[]) {} }
       class Session {

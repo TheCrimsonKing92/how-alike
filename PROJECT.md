@@ -20,6 +20,7 @@ The app is responsive but not mobile-first -- it provides an identical experienc
 ## Guiding Principles
 - **Privacy-first:** No images or data leave the user's device.
 - **Explainable:** Users can see *why* two faces are deemed similar.
+- **Accessible terminology:** Hover/tap glossary popovers define anatomy terms (zygomatic, philtrum, nasolabial, etc.) in ≤30 words; diagram overlays follow once assets exist.
 - **Portable:** Runs in any modern browser; installable as a PWA.
 - **Evolvable:** Architecture supports stepwise enhancement--geometry only -> embeddings -> parsing--without breaking earlier layers.
 - **Inclusive:** Works with diverse faces, lighting, and devices through adaptive modes.

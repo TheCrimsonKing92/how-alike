@@ -14,6 +14,12 @@
 - When finished, provide a brief summary of what was accomplished
 - Save detailed explanations for when the user explicitly requests them
 
+## Problem-Solving Standards
+- **Never suggest settling for inferior solutions** - Do not recommend reverting to a lower-quality approach or settling for "good enough" without explicit user direction
+- You may ask if the user wants to consider alternatives, but be prepared to continue pursuing the optimal solution
+- Exhaust all reasonable options before suggesting compromise
+- When blocked, propose next debugging steps rather than abandoning the goal
+
 ## Debugging Discipline
 - **Read documentation first** - Before guessing at APIs or implementing workarounds, search for and read official documentation, existing test scripts, or working examples in the codebase
 - **Test before suggesting** - Never propose code changes without first verifying they work via tests, isolated scripts, or inspection of the actual API

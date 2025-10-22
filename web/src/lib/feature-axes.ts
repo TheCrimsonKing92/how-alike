@@ -594,3 +594,125 @@ export function extractFeatureMeasurements(
     faceShape: extractFaceShapeMeasurements(landmarks, leftEye, rightEye),
   };
 }
+
+// ============================================================================
+// Facial Maturity Estimation
+// ============================================================================
+
+export interface FacialMaturityEstimate {
+  score: number;           // 0-1 scale (0=child, 1=adult)
+  confidence: number;      // 0-1 how confident we are
+  indicators: string[];    // Descriptive indicators like "Large forehead (child)"
+}
+
+/**
+ * Estimate facial maturity from measurements
+ *
+ * Uses multiple anatomical indicators to determine developmental stage:
+ * - Children: large forehead, recessed chin, round jaw, flat nose bridge
+ * - Adults: smaller forehead ratio, projected chin/nose, angular jaw
+ *
+ * Returns score 0-1 where 0=child, 0.5=adolescent, 1=adult
+ */
+export function estimateFacialMaturity(
+  measurements: FeatureMeasurements,
+  landmarks: Point[]
+): FacialMaturityEstimate {
+  const indicators: { value: number; weight: number; name: string }[] = [];
+
+  // Get face height for ratios
+  const foreheadTop = landmarks[LANDMARKS.foreheadTop];
+  const chin = landmarks[LANDMARKS.chinCenter];
+  const faceHeight = distance(foreheadTop, chin);
+
+  // 1. Forehead ratio (highly reliable indicator)
+  // Children: 0.45-0.55, Adults: 0.28-0.36
+  // Use continuous scale for better sensitivity
+  const foreheadRatio = measurements.forehead.height / faceHeight;
+  const foreheadScore = Math.max(0, Math.min(1, (0.50 - foreheadRatio) / 0.18)); // linear from 0.50 (child) to 0.32 (adult)
+  const foreheadLabel = foreheadRatio > 0.48 ? "Large forehead (child)" :
+                        foreheadRatio < 0.34 ? "Small forehead (adult)" :
+                        "Medium forehead";
+  indicators.push({ value: foreheadScore, weight: 2.5, name: foreheadLabel });
+
+  // 2. Jaw angularity (reliable indicator)
+  // Children: 135-145° (round), Adults: 115-125° (angular)
+  const jawAngle = measurements.jaw.mandibularAngle;
+  const jawScore = Math.max(0, Math.min(1, (140 - jawAngle) / 25)); // linear from 140° (child) to 115° (adult)
+  const jawLabel = jawAngle > 135 ? "Round jaw (child)" :
+                   jawAngle < 120 ? "Angular jaw (adult)" :
+                   "Moderate jaw angle";
+  indicators.push({ value: jawScore, weight: 1.8, name: jawLabel });
+
+  // 3. Chin projection (very reliable)
+  // Children: -0.05 to 0.05, Adults: 0.10-0.20
+  const chinProj = measurements.jaw.chinProjection;
+  const chinScore = Math.max(0, Math.min(1, (chinProj - 0.00) / 0.15)); // linear from 0.00 (child) to 0.15 (adult)
+  const chinLabel = chinProj < 0.05 ? "Recessed chin (child)" :
+                    chinProj > 0.13 ? "Prominent chin (adult)" :
+                    "Moderate chin";
+  indicators.push({ value: chinScore, weight: 2.0, name: chinLabel });
+
+  // 4. Nose projection (reliable for ages 5-adult)
+  // Children: 0.02-0.08, Adults: 0.12-0.20
+  const noseProj = measurements.nose.tipProjection;
+  const noseScore = Math.max(0, Math.min(1, (noseProj - 0.05) / 0.12)); // linear from 0.05 (child) to 0.17 (adult)
+  const noseLabel = noseProj < 0.09 ? "Flat nose (child)" :
+                    noseProj > 0.14 ? "Prominent nose (adult)" :
+                    "Moderate nose";
+  indicators.push({ value: noseScore, weight: 1.5, name: noseLabel });
+
+  // 5. Facial thirds balance (children are top-heavy)
+  // Extract upper/middle/lower face proportions
+  const leftBrowMid = landmarks[LANDMARKS.leftBrowMid];
+  const rightBrowMid = landmarks[LANDMARKS.rightBrowMid];
+  const noseBridge = landmarks[LANDMARKS.noseBridgeLower];
+
+  const browY = (leftBrowMid.y + rightBrowMid.y) / 2;
+  const noseBaseY = noseBridge.y;
+  const chinY = chin.y;
+  const foreheadTopY = foreheadTop.y;
+
+  const upperThird = Math.abs(browY - foreheadTopY);
+  const midThird = Math.abs(noseBaseY - browY);
+
+  const upperDominance = upperThird / (midThird || 1);
+  // Children: 1.2-1.5 (top-heavy), Adults: 0.9-1.05 (balanced)
+  const thirdsScore = Math.max(0, Math.min(1, (1.35 - upperDominance) / 0.45)); // linear from 1.35 (child) to 0.90 (adult)
+  const thirdsLabel = upperDominance > 1.20 ? "Top-heavy proportions (child)" :
+                      upperDominance < 1.00 ? "Balanced thirds (adult)" :
+                      "Moderate proportions";
+  indicators.push({ value: thirdsScore, weight: 1.3, name: thirdsLabel });
+
+  // 6. Eye size (highly reliable - children have proportionally larger eyes)
+  // Children: 0.20-0.28 (large relative to face), Adults: 0.12-0.18 (smaller)
+  const eyeSize = measurements.eyes.eyeSize;
+  const eyeScore = Math.max(0, Math.min(1, (0.24 - eyeSize) / 0.12)); // linear from 0.24 (child) to 0.12 (adult)
+  const eyeLabel = eyeSize > 0.22 ? "Large eyes (child)" :
+                   eyeSize < 0.15 ? "Small eyes (adult)" :
+                   "Medium eyes";
+  indicators.push({ value: eyeScore, weight: 2.2, name: eyeLabel });
+
+  // Compute weighted average
+  if (indicators.length === 0) {
+    // No indicators available (shouldn't happen, but handle gracefully)
+    return {
+      score: 0.5,
+      confidence: 0.1,
+      indicators: ["Insufficient data for maturity estimation"]
+    };
+  }
+
+  const totalWeight = indicators.reduce((sum, ind) => sum + ind.weight, 0);
+  const weightedSum = indicators.reduce((sum, ind) => sum + ind.value * ind.weight, 0);
+  const score = weightedSum / totalWeight;
+
+  // Confidence based on number of indicators (more = higher confidence)
+  const confidence = Math.min(indicators.length / 5, 1.0);
+
+  return {
+    score,
+    confidence,
+    indicators: indicators.map(ind => ind.name)
+  };
+}

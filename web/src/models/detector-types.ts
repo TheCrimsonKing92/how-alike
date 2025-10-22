@@ -15,8 +15,9 @@ export type RegionMaskDebug = {
 };
 
 export type RegionHintsArray = RegionHint[] & {
-  __source?: 'onnx' | 'heuristic';
+  __source?: 'onnx' | 'heuristic' | 'landmarks' | 'transformers';
   __ort?: 'ok' | 'missing' | 'error';
+  __transformers?: 'ok' | 'missing' | 'error' | 'no-hints';
   __mask?: RegionMaskDebug;
 };
 

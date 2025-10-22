@@ -6,7 +6,9 @@
  */
 
 import type { FeatureClassifications, AxisClassification } from './axis-classifiers';
-import type { FeatureMeasurements } from './feature-axes';
+import type { FeatureMeasurements, FacialMaturityEstimate, Point } from './feature-axes';
+import type { AgeEstimate } from '@/workers/types';
+import { estimateFacialMaturity } from './feature-axes';
 
 export interface AxisComparison {
   axis: string;
@@ -219,6 +221,17 @@ export function featureAgreementSummary(
 }
 
 /**
+ * Congruence result with age/maturity information
+ */
+export interface CongruenceResult {
+  score: number;
+  maturityA?: FacialMaturityEstimate;
+  maturityB?: FacialMaturityEstimate;
+  ageWarning?: string;
+  agePenalty?: number;
+}
+
+/**
  * Complete comparison result with all metrics
  */
 export interface ComparisonResult {
@@ -226,26 +239,177 @@ export interface ComparisonResult {
   sharedAxes: string[];
   congruenceScore: number;
   agreementSummary: string;
+  congruenceResult?: CongruenceResult;
+}
+
+/**
+ * Compute age-aware congruence using ML-based age estimates (ViT classifier)
+ *
+ * Uses actual age predictions instead of unreliable landmark-based maturity heuristics.
+ * Applies penalty for cross-age comparisons to prevent false positives when comparing
+ * faces at different developmental stages.
+ */
+export function computeMLAgeAwareCongruence(
+  comparisons: FeatureComparison[],
+  ageEstimateA: AgeEstimate,
+  ageEstimateB: AgeEstimate
+): CongruenceResult {
+  // Base score from hybrid feature comparisons
+  const baseScore = morphologicalCongruence(comparisons);
+
+  const ageGap = Math.abs(ageEstimateA.age - ageEstimateB.age);
+  const minConfidence = Math.min(ageEstimateA.confidence, ageEstimateB.confidence);
+
+  // Apply penalty for cross-age comparison
+  let agePenalty = 0;
+  let ageWarning: string | undefined;
+
+  // Only apply penalty if we're confident in both predictions
+  if (ageGap >= 5 && minConfidence >= 0.4) {
+    // Scale penalty: 5-10 years = 5%, 10-20 = 10-20%, 20-30 = 20-30%, 30+ = 30%
+    if (ageGap < 10) {
+      agePenalty = 0.05;
+    } else if (ageGap < 20) {
+      agePenalty = 0.10 + (ageGap - 10) * 0.01; // 10-20%
+    } else if (ageGap < 30) {
+      agePenalty = 0.20 + (ageGap - 20) * 0.01; // 20-30%
+    } else {
+      agePenalty = 0.30; // Max 30%
+    }
+
+    // Generate warning message
+    const stageA = getAgeStageFromAge(ageEstimateA.age);
+    const stageB = getAgeStageFromAge(ageEstimateB.age);
+    ageWarning = `Cross-age comparison: ${stageA} (~${Math.round(ageEstimateA.age)}) vs ${stageB} (~${Math.round(ageEstimateB.age)}). Similarity may be less meaningful.`;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[feature-comparisons] ML age penalty applied:', {
+        baseScore: baseScore.toFixed(3),
+        ageGap: ageGap.toFixed(1),
+        minConfidence: minConfidence.toFixed(2),
+        penalty: (agePenalty * 100).toFixed(1) + '%',
+        adjustedScore: (baseScore * (1 - agePenalty)).toFixed(3)
+      });
+    }
+  }
+
+  const adjustedScore = baseScore * (1 - agePenalty);
+
+  return {
+    score: adjustedScore,
+    ageWarning,
+    agePenalty
+  };
+}
+
+/**
+ * Get descriptive age stage from estimated age
+ */
+function getAgeStageFromAge(age: number): string {
+  if (age < 3) return 'Infant';
+  if (age < 10) return 'Child';
+  if (age < 20) return 'Adolescent';
+  if (age < 30) return 'Young Adult';
+  if (age < 50) return 'Adult';
+  if (age < 70) return 'Middle-Aged Adult';
+  return 'Senior';
+}
+
+/**
+ * Compute age-aware congruence score with maturity estimation (LEGACY - uses landmark heuristics)
+ *
+ * Applies penalty for cross-age comparisons to prevent false positives
+ * when comparing faces at different developmental stages.
+ *
+ * @deprecated Use computeMLAgeAwareCongruence with ViT age estimates instead
+ */
+export function computeAgeAwareCongruence(
+  comparisons: FeatureComparison[],
+  measurementsA: FeatureMeasurements,
+  measurementsB: FeatureMeasurements,
+  landmarksA: Point[],
+  landmarksB: Point[]
+): CongruenceResult {
+  // Base score from hybrid feature comparisons
+  const baseScore = morphologicalCongruence(comparisons);
+
+  // Estimate maturity for both faces
+  const maturityA = estimateFacialMaturity(measurementsA, landmarksA);
+  const maturityB = estimateFacialMaturity(measurementsB, landmarksB);
+
+  const maturityGap = Math.abs(maturityA.score - maturityB.score);
+
+  // Apply penalty for cross-age comparison
+  let agePenalty = 0;
+  let ageWarning: string | undefined;
+
+  if (maturityGap > 0.15 && Math.min(maturityA.confidence, maturityB.confidence) > 0.5) {
+    // Significant age difference detected with confidence
+    // Penalty scales from 10% (gap=0.15) to 30% (gap=0.45+)
+    agePenalty = Math.min((maturityGap - 0.15) * 0.67, 0.30);
+
+    const stageA = maturityA.score < 0.3 ? "Child" : maturityA.score < 0.6 ? "Adolescent" : "Adult";
+    const stageB = maturityB.score < 0.3 ? "Child" : maturityB.score < 0.6 ? "Adolescent" : "Adult";
+
+    ageWarning = `Cross-age comparison detected: ${stageA} vs ${stageB}. Similarity may be less meaningful.`;
+  }
+
+  const adjustedScore = baseScore * (1 - agePenalty);
+
+  return {
+    score: adjustedScore,
+    maturityA,
+    maturityB,
+    ageWarning,
+    agePenalty
+  };
 }
 
 /**
  * Perform complete feature comparison with all derived metrics
+ *
+ * Supports both ML-based age estimation (preferred) and legacy landmark-based maturity.
+ * If ageEstimates are provided, uses ML-based scoring. Otherwise falls back to landmark maturity.
  */
 export function performComparison(
   measurementsA: FeatureMeasurements,
   measurementsB: FeatureMeasurements,
   classificationsA: FeatureClassifications,
-  classificationsB: FeatureClassifications
+  classificationsB: FeatureClassifications,
+  landmarksA?: Point[],
+  landmarksB?: Point[],
+  ageEstimates?: { ageEstimateA: AgeEstimate; ageEstimateB: AgeEstimate }
 ): ComparisonResult {
   const comparisons = compareFeatures(classificationsA, classificationsB);
   const sharedAxes = sharedAxisValues(comparisons);
-  const congruenceScore = morphologicalCongruence(comparisons);
   const agreementSummary = featureAgreementSummary(comparisons);
+
+  // Compute age-aware congruence
+  let congruenceResult: CongruenceResult | undefined;
+  let congruenceScore: number;
+
+  // Prefer ML-based age estimation if available
+  if (ageEstimates) {
+    congruenceResult = computeMLAgeAwareCongruence(
+      comparisons,
+      ageEstimates.ageEstimateA,
+      ageEstimates.ageEstimateB
+    );
+    congruenceScore = congruenceResult.score;
+  } else if (landmarksA && landmarksB) {
+    // Fallback to legacy landmark-based maturity
+    congruenceResult = computeAgeAwareCongruence(comparisons, measurementsA, measurementsB, landmarksA, landmarksB);
+    congruenceScore = congruenceResult.score;
+  } else {
+    // No age adjustment available
+    congruenceScore = morphologicalCongruence(comparisons);
+  }
 
   return {
     comparisons,
     sharedAxes,
     congruenceScore,
     agreementSummary,
+    congruenceResult,
   };
 }

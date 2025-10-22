@@ -11,7 +11,7 @@ The app is installable as a Progressive Web App (PWA), functioning seamlessly ac
 ## Core Components
 | Component | Purpose |
 |------------|----------|
-| **UI Layer (React + Tailwind)** | Handles image upload/capture, result display, and mode switching. |
+| **UI Layer (React + Tailwind)** | Handles image upload/capture, result display, mode switching, and glossary popovers (shared `DefinitionTooltip`, lazy-loaded glossary JSON, `IntersectionObserver` defer, `<abbr title>` fallback). |
 | **Canvas Overlay** | Draws landmarks and colored similarity regions; supports touch gestures. |
 | **Mode Manager** | Chooses between *Fast* (geometry only) and *Balanced* (geometry + embeddings) modes based on device capability. |
 | **Analysis Worker** | Runs ML inference and math off the main thread for smooth UX. |

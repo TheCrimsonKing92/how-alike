@@ -1,18 +1,20 @@
 /**
  * Age Estimation using ONNX Runtime
  *
- * Uses InsightFace genderage.onnx model to predict age from face images.
- * This replaces the unreliable landmark-based maturity heuristics.
+ * Dual-model approach for improved accuracy:
+ * 1. Gender prediction: InsightFace genderage.onnx (96x96, fast, 1.3MB)
+ * 2. Age prediction: yu4u ResNet50 (224x224, accurate, 90MB, 4.41 MAE on APPA-REAL)
  *
- * Model: InsightFace Antelopev2 Gender-Age Classifier
+ * InsightFace genderage.onnx:
  * - Source: https://huggingface.co/fofr/comfyui/blob/main/insightface/models/antelopev2/genderage.onnx
- * - Input: 1 × 3 × 96 × 96 (NCHW, RGB, [0, 255] range - NO normalization)
- * - Output: 1 × 3 [female_score, male_score, age/100]
- * - Model specs: input_mean=0.0, input_std=1.0 (per InsightFace Attribute class)
+ * - Input: 1 × 3 × 96 × 96 (NCHW, RGB, [0, 255])
+ * - Output: 1 × 3 [female_score, male_score, age/100] (age output unused)
  *
- * ⚠️ PREPROCESSING NOTE: This model requires RGB in [0, 255] range (no normalization).
- * Age output must be multiplied by 100 to get years.
- * See inline comments in estimateAge() for details.
+ * yu4u age_only_resnet50:
+ * - Source: https://github.com/yu4u/age-gender-estimation (converted to ONNX)
+ * - Input: 1 × 224 × 224 × 3 (NHWC, RGB, [0, 255])
+ * - Output: 1 × 101 (softmax probabilities for ages 0-100)
+ * - Age = weighted sum: sum(prob[i] * i for i in 0..100)
  */
 
 import type * as ORT from 'onnxruntime-web';
@@ -41,18 +43,19 @@ type OrtLike = {
   };
 };
 
-let ageSession: MinimalOrtSession | null = null;
+let genderSession: MinimalOrtSession | null = null;  // For gender prediction
+let ageSession: MinimalOrtSession | null = null;      // For age prediction
 let ort: OrtLike | null = null;
 let inferenceQueue: Promise<any> = Promise.resolve();
 
 /**
- * Initialize the age classifier model
+ * Initialize the age and gender classifier models
  * Call this once during worker initialization
  */
 export async function initAgeClassifier(): Promise<void> {
-  if (ageSession) return;
+  if (genderSession && ageSession) return;
 
-  console.info('[age-estimation] Loading InsightFace genderage.onnx...');
+  console.info('[age-estimation] Loading gender and age models...');
   const start = performance.now();
 
   try {
@@ -63,7 +66,7 @@ export async function initAgeClassifier(): Promise<void> {
     }
     ort = ortMod as OrtLike;
 
-    // Configure ONNX Runtime (same as parsing model)
+    // Configure ONNX Runtime
     if (typeof ort.env.webgl !== 'undefined') {
       const webgl = ort.env.webgl as any;
       webgl.contextAttributes = { alpha: true, depth: false, stencil: false };
@@ -81,32 +84,48 @@ export async function initAgeClassifier(): Promise<void> {
       } as Record<string, string>;
     }
 
-    // Load model
-    const modelUrl = '/models/age-gender/genderage.onnx';
-    const response = await fetch(modelUrl);
-    if (!response.ok) throw new Error(`Failed to fetch model: ${response.status}`);
-    const modelBuffer = await response.arrayBuffer();
+    // Load gender model (InsightFace, 1.3MB, fast)
+    const genderModelUrl = '/models/age-gender/genderage.onnx';
+    const genderResponse = await fetch(genderModelUrl);
+    if (!genderResponse.ok) throw new Error(`Failed to fetch gender model: ${genderResponse.status}`);
+    const genderModelBuffer = await genderResponse.arrayBuffer();
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[age-estimation] loaded model buffer:', (modelBuffer.byteLength / (1024 * 1024)).toFixed(2), 'MB');
+      console.info('[age-estimation] Gender model size:', (genderModelBuffer.byteLength / (1024 * 1024)).toFixed(2), 'MB');
     }
 
-    // Create session with WebGL/WASM
-    ageSession = await ort.InferenceSession.create(modelBuffer, {
+    genderSession = await ort.InferenceSession.create(genderModelBuffer, {
+      executionProviders: ['webgl', 'wasm'],
+      graphOptimizationLevel: 'disabled',
+      enableCpuMemArena: false,
+    });
+
+    // Load age model (yu4u ResNet50, 90MB, accurate)
+    const ageModelUrl = '/models/age-gender/yu4u_age_resnet50.onnx';
+    const ageResponse = await fetch(ageModelUrl);
+    if (!ageResponse.ok) throw new Error(`Failed to fetch age model: ${ageResponse.status}`);
+    const ageModelBuffer = await ageResponse.arrayBuffer();
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[age-estimation] Age model size:', (ageModelBuffer.byteLength / (1024 * 1024)).toFixed(2), 'MB');
+    }
+
+    ageSession = await ort.InferenceSession.create(ageModelBuffer, {
       executionProviders: ['webgl', 'wasm'],
       graphOptimizationLevel: 'disabled',
       enableCpuMemArena: false,
     });
 
     const elapsed = performance.now() - start;
-    console.info(`[age-estimation] Model loaded successfully in ${elapsed.toFixed(0)}ms`);
+    console.info(`[age-estimation] Models loaded successfully in ${elapsed.toFixed(0)}ms`);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[age-estimation] Input names:', ageSession.inputNames);
-      console.info('[age-estimation] Output names:', ageSession.outputNames);
+      console.info('[age-estimation] Gender model:', { inputs: genderSession.inputNames, outputs: genderSession.outputNames });
+      console.info('[age-estimation] Age model:', { inputs: ageSession.inputNames, outputs: ageSession.outputNames });
     }
   } catch (error) {
-    console.error('[age-estimation] Failed to load age classifier:', error);
+    console.error('[age-estimation] Failed to load classifiers:', error);
+    genderSession = null;
     ageSession = null;
     ort = null;
     // Don't throw - allow app to continue without age estimation
@@ -124,7 +143,7 @@ let inferenceCounter = 0;
 export async function estimateAge(
   image: ImageBitmap | HTMLCanvasElement | OffscreenCanvas
 ): Promise<AgeEstimate> {
-  if (!ageSession || !ort) {
+  if (!genderSession || !ageSession || !ort) {
     throw new Error('Age classifier not initialized. Call initAgeClassifier() first.');
   }
 
@@ -132,113 +151,114 @@ export async function estimateAge(
   const inferenceId = ++inferenceCounter;
   const result = await (inferenceQueue = inferenceQueue.then(async () => {
     if (process.env.NODE_ENV !== 'production') {
-      console.info(`[age-estimation #${inferenceId}] starting inference`);
-    }
-    // Resize to 96x96
-    const SIZE = 96;
-    const canvas = new OffscreenCanvas(SIZE, SIZE);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Cannot get 2d context');
-
-    ctx.drawImage(image as any, 0, 0, SIZE, SIZE);
-    const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
-    const rgba = imageData.data;
-
-    if (process.env.NODE_ENV !== 'production') {
-      // Sample center pixel values for debugging
-      const centerIdx = (SIZE / 2 * SIZE + SIZE / 2) * 4;
-      console.info(`[age-estimation #${inferenceId}] center pixel (RGBA):`, [
-        rgba[centerIdx],
-        rgba[centerIdx + 1],
-        rgba[centerIdx + 2],
-        rgba[centerIdx + 3]
-      ]);
+      console.info(`[age-estimation #${inferenceId}] starting dual-model inference`);
     }
 
-    // Convert to NCHW format: [1, 3, 96, 96]
-    //
-    // Empirical testing results (with IPD-based crop, no alignment):
-    // - RGB [0, 1]: Both → 0.4 years (broken)
-    // - RGB [0, 255]: Adult 73.6, Child 52.5 (BEST: shows difference, ~3x overestimate)
-    // - RGB [-1, 1]: Both → 35 years (no difference)
-    // - BGR [0, 255]: Adult 64, Child 33 (shows difference, ~2-3x overestimate)
-    // - BGR [-1, 1]: Both → 35 years (no difference)
-    //
-    // Using BGR [0, 255] as it shows age differences with reasonable overestimation
-    //
-    const data = new Float32Array(1 * 3 * SIZE * SIZE);
+    // ===== GENDER PREDICTION (96x96, NCHW, BGR) =====
+    const GENDER_SIZE = 96;
+    const genderCanvas = new OffscreenCanvas(GENDER_SIZE, GENDER_SIZE);
+    const genderCtx = genderCanvas.getContext('2d');
+    if (!genderCtx) throw new Error('Cannot get 2d context for gender');
 
-    for (let y = 0; y < SIZE; y++) {
-      for (let x = 0; x < SIZE; x++) {
-        const idx = (y * SIZE + x) * 4;
-        const baseIdx = y * SIZE + x;
+    genderCtx.drawImage(image as any, 0, 0, GENDER_SIZE, GENDER_SIZE);
+    const genderImageData = genderCtx.getImageData(0, 0, GENDER_SIZE, GENDER_SIZE);
+    const genderRgba = genderImageData.data;
 
-        // BGR channels in [0, 255] range (no normalization)
-        data[0 * SIZE * SIZE + baseIdx] = rgba[idx + 2]; // B
-        data[1 * SIZE * SIZE + baseIdx] = rgba[idx + 1]; // G
-        data[2 * SIZE * SIZE + baseIdx] = rgba[idx];     // R
+    // Convert to NCHW format: [1, 3, 96, 96] (BGR channels)
+    const genderData = new Float32Array(1 * 3 * GENDER_SIZE * GENDER_SIZE);
+    for (let y = 0; y < GENDER_SIZE; y++) {
+      for (let x = 0; x < GENDER_SIZE; x++) {
+        const idx = (y * GENDER_SIZE + x) * 4;
+        const baseIdx = y * GENDER_SIZE + x;
+        genderData[0 * GENDER_SIZE * GENDER_SIZE + baseIdx] = genderRgba[idx + 2]; // B
+        genderData[1 * GENDER_SIZE * GENDER_SIZE + baseIdx] = genderRgba[idx + 1]; // G
+        genderData[2 * GENDER_SIZE * GENDER_SIZE + baseIdx] = genderRgba[idx];     // R
       }
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      // Sample normalized values
-      const sampleIdx = SIZE / 2 * SIZE + SIZE / 2;
-      console.info(`[age-estimation #${inferenceId}] normalized center (RGB):`, [
-        data[0 * SIZE * SIZE + sampleIdx].toFixed(3),
-        data[1 * SIZE * SIZE + sampleIdx].toFixed(3),
-        data[2 * SIZE * SIZE + sampleIdx].toFixed(3)
-      ]);
-    }
+    // Run gender inference
+    const genderInputName = genderSession!.inputNames[0];
+    const genderTensor = new ort!.Tensor('float32', genderData, [1, 3, GENDER_SIZE, GENDER_SIZE]);
+    const genderOutputs = await genderSession!.run({ [genderInputName]: genderTensor });
+    const genderOutputData = (genderOutputs[genderSession!.outputNames[0]] as any).data as Float32Array;
 
-    // Create tensor and run inference
-    const inputName = ageSession!.inputNames[0];
-    const tensor = new ort!.Tensor('float32', data, [1, 3, SIZE, SIZE]);
-    const feeds = { [inputName]: tensor };
-    const outputs = await ageSession!.run(feeds);
-
-    // Extract output: [female_score, male_score, age]
-    const outputName = ageSession!.outputNames[0];
-    const outputTensor = outputs[outputName] as any;
-    const outputData = outputTensor.data as Float32Array;
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.info(`[age-estimation #${inferenceId}] raw output tensor:`, {
-        length: outputData.length,
-        values: Array.from(outputData.slice(0, 10)),
-        shape: outputTensor.dims
-      });
-    }
-
-    const femaleScore = outputData[0];
-    const maleScore = outputData[1];
-    // Age output is normalized [0, 1] representing age/100
-    // Multiply by 100 to get actual age in years
-    const age = outputData[2] * 100;
-
-    // Determine gender from scores
+    const femaleScore = genderOutputData[0];
+    const maleScore = genderOutputData[1];
     const gender = maleScore > femaleScore ? 'male' : 'female';
     const genderConfidence = Math.abs(maleScore - femaleScore);
 
-    // Use gender confidence as overall confidence (higher separation = more confident)
-    // Normalize to [0, 1] range (sigmoid-like scores typically range from -3 to 3)
-    const confidence = Math.min(1, Math.max(0, genderConfidence / 3));
-
     if (process.env.NODE_ENV !== 'production') {
-      console.info(`[age-estimation #${inferenceId}] prediction:`, {
-        age: age.toFixed(1),
+      console.info(`[age-estimation #${inferenceId}] gender prediction:`, {
         gender,
         femaleScore: femaleScore.toFixed(3),
         maleScore: maleScore.toFixed(3),
-        confidence: confidence.toFixed(2)
+        confidence: genderConfidence.toFixed(3)
       });
     }
 
+    // ===== AGE PREDICTION (224x224, NHWC, RGB) =====
+    const AGE_SIZE = 224;
+    const ageCanvas = new OffscreenCanvas(AGE_SIZE, AGE_SIZE);
+    const ageCtx = ageCanvas.getContext('2d');
+    if (!ageCtx) throw new Error('Cannot get 2d context for age');
+
+    ageCtx.drawImage(image as any, 0, 0, AGE_SIZE, AGE_SIZE);
+    const ageImageData = ageCtx.getImageData(0, 0, AGE_SIZE, AGE_SIZE);
+    const ageRgba = ageImageData.data;
+
+    // Convert to NHWC format: [1, 224, 224, 3]
+    // yu4u model was trained with raw BGR images [0, 255] - NO normalization!
+    // See age-gender-estimation/age_estimation/generator.py:61-62
+    // They use cv2.imread (BGR) with dtype=np.uint8, no preprocessing
+    const ageData = new Float32Array(1 * AGE_SIZE * AGE_SIZE * 3);
+    for (let y = 0; y < AGE_SIZE; y++) {
+      for (let x = 0; x < AGE_SIZE; x++) {
+        const rgbaIdx = (y * AGE_SIZE + x) * 4;
+        const baseIdx = (y * AGE_SIZE + x) * 3;
+
+        // BGR format [0, 255] - CRITICAL: B, G, R order, not R, G, B!
+        ageData[baseIdx + 0] = ageRgba[rgbaIdx + 2]; // B (from RGBA blue channel)
+        ageData[baseIdx + 1] = ageRgba[rgbaIdx + 1]; // G
+        ageData[baseIdx + 2] = ageRgba[rgbaIdx + 0]; // R (from RGBA red channel)
+      }
+    }
+
+    // Run age inference
+    const ageInputName = ageSession!.inputNames[0];
+    const ageTensor = new ort!.Tensor('float32', ageData, [1, AGE_SIZE, AGE_SIZE, 3]);
+    const ageOutputs = await ageSession!.run({ [ageInputName]: ageTensor });
+    const ageOutputData = (ageOutputs[ageSession!.outputNames[0]] as any).data as Float32Array;
+
+    // Age output is 101-class probability distribution (ages 0-100)
+    // Calculate expected value: sum(prob[i] * i for i in 0..100)
+    let rawAge = 0;
+    for (let i = 0; i < 101; i++) {
+      rawAge += ageOutputData[i] * i;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      // Find top 3 predicted ages
+      const probs = Array.from(ageOutputData);
+      const topIndices = probs
+        .map((p, i) => ({ age: i, prob: p }))
+        .sort((a, b) => b.prob - a.prob)
+        .slice(0, 3);
+
+      console.info(`[age-estimation #${inferenceId}] age prediction:`, {
+        rawAge: rawAge.toFixed(1),
+        top3: topIndices.map(t => `${t.age}y (${(t.prob * 100).toFixed(1)}%)`).join(', ')
+      });
+    }
+
+    // Use gender confidence as overall confidence
+    const confidence = Math.min(1, Math.max(0, genderConfidence / 3));
+
     return {
-      age: calibratePredictedAge(age, gender, genderConfidence),
+      age: calibratePredictedAge(rawAge, gender, genderConfidence),
       confidence,
       gender,
       genderConfidence,
-      rawAge: age
+      rawAge
     };
   }));
 

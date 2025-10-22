@@ -92,7 +92,7 @@ async function coreDetector() {
     const model = face.SupportedModels.MediaPipeFaceMesh;
     detectorPromise = face.createDetector(model, { runtime: 'tfjs', refineLandmarks: true });
   }
-  return detectorPromise as Awaited<typeof detectorPromise>;
+  return await detectorPromise;
 }
 
 export const parsingAdapter: DetectorAdapter = {
@@ -140,15 +140,15 @@ export const parsingAdapter: DetectorAdapter = {
         run(feeds: Record<string, unknown>): Promise<Record<string, unknown>>;
       };
       type OrtLike = {
-        InferenceSession: { create: (url: string, opts?: Record<string, unknown>) => Promise<MinimalOrtSession> };
+        InferenceSession: { create: (urlOrBuffer: string | ArrayBuffer | Uint8Array, opts?: Record<string, unknown>) => Promise<MinimalOrtSession> };
         Tensor: new (type: string, data: Float32Array, dims: number[]) => unknown;
         env: { wasm: { wasmPaths?: string | Record<string, string>; [k: string]: unknown } };
       };
       const ort = ortMod as OrtLike;
 
       // Enable WebGL backend (must be set before session creation)
-      if (typeof ort.env.webgl !== 'undefined') {
-        const webgl = ort.env.webgl as any;
+      if (typeof (ort.env as any).webgl !== 'undefined') {
+        const webgl = (ort.env as any).webgl;
         // Enable WebGL and set context attributes
         webgl.contextAttributes = { alpha: true, depth: false, stencil: false };
         webgl.pack = true; // Enable texture packing for better performance

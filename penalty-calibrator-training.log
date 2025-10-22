@@ -1,0 +1,79 @@
+[OK] Loading MobileFaceNet...
+[OK] Loading Age Probe...
+
+[OK] Extracting embeddings from UTKFace...
+  Processed 100 images
+  Processed 200 images
+  Processed 300 images
+  Processed 400 images
+  Processed 500 images
+  Processed 600 images
+  Processed 700 images
+  Processed 800 images
+
+[OK] Extracted 877 embeddings
+    Age range: 1-100
+
+[OK] Generating synthetic calibration pairs...
+    Finding high-similarity pairs...
+      Checked 9950 pairs, found 1 same-person pairs
+      Checked 19900 pairs, found 2 same-person pairs
+      Checked 29850 pairs, found 2 same-person pairs
+      Checked 39800 pairs, found 2 same-person pairs
+      Checked 49750 pairs, found 2 same-person pairs
+      Checked 59700 pairs, found 6 same-person pairs
+      Checked 69650 pairs, found 7 same-person pairs
+      Checked 79600 pairs, found 7 same-person pairs
+      Checked 89550 pairs, found 11 same-person pairs
+      Checked 99500 pairs, found 12 same-person pairs
+      Checked 109450 pairs, found 12 same-person pairs
+      Checked 119400 pairs, found 12 same-person pairs
+      Checked 129350 pairs, found 12 same-person pairs
+      Checked 139047 pairs, found 12 same-person pairs
+      Checked 146622 pairs, found 14 same-person pairs
+      Checked 151697 pairs, found 15 same-person pairs
+      Checked 154272 pairs, found 16 same-person pairs
+    Found 16 high-similarity pairs
+    Generating different-person pairs...
+
+[OK] Generated pairs:
+    Same-person: 16 pairs
+      Similarity: [0.772, 1.000]
+      Age diff: [0.0, 2.0]
+    Different-person: 1000 pairs
+      Similarity: [-0.134, 0.616]
+      Age diff: [0.0, 99.0]
+[OK] Fitting penalty calibrator...
+    Same-person pairs: 16
+    Different-person pairs: 1000
+
+[OK] Optimizing parameters...
+
+[OK] Optimal parameters:
+    alpha (penalty/year): 0.005000
+    tau (threshold): 5.00 years
+    M (max penalty): 30.00 years
+
+[OK] Final performance:
+  alpha=0.0050, tau=5.0, M=30.0
+  EER: 0.00%
+  TAR@FAR=1e-3: 100.00%
+
+[OK] Saving calibrator parameters...
+[OK] Saved to: web/public/models/similarity-calibrator/penalty.json
+
+[OK] Creating visualization...
+[OK] Saved plot to: penalty-calibration-curve.png
+
+[OK] Training complete!
+
+[SUMMARY]
+  Model type: Penalty-based calibration
+  Parameters: 5 values
+  Size: ~100 bytes
+  Formula: score' = s - 0.0050*clip(|age_diff| - 5.0, 0, 30.0)
+
+  Interpretation:
+    - No penalty for age gaps < 5.0 years
+    - Penalty of 0.0050 per year beyond threshold
+    - Max penalty: 0.150 (30 years)

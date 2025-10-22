@@ -1,0 +1,40 @@
+Batch Age Calibration
+====================
+Input folder: C:\Users\miles\vcs\how-alike\calibration-images
+Output file:  C:\Users\miles\vcs\how-alike\calibration-data.csv
+
+Found 22 images
+
+Launching browser...
+Loading calibration page...
+Waiting for worker to initialize...
+Worker ready!
+
+✓ 10_1_0_20170109204617417.jpg: age 10 → raw 35.7, calibrated 48.9
+✓ 12_1_0_20170109205104124.jpg: age 12 → raw 32.3, calibrated 21.2
+✓ 14_1_0_20170103201911744.jpg: age 14 → raw 49.0, calibrated 44.6
+✓ 18_0_0_20170110231625906.jpg: age 18 → raw 37.3, calibrated 61.9
+✓ 19_1_3_20170104221847479.jpg: age 19 → raw 32.9, calibrated 26.2
+✓ 26_1_2_20170104015910819.jpg: age 26 → raw 33.1, calibrated 27.5
+✓ 29_0_4_20170103235516820.jpg: age 29 → raw 38.2, calibrated 69.7
+✓ 35_1_1_20170109132740903.jpg: age 35 → raw 53.2, calibrated 53.8
+✓ 39_1_0_20170103182742753.jpg: age 39 → raw 38.1, calibrated 68.6
+✓ 3_0_4_20170103202821873.jpg: age 3 → raw 40.4, calibrated 26.1
+✓ 46_1_0_20170105172417134.jpg: age 46 → raw 25.2, calibrated 0.0
+✓ 47_0_0_20170104211830788.jpg: age 47 → raw 50.9, calibrated 48.8
+✗ 59_0_0_20170111203905144.jpg: page.waitForFunction: Timeout 90000ms exceeded.
+✓ 59_1_0_20170110122554230.jpg: age 59 → raw 26.3, calibrated 0.0
+✓ 5_1_0_20170109191946614.jpg: age 5 → raw 21.4, calibrated 0.0
+✓ 66_1_0_20170110140413980.jpg: age 66 → raw 58.7, calibrated 65.6
+✓ 67_0_3_20161220221736930.jpg: age 67 → raw 68.1, calibrated 86.0
+✓ 76_1_0_20170110140935777.jpg: age 76 → raw 66.7, calibrated 82.9
+✓ 7_1_1_20170109194708063.jpg: age 7 → raw 55.5, calibrated 58.8
+✓ 80_0_0_20170111200927317.jpg: age 80 → raw 73.8, calibrated 98.4
+✓ 85_1_0_20170110181953748.jpg: age 85 → raw 51.5, calibrated 50.1
+✓ 89_1_3_20170109150838156.jpg: age 89 → raw 59.0, calibrated 66.3
+
+✓ Processed 21/22 images (1 failed)
+
+✓ Saved calibration data to: C:\Users\miles\vcs\how-alike\calibration-data.csv
+
+Mean Absolute Error (calibrated): 18.89 years

@@ -1,0 +1,214 @@
+[OK] Loading MobileFaceNet...
+[OK] Loading Age Probe...
+[OK] Loading images and extracting features...
+[OK] Loaded 100 images
+[OK] Loaded 200 images
+[OK] Loaded 300 images
+[OK] Loaded 300 images total
+[OK] Extracting embeddings and age predictions...
+[OK] Processed 50/300 images
+[OK] Processed 100/300 images
+[OK] Processed 150/300 images
+[OK] Processed 200/300 images
+[OK] Processed 250/300 images
+[OK] Processed 300/300 images
+[OK] Successfully processed 300 images
+[OK] Generating 1000 training pairs...
+[WARN] No same-person pairs available - using high-similarity heuristic
+[OK] Generated 1019 pairs (19 same-person, 1000 different-person)
+C:\Users\miles\vcs\how-alike\scripts\train-similarity-calibrator.py:335: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter will be the default. To switch now, set dynamo=True in torch.onnx.export. This new exporter supports features like exporting LLMs with DynamicCache. We encourage you to try it and share feedback to help improve the experience. Learn more about the new export logic: https://pytorch.org/docs/stable/onnx_dynamo.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html.
+  torch.onnx.export(
+
+[OK] Dataset: 1019 pairs
+    Same-person pairs: 19
+    Different-person pairs: 1000
+    Feature ranges:
+      Similarity: [-0.125, 0.907]
+      Age diff: [0.0, 6.7]
+      Uncertainty: [0.000, 0.000]
+
+[OK] Split: 815 train, 204 val
+
+[OK] Training similarity calibrator...
+    Model params: 673 (~0.00 MB)
+    Device: cpu
+Epoch 1/200: train_loss=0.5396 train_acc=97.8% val_loss=0.4471 val_acc=98.0% lr=0.001000
+Epoch 2/200: train_loss=0.3732 train_acc=98.2% val_loss=0.2693 val_acc=98.0% lr=0.001000
+Epoch 3/200: train_loss=0.2225 train_acc=98.2% val_loss=0.1559 val_acc=98.0% lr=0.001000
+Epoch 4/200: train_loss=0.1431 train_acc=98.2% val_loss=0.1206 val_acc=98.0% lr=0.001000
+Epoch 5/200: train_loss=0.1278 train_acc=98.2% val_loss=0.1107 val_acc=98.0% lr=0.001000
+Epoch 6/200: train_loss=0.1121 train_acc=98.2% val_loss=0.1077 val_acc=98.0% lr=0.001000
+Epoch 7/200: train_loss=0.1146 train_acc=98.2% val_loss=0.1055 val_acc=98.0% lr=0.001000
+Epoch 8/200: train_loss=0.1171 train_acc=98.2% val_loss=0.1035 val_acc=98.0% lr=0.001000
+Epoch 9/200: train_loss=0.1018 train_acc=98.2% val_loss=0.1013 val_acc=98.0% lr=0.001000
+Epoch 10/200: train_loss=0.1176 train_acc=98.2% val_loss=0.0996 val_acc=98.0% lr=0.001000
+Epoch 11/200: train_loss=0.1019 train_acc=98.2% val_loss=0.0971 val_acc=98.0% lr=0.001000
+Epoch 12/200: train_loss=0.1146 train_acc=98.2% val_loss=0.0952 val_acc=98.0% lr=0.001000
+Epoch 13/200: train_loss=0.0992 train_acc=98.2% val_loss=0.0925 val_acc=98.0% lr=0.001000
+Epoch 14/200: train_loss=0.0980 train_acc=98.2% val_loss=0.0905 val_acc=98.0% lr=0.001000
+Epoch 15/200: train_loss=0.1043 train_acc=98.2% val_loss=0.0885 val_acc=98.0% lr=0.001000
+Epoch 16/200: train_loss=0.0905 train_acc=98.2% val_loss=0.0866 val_acc=98.0% lr=0.001000
+Epoch 17/200: train_loss=0.0908 train_acc=98.2% val_loss=0.0844 val_acc=98.0% lr=0.001000
+Epoch 18/200: train_loss=0.0880 train_acc=98.2% val_loss=0.0825 val_acc=98.0% lr=0.001000
+Epoch 19/200: train_loss=0.0870 train_acc=98.2% val_loss=0.0801 val_acc=98.0% lr=0.001000
+Epoch 20/200: train_loss=0.0916 train_acc=98.2% val_loss=0.0785 val_acc=98.0% lr=0.001000
+Epoch 21/200: train_loss=0.0868 train_acc=98.2% val_loss=0.0760 val_acc=98.0% lr=0.001000
+Epoch 22/200: train_loss=0.0760 train_acc=98.2% val_loss=0.0746 val_acc=98.0% lr=0.001000
+Epoch 23/200: train_loss=0.0783 train_acc=98.2% val_loss=0.0722 val_acc=98.0% lr=0.001000
+Epoch 24/200: train_loss=0.0742 train_acc=98.2% val_loss=0.0701 val_acc=98.0% lr=0.001000
+Epoch 25/200: train_loss=0.0825 train_acc=98.2% val_loss=0.0681 val_acc=98.0% lr=0.001000
+Epoch 26/200: train_loss=0.0696 train_acc=98.2% val_loss=0.0658 val_acc=98.0% lr=0.001000
+Epoch 27/200: train_loss=0.0663 train_acc=98.2% val_loss=0.0645 val_acc=98.0% lr=0.001000
+Epoch 28/200: train_loss=0.0709 train_acc=98.2% val_loss=0.0616 val_acc=98.0% lr=0.001000
+Epoch 29/200: train_loss=0.0674 train_acc=98.2% val_loss=0.0595 val_acc=98.0% lr=0.001000
+Epoch 30/200: train_loss=0.0629 train_acc=98.2% val_loss=0.0575 val_acc=98.0% lr=0.001000
+Epoch 31/200: train_loss=0.0561 train_acc=98.2% val_loss=0.0546 val_acc=98.0% lr=0.001000
+Epoch 32/200: train_loss=0.0545 train_acc=98.2% val_loss=0.0532 val_acc=98.0% lr=0.001000
+Epoch 33/200: train_loss=0.0529 train_acc=98.2% val_loss=0.0507 val_acc=98.0% lr=0.001000
+Epoch 34/200: train_loss=0.0498 train_acc=98.2% val_loss=0.0500 val_acc=98.0% lr=0.001000
+Epoch 35/200: train_loss=0.0503 train_acc=98.2% val_loss=0.0478 val_acc=98.0% lr=0.001000
+Epoch 36/200: train_loss=0.0478 train_acc=98.2% val_loss=0.0455 val_acc=98.0% lr=0.001000
+Epoch 37/200: train_loss=0.0489 train_acc=98.2% val_loss=0.0439 val_acc=98.0% lr=0.001000
+Epoch 38/200: train_loss=0.0424 train_acc=98.2% val_loss=0.0435 val_acc=98.0% lr=0.001000
+Epoch 39/200: train_loss=0.0438 train_acc=98.2% val_loss=0.0412 val_acc=98.0% lr=0.001000
+Epoch 40/200: train_loss=0.0398 train_acc=98.2% val_loss=0.0382 val_acc=98.0% lr=0.001000
+Epoch 41/200: train_loss=0.0376 train_acc=98.2% val_loss=0.0391 val_acc=98.0% lr=0.001000
+Epoch 42/200: train_loss=0.0406 train_acc=98.2% val_loss=0.0359 val_acc=98.0% lr=0.001000
+Epoch 43/200: train_loss=0.0370 train_acc=98.2% val_loss=0.0337 val_acc=98.0% lr=0.001000
+Epoch 44/200: train_loss=0.0356 train_acc=98.2% val_loss=0.0340 val_acc=98.0% lr=0.001000
+Epoch 45/200: train_loss=0.0325 train_acc=98.4% val_loss=0.0316 val_acc=98.0% lr=0.001000
+Epoch 46/200: train_loss=0.0357 train_acc=98.3% val_loss=0.0312 val_acc=98.0% lr=0.001000
+Epoch 47/200: train_loss=0.0319 train_acc=98.5% val_loss=0.0308 val_acc=98.0% lr=0.001000
+Epoch 48/200: train_loss=0.0360 train_acc=98.5% val_loss=0.0289 val_acc=98.0% lr=0.001000
+Epoch 49/200: train_loss=0.0315 train_acc=98.9% val_loss=0.0284 val_acc=98.0% lr=0.001000
+Epoch 50/200: train_loss=0.0356 train_acc=98.4% val_loss=0.0272 val_acc=98.0% lr=0.001000
+Epoch 51/200: train_loss=0.0264 train_acc=99.0% val_loss=0.0275 val_acc=98.0% lr=0.001000
+Epoch 52/200: train_loss=0.0322 train_acc=98.3% val_loss=0.0257 val_acc=98.0% lr=0.001000
+Epoch 53/200: train_loss=0.0264 train_acc=99.0% val_loss=0.0257 val_acc=98.0% lr=0.001000
+Epoch 54/200: train_loss=0.0310 train_acc=99.0% val_loss=0.0240 val_acc=98.0% lr=0.001000
+Epoch 55/200: train_loss=0.0270 train_acc=98.8% val_loss=0.0235 val_acc=98.5% lr=0.001000
+Epoch 56/200: train_loss=0.0257 train_acc=99.0% val_loss=0.0236 val_acc=98.0% lr=0.001000
+Epoch 57/200: train_loss=0.0296 train_acc=98.5% val_loss=0.0222 val_acc=99.0% lr=0.001000
+Epoch 58/200: train_loss=0.0275 train_acc=98.5% val_loss=0.0218 val_acc=99.0% lr=0.001000
+Epoch 59/200: train_loss=0.0231 train_acc=99.1% val_loss=0.0214 val_acc=99.0% lr=0.001000
+Epoch 60/200: train_loss=0.0254 train_acc=99.1% val_loss=0.0209 val_acc=99.0% lr=0.001000
+Epoch 61/200: train_loss=0.0246 train_acc=98.9% val_loss=0.0200 val_acc=99.0% lr=0.001000
+Epoch 62/200: train_loss=0.0249 train_acc=99.4% val_loss=0.0198 val_acc=99.0% lr=0.001000
+Epoch 63/200: train_loss=0.0231 train_acc=99.0% val_loss=0.0192 val_acc=99.0% lr=0.001000
+Epoch 64/200: train_loss=0.0226 train_acc=98.9% val_loss=0.0184 val_acc=99.0% lr=0.001000
+Epoch 65/200: train_loss=0.0290 train_acc=98.7% val_loss=0.0178 val_acc=99.0% lr=0.001000
+Epoch 66/200: train_loss=0.0182 train_acc=99.5% val_loss=0.0175 val_acc=99.0% lr=0.001000
+Epoch 67/200: train_loss=0.0200 train_acc=99.0% val_loss=0.0176 val_acc=99.0% lr=0.001000
+Epoch 68/200: train_loss=0.0177 train_acc=99.3% val_loss=0.0165 val_acc=99.0% lr=0.001000
+Epoch 69/200: train_loss=0.0176 train_acc=99.4% val_loss=0.0176 val_acc=99.0% lr=0.001000
+Epoch 70/200: train_loss=0.0188 train_acc=99.0% val_loss=0.0159 val_acc=99.0% lr=0.001000
+Epoch 71/200: train_loss=0.0207 train_acc=99.3% val_loss=0.0151 val_acc=99.5% lr=0.001000
+Epoch 72/200: train_loss=0.0179 train_acc=99.6% val_loss=0.0167 val_acc=99.0% lr=0.001000
+Epoch 73/200: train_loss=0.0183 train_acc=99.1% val_loss=0.0147 val_acc=99.0% lr=0.001000
+Epoch 74/200: train_loss=0.0192 train_acc=99.1% val_loss=0.0144 val_acc=99.5% lr=0.001000
+Epoch 75/200: train_loss=0.0161 train_acc=99.6% val_loss=0.0154 val_acc=99.0% lr=0.001000
+Epoch 76/200: train_loss=0.0222 train_acc=99.1% val_loss=0.0143 val_acc=99.5% lr=0.001000
+Epoch 77/200: train_loss=0.0162 train_acc=99.6% val_loss=0.0152 val_acc=99.0% lr=0.001000
+Epoch 78/200: train_loss=0.0180 train_acc=99.3% val_loss=0.0140 val_acc=99.5% lr=0.001000
+Epoch 79/200: train_loss=0.0147 train_acc=99.4% val_loss=0.0133 val_acc=99.5% lr=0.001000
+Epoch 80/200: train_loss=0.0154 train_acc=99.3% val_loss=0.0128 val_acc=99.5% lr=0.001000
+Epoch 81/200: train_loss=0.0196 train_acc=99.3% val_loss=0.0130 val_acc=99.5% lr=0.001000
+Epoch 82/200: train_loss=0.0189 train_acc=99.5% val_loss=0.0135 val_acc=99.0% lr=0.001000
+Epoch 83/200: train_loss=0.0150 train_acc=99.3% val_loss=0.0132 val_acc=99.5% lr=0.001000
+Epoch 84/200: train_loss=0.0180 train_acc=99.5% val_loss=0.0127 val_acc=99.5% lr=0.001000
+Epoch 85/200: train_loss=0.0172 train_acc=99.3% val_loss=0.0133 val_acc=99.0% lr=0.001000
+Epoch 86/200: train_loss=0.0129 train_acc=99.5% val_loss=0.0125 val_acc=99.5% lr=0.001000
+Epoch 87/200: train_loss=0.0115 train_acc=99.8% val_loss=0.0120 val_acc=99.5% lr=0.001000
+Epoch 88/200: train_loss=0.0152 train_acc=99.6% val_loss=0.0114 val_acc=99.5% lr=0.001000
+Epoch 89/200: train_loss=0.0133 train_acc=99.5% val_loss=0.0122 val_acc=99.5% lr=0.001000
+Epoch 90/200: train_loss=0.0145 train_acc=99.4% val_loss=0.0110 val_acc=99.5% lr=0.001000
+Epoch 91/200: train_loss=0.0127 train_acc=99.6% val_loss=0.0117 val_acc=99.5% lr=0.001000
+Epoch 92/200: train_loss=0.0122 train_acc=99.6% val_loss=0.0110 val_acc=99.5% lr=0.001000
+Epoch 93/200: train_loss=0.0133 train_acc=99.8% val_loss=0.0107 val_acc=99.5% lr=0.001000
+Epoch 94/200: train_loss=0.0141 train_acc=99.4% val_loss=0.0130 val_acc=99.0% lr=0.001000
+Epoch 95/200: train_loss=0.0159 train_acc=99.5% val_loss=0.0104 val_acc=99.5% lr=0.001000
+Epoch 96/200: train_loss=0.0143 train_acc=99.4% val_loss=0.0111 val_acc=99.5% lr=0.001000
+Epoch 97/200: train_loss=0.0121 train_acc=99.4% val_loss=0.0105 val_acc=99.5% lr=0.001000
+Epoch 98/200: train_loss=0.0113 train_acc=99.6% val_loss=0.0107 val_acc=99.5% lr=0.001000
+Epoch 99/200: train_loss=0.0115 train_acc=99.6% val_loss=0.0104 val_acc=99.5% lr=0.001000
+Epoch 100/200: train_loss=0.0117 train_acc=99.6% val_loss=0.0098 val_acc=100.0% lr=0.001000
+Epoch 101/200: train_loss=0.0168 train_acc=99.1% val_loss=0.0099 val_acc=99.5% lr=0.001000
+Epoch 102/200: train_loss=0.0083 train_acc=99.9% val_loss=0.0098 val_acc=99.5% lr=0.001000
+Epoch 103/200: train_loss=0.0117 train_acc=99.8% val_loss=0.0103 val_acc=99.5% lr=0.001000
+Epoch 104/200: train_loss=0.0115 train_acc=99.8% val_loss=0.0095 val_acc=99.5% lr=0.001000
+Epoch 105/200: train_loss=0.0144 train_acc=99.5% val_loss=0.0092 val_acc=100.0% lr=0.001000
+Epoch 106/200: train_loss=0.0114 train_acc=99.5% val_loss=0.0092 val_acc=100.0% lr=0.001000
+Epoch 107/200: train_loss=0.0093 train_acc=100.0% val_loss=0.0091 val_acc=100.0% lr=0.001000
+Epoch 108/200: train_loss=0.0095 train_acc=100.0% val_loss=0.0096 val_acc=99.5% lr=0.001000
+Epoch 109/200: train_loss=0.0113 train_acc=99.8% val_loss=0.0097 val_acc=99.5% lr=0.001000
+Epoch 110/200: train_loss=0.0114 train_acc=99.8% val_loss=0.0089 val_acc=100.0% lr=0.001000
+Epoch 111/200: train_loss=0.0126 train_acc=99.3% val_loss=0.0087 val_acc=100.0% lr=0.001000
+Epoch 112/200: train_loss=0.0107 train_acc=99.8% val_loss=0.0087 val_acc=100.0% lr=0.001000
+Epoch 113/200: train_loss=0.0115 train_acc=99.6% val_loss=0.0098 val_acc=99.5% lr=0.001000
+Epoch 114/200: train_loss=0.0126 train_acc=99.6% val_loss=0.0092 val_acc=100.0% lr=0.001000
+Epoch 115/200: train_loss=0.0081 train_acc=99.8% val_loss=0.0099 val_acc=99.5% lr=0.001000
+Epoch 116/200: train_loss=0.0100 train_acc=99.6% val_loss=0.0084 val_acc=100.0% lr=0.001000
+Epoch 117/200: train_loss=0.0109 train_acc=99.9% val_loss=0.0083 val_acc=100.0% lr=0.001000
+Epoch 118/200: train_loss=0.0110 train_acc=99.6% val_loss=0.0093 val_acc=100.0% lr=0.001000
+Epoch 119/200: train_loss=0.0129 train_acc=99.6% val_loss=0.0084 val_acc=100.0% lr=0.001000
+Epoch 120/200: train_loss=0.0136 train_acc=99.4% val_loss=0.0084 val_acc=100.0% lr=0.001000
+Epoch 121/200: train_loss=0.0126 train_acc=99.8% val_loss=0.0091 val_acc=100.0% lr=0.001000
+Epoch 122/200: train_loss=0.0127 train_acc=99.4% val_loss=0.0087 val_acc=99.5% lr=0.001000
+Epoch 123/200: train_loss=0.0100 train_acc=99.8% val_loss=0.0089 val_acc=100.0% lr=0.000500
+Epoch 124/200: train_loss=0.0103 train_acc=99.9% val_loss=0.0082 val_acc=100.0% lr=0.000500
+Epoch 125/200: train_loss=0.0117 train_acc=99.5% val_loss=0.0087 val_acc=100.0% lr=0.000500
+Epoch 126/200: train_loss=0.0116 train_acc=99.5% val_loss=0.0082 val_acc=100.0% lr=0.000500
+Epoch 127/200: train_loss=0.0088 train_acc=99.9% val_loss=0.0083 val_acc=100.0% lr=0.000500
+Epoch 128/200: train_loss=0.0091 train_acc=99.8% val_loss=0.0086 val_acc=100.0% lr=0.000500
+Epoch 129/200: train_loss=0.0106 train_acc=99.8% val_loss=0.0080 val_acc=100.0% lr=0.000500
+Epoch 130/200: train_loss=0.0108 train_acc=99.6% val_loss=0.0081 val_acc=100.0% lr=0.000500
+Epoch 131/200: train_loss=0.0077 train_acc=99.9% val_loss=0.0080 val_acc=100.0% lr=0.000500
+Epoch 132/200: train_loss=0.0075 train_acc=99.9% val_loss=0.0081 val_acc=100.0% lr=0.000500
+Epoch 133/200: train_loss=0.0099 train_acc=99.8% val_loss=0.0080 val_acc=100.0% lr=0.000500
+Epoch 134/200: train_loss=0.0098 train_acc=99.6% val_loss=0.0080 val_acc=100.0% lr=0.000500
+Epoch 135/200: train_loss=0.0093 train_acc=99.6% val_loss=0.0085 val_acc=99.5% lr=0.000500
+Epoch 136/200: train_loss=0.0093 train_acc=99.8% val_loss=0.0078 val_acc=100.0% lr=0.000500
+Epoch 137/200: train_loss=0.0082 train_acc=99.9% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 138/200: train_loss=0.0061 train_acc=100.0% val_loss=0.0078 val_acc=100.0% lr=0.000500
+Epoch 139/200: train_loss=0.0067 train_acc=99.9% val_loss=0.0077 val_acc=100.0% lr=0.000500
+Epoch 140/200: train_loss=0.0077 train_acc=99.8% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 141/200: train_loss=0.0052 train_acc=100.0% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 142/200: train_loss=0.0123 train_acc=99.4% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 143/200: train_loss=0.0092 train_acc=99.5% val_loss=0.0076 val_acc=100.0% lr=0.000500
+Epoch 144/200: train_loss=0.0089 train_acc=99.8% val_loss=0.0078 val_acc=100.0% lr=0.000500
+Epoch 145/200: train_loss=0.0053 train_acc=99.9% val_loss=0.0076 val_acc=100.0% lr=0.000500
+Epoch 146/200: train_loss=0.0084 train_acc=99.8% val_loss=0.0075 val_acc=100.0% lr=0.000500
+Epoch 147/200: train_loss=0.0075 train_acc=99.9% val_loss=0.0078 val_acc=100.0% lr=0.000500
+Epoch 148/200: train_loss=0.0070 train_acc=99.8% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 149/200: train_loss=0.0092 train_acc=99.8% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 150/200: train_loss=0.0081 train_acc=99.8% val_loss=0.0076 val_acc=100.0% lr=0.000500
+Epoch 151/200: train_loss=0.0095 train_acc=99.8% val_loss=0.0079 val_acc=100.0% lr=0.000500
+Epoch 152/200: train_loss=0.0073 train_acc=100.0% val_loss=0.0077 val_acc=100.0% lr=0.000250
+Epoch 153/200: train_loss=0.0096 train_acc=99.6% val_loss=0.0076 val_acc=100.0% lr=0.000250
+Epoch 154/200: train_loss=0.0095 train_acc=99.5% val_loss=0.0074 val_acc=100.0% lr=0.000250
+Epoch 155/200: train_loss=0.0102 train_acc=99.8% val_loss=0.0076 val_acc=100.0% lr=0.000250
+Epoch 156/200: train_loss=0.0074 train_acc=99.9% val_loss=0.0076 val_acc=100.0% lr=0.000250
+Epoch 157/200: train_loss=0.0078 train_acc=99.9% val_loss=0.0077 val_acc=100.0% lr=0.000250
+Epoch 158/200: train_loss=0.0110 train_acc=99.6% val_loss=0.0078 val_acc=100.0% lr=0.000250
+Epoch 159/200: train_loss=0.0116 train_acc=99.4% val_loss=0.0076 val_acc=100.0% lr=0.000250
+Epoch 160/200: train_loss=0.0075 train_acc=99.9% val_loss=0.0077 val_acc=100.0% lr=0.000125
+Epoch 161/200: train_loss=0.0074 train_acc=99.9% val_loss=0.0076 val_acc=100.0% lr=0.000125
+Epoch 162/200: train_loss=0.0085 train_acc=99.8% val_loss=0.0077 val_acc=100.0% lr=0.000125
+Epoch 163/200: train_loss=0.0078 train_acc=99.8% val_loss=0.0078 val_acc=100.0% lr=0.000125
+Epoch 164/200: train_loss=0.0075 train_acc=99.8% val_loss=0.0076 val_acc=100.0% lr=0.000125
+Epoch 165/200: train_loss=0.0074 train_acc=99.8% val_loss=0.0076 val_acc=100.0% lr=0.000125
+Epoch 166/200: train_loss=0.0094 train_acc=99.8% val_loss=0.0075 val_acc=100.0% lr=0.000063
+Epoch 167/200: train_loss=0.0079 train_acc=99.9% val_loss=0.0075 val_acc=100.0% lr=0.000063
+Epoch 168/200: train_loss=0.0074 train_acc=99.9% val_loss=0.0076 val_acc=100.0% lr=0.000063
+Epoch 169/200: train_loss=0.0072 train_acc=99.8% val_loss=0.0076 val_acc=100.0% lr=0.000063
+[OK] Early stopping at epoch 169
+
+[OK] Exporting to ONNX...
+[OK] Exported to web/public/models/similarity-calibrator/calibrator.onnx (0.00 MB)
+
+[OK] Training complete!
+    Model saved to: similarity_calibrator_best.pth
+    ONNX exported to: web/public/models/similarity-calibrator/calibrator.onnx
+
+[WARN] Training used synthetic same-person pairs (high-similarity heuristic)
+       For production, use real age-progression datasets like FG-NET or MORPH

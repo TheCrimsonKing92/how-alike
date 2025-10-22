@@ -1,0 +1,1663 @@
+Batch Age Calibration
+====================
+Input folder: C:\Users\miles\vcs\how-alike\calibration-images
+Output file:  C:\Users\miles\vcs\how-alike\calibration-data-yu4u-bgr.csv
+
+Found 22 images
+
+Launching browser...
+Loading calibration page...
+Waiting for worker to initialize...
+Worker ready!
+
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 4.7°, pitch: down 5.9°, roll: CCW 0.1°, faceB: yaw: left 6.1°, pitch: down 6.0°, roll: CW 0.5°, disparity: 1.5°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] loading jonathandinu/face-parsing model directly...
+  [PAGE] [transformers-parsing] loading jonathandinu/face-parsing model directly...
+  [PAGE] [transformers-parsing] model and processor loaded successfully
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 500 x 498
+  [PAGE] [transformers-parsing] running direct model inference on full image: 500 x 498
+  [PAGE] [transformers-parsing] RawImage created: 500 x 498 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 177 148 114 255
+  [PAGE] [transformers-parsing] model and processor loaded successfully
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 500 x 498
+  [PAGE] [transformers-parsing] running direct model inference on full image: 500 x 498
+  [PAGE] [transformers-parsing] RawImage created: 500 x 498 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 177 148 114 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 17354 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 498 x 500
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -1.00, 5.79, -7.24, -7.95, -11.19
+  [PAGE] [transformers-parsing] class distribution: 18:100183, 13:80600, 1:33751, 0:26875, 2:3348, 12:1101, 4:684, 5:672, 11:607, 7:562
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=356
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=562
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3348
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=684
+  [PAGE] [transformers-parsing] outline for classId=4: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=672
+  [PAGE] [transformers-parsing] outline for classId=5: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=261
+  [PAGE] [transformers-parsing] outline for classId=10: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=607
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1101
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 17508 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 498 x 500
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -1.00, 5.79, -7.24, -7.95, -11.19
+  [PAGE] [transformers-parsing] class distribution: 18:100183, 13:80600, 1:33751, 0:26875, 2:3348, 12:1101, 4:684, 5:672, 11:607, 7:562
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=356
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=562
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3348
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=684
+  [PAGE] [transformers-parsing] outline for classId=4: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=672
+  [PAGE] [transformers-parsing] outline for classId=5: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=261
+  [PAGE] [transformers-parsing] outline for classId=10: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=607
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1101
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #1] starting dual-model inference
+  [PAGE] [age-estimation #1] gender prediction: {gender: female, femaleScore: 0.324, maleScore: -0.324, confidence: 0.648}
+  [PAGE] [age-estimation #1] age prediction: {rawAge: 26.5, top3: 24y (30.1%), 29y (23.5%), 27y (15.0%)}
+  [PAGE] [age-estimation #2] starting dual-model inference
+  [PAGE] [age-estimation #2] gender prediction: {gender: male, femaleScore: -0.017, maleScore: 0.017, confidence: 0.034}
+  [PAGE] [age-estimation #2] age prediction: {rawAge: 26.6, top3: 24y (29.1%), 29y (24.4%), 27y (15.9%)}
+  [PAGE] [worker] age estimation: {ageA: 20.0 years (female), ageB: 20.1 years (male), confidenceA: 0.22, confidenceB: 0.01, ageGap: 0.1}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.93, sharedAxes: 25, overall: High morphological congruence. Similar brows and n…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 10_1_0_20170109204617417.jpg: age 10 → raw 26.5, calibrated 20.0
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 2.4°, pitch: down 6.5°, roll: CCW 3.2°, faceB: yaw: left 3.4°, pitch: down 5.6°, roll: CCW 3.0°, disparity: 1.4°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 241 x 320
+  [PAGE] [transformers-parsing] running direct model inference on full image: 241 x 320
+  [PAGE] [transformers-parsing] RawImage created: 241 x 320 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 66 67 71 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 241 x 320
+  [PAGE] [transformers-parsing] running direct model inference on full image: 241 x 320
+  [PAGE] [transformers-parsing] RawImage created: 241 x 320 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 66 67 71 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16249 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 320 x 241
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.85, -1.85, -4.49, -7.88, -10.05
+  [PAGE] [transformers-parsing] class distribution: 0:38085, 13:21313, 18:11576, 1:3155, 17:1915, 2:362, 12:305, 10:128, 11:105, 6:88
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=88
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=362
+  [PAGE] [transformers-parsing] outline for classId=2: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=57
+  [PAGE] [transformers-parsing] outline for classId=4: 4 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=31
+  [PAGE] [transformers-parsing] outline for classId=5: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=128
+  [PAGE] [transformers-parsing] outline for classId=10: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=105
+  [PAGE] [transformers-parsing] outline for classId=11: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=305
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16311 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 320 x 241
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.85, -1.85, -4.49, -7.88, -10.05
+  [PAGE] [transformers-parsing] class distribution: 0:38085, 13:21313, 18:11576, 1:3155, 17:1915, 2:362, 12:305, 10:128, 11:105, 6:88
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=88
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=362
+  [PAGE] [transformers-parsing] outline for classId=2: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=57
+  [PAGE] [transformers-parsing] outline for classId=4: 4 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=31
+  [PAGE] [transformers-parsing] outline for classId=5: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=128
+  [PAGE] [transformers-parsing] outline for classId=10: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=105
+  [PAGE] [transformers-parsing] outline for classId=11: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=305
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 1 [5 pts]
+  [PAGE] [worker] nose hints: 1 [6 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:1, nose:1
+  [PAGE] [worker] brow polys: 1 [5 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 1 [5 pts]
+  [PAGE] [worker] nose hints: 1 [6 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:1, nose:1
+  [PAGE] [worker] brow polys: 1 [5 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #3] starting dual-model inference
+  [PAGE] [age-estimation #3] gender prediction: {gender: male, femaleScore: -0.911, maleScore: 0.911, confidence: 1.822}
+  [PAGE] [age-estimation #3] age prediction: {rawAge: 26.1, top3: 24y (24.8%), 27y (12.6%), 22y (11.9%)}
+  [PAGE] [age-estimation #4] starting dual-model inference
+  [PAGE] [age-estimation #4] gender prediction: {gender: male, femaleScore: -0.730, maleScore: 0.730, confidence: 1.459}
+  [PAGE] [age-estimation #4] age prediction: {rawAge: 26.0, top3: 24y (25.5%), 27y (12.6%), 22y (12.0%)}
+  [PAGE] [worker] age estimation: {ageA: 24.4 years (male), ageB: 24.2 years (male), confidenceA: 0.61, confidenceB: 0.49, ageGap: 0.2}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.93, sharedAxes: 25, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 12_1_0_20170109205104124.jpg: age 12 → raw 26.1, calibrated 24.4
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 5.9°, pitch: down 7.1°, roll: CCW 1.7°, faceB: yaw: right 10.1°, pitch: down 6.8°, roll: CCW 1.5°, disparity: 4.2°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 602 x 751
+  [PAGE] [transformers-parsing] running direct model inference on full image: 602 x 751
+  [PAGE] [transformers-parsing] RawImage created: 602 x 751 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 245 180 148 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 602 x 751
+  [PAGE] [transformers-parsing] running direct model inference on full image: 602 x 751
+  [PAGE] [transformers-parsing] RawImage created: 602 x 751 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 245 180 148 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16459 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 751 x 602
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -4.47, -7.33, 5.60, -9.49, -11.32
+  [PAGE] [transformers-parsing] class distribution: 13:197037, 1:166525, 17:38404, 0:19256, 2:12212, 8:3521, 6:3433, 12:3313, 7:3258, 11:2001
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=3433
+  [PAGE] [transformers-parsing] outline for classId=6: 9 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=3258
+  [PAGE] [transformers-parsing] outline for classId=7: 9 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=12212
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=1433
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=1709
+  [PAGE] [transformers-parsing] outline for classId=5: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=2001
+  [PAGE] [transformers-parsing] outline for classId=11: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=3313
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16646 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 751 x 602
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -4.47, -7.33, 5.60, -9.49, -11.32
+  [PAGE] [transformers-parsing] class distribution: 13:197037, 1:166525, 17:38404, 0:19256, 2:12212, 8:3521, 6:3433, 12:3313, 7:3258, 11:2001
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=3433
+  [PAGE] [transformers-parsing] outline for classId=6: 9 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=3258
+  [PAGE] [transformers-parsing] outline for classId=7: 9 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=12212
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=1433
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=1709
+  [PAGE] [transformers-parsing] outline for classId=5: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=2001
+  [PAGE] [transformers-parsing] outline for classId=11: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=3313
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 9 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 9 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 9 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 9 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #5] starting dual-model inference
+  [PAGE] [age-estimation #5] gender prediction: {gender: female, femaleScore: 0.811, maleScore: -0.811, confidence: 1.623}
+  [PAGE] [age-estimation #5] age prediction: {rawAge: 26.1, top3: 24y (28.2%), 27y (19.8%), 29y (7.7%)}
+  [PAGE] [age-estimation #6] starting dual-model inference
+  [PAGE] [age-estimation #6] gender prediction: {gender: female, femaleScore: 0.763, maleScore: -0.763, confidence: 1.526}
+  [PAGE] [age-estimation #6] age prediction: {rawAge: 26.2, top3: 24y (25.7%), 27y (17.5%), 29y (8.4%)}
+  [PAGE] [worker] age estimation: {ageA: 13.5 years (female), ageB: 13.5 years (female), confidenceA: 0.54, confidenceB: 0.51, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.96, sharedAxes: 25, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 14_1_0_20170103201911744.jpg: age 14 → raw 26.1, calibrated 13.5
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 17.7°, pitch: down 1.9°, roll: CCW 0.8°, faceB: yaw: right 19.0°, pitch: down 2.7°, roll: CCW 0.8°, disparity: 1.5°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 1280 x 720
+  [PAGE] [transformers-parsing] running direct model inference on full image: 1280 x 720
+  [PAGE] [transformers-parsing] RawImage created: 1280 x 720 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 220 223 232 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 1280 x 720
+  [PAGE] [transformers-parsing] running direct model inference on full image: 1280 x 720
+  [PAGE] [transformers-parsing] RawImage created: 1280 x 720 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 220 223 232 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16589 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 720 x 1280
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.15, 3.75, -7.19, -3.62, 2.03
+  [PAGE] [transformers-parsing] class distribution: 0:528571, 18:144357, 13:115690, 1:88457, 17:22322, 2:8962, 8:4306, 6:2227, 12:1914, 7:1877
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=2227
+  [PAGE] [transformers-parsing] outline for classId=6: 10 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=1877
+  [PAGE] [transformers-parsing] outline for classId=7: 10 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=8962
+  [PAGE] [transformers-parsing] outline for classId=2: 13 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=941
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=852
+  [PAGE] [transformers-parsing] outline for classId=5: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=1124
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1914
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 17029 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 720 x 1280
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.15, 3.75, -7.19, -3.62, 2.03
+  [PAGE] [transformers-parsing] class distribution: 0:528571, 18:144357, 13:115690, 1:88457, 17:22322, 2:8962, 8:4306, 6:2227, 12:1914, 7:1877
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=2227
+  [PAGE] [transformers-parsing] outline for classId=6: 10 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=1877
+  [PAGE] [transformers-parsing] outline for classId=7: 10 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=8962
+  [PAGE] [transformers-parsing] outline for classId=2: 13 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=941
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=852
+  [PAGE] [transformers-parsing] outline for classId=5: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=1124
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1914
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [10 pts, 10 pts]
+  [PAGE] [worker] nose hints: 1 [13 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [10 pts, 10 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [10 pts, 10 pts]
+  [PAGE] [worker] nose hints: 1 [13 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [10 pts, 10 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #7] starting dual-model inference
+  [PAGE] [age-estimation #7] gender prediction: {gender: male, femaleScore: -0.164, maleScore: 0.164, confidence: 0.329}
+  [PAGE] [age-estimation #7] age prediction: {rawAge: 26.5, top3: 27y (18.3%), 29y (17.4%), 24y (16.8%)}
+  [PAGE] [age-estimation #8] starting dual-model inference
+  [PAGE] [age-estimation #8] gender prediction: {gender: male, femaleScore: -0.171, maleScore: 0.171, confidence: 0.342}
+  [PAGE] [age-estimation #8] age prediction: {rawAge: 26.8, top3: 27y (18.2%), 29y (15.6%), 24y (12.6%)}
+  [PAGE] [worker] age estimation: {ageA: 20.0 years (male), ageB: 20.3 years (male), confidenceA: 0.11, confidenceB: 0.11, ageGap: 0.3}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.93, sharedAxes: 26, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 18_0_0_20170110231625906.jpg: age 18 → raw 26.5, calibrated 20.0
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 14.0°, pitch: down 6.5°, roll: CW 6.0°, faceB: yaw: left 14.8°, pitch: down 6.6°, roll: CW 6.0°, disparity: 0.8°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 449
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 449
+  [PAGE] [transformers-parsing] RawImage created: 452 x 449 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 205 162 189 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 449
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 449
+  [PAGE] [transformers-parsing] RawImage created: 452 x 449 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 205 162 189 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15956 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 449 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.41, 5.01, -5.03, -7.15, -7.23
+  [PAGE] [transformers-parsing] class distribution: 0:81427, 18:54131, 13:25755, 1:23167, 17:12928, 2:2172, 9:887, 12:628, 11:453, 7:447
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=375
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=447
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2172
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=265
+  [PAGE] [transformers-parsing] outline for classId=4: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=293
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=453
+  [PAGE] [transformers-parsing] outline for classId=11: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=628
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16049 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 449 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.41, 5.01, -5.03, -7.15, -7.23
+  [PAGE] [transformers-parsing] class distribution: 0:81427, 18:54131, 13:25755, 1:23167, 17:12928, 2:2172, 9:887, 12:628, 11:453, 7:447
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=375
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=447
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2172
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=265
+  [PAGE] [transformers-parsing] outline for classId=4: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=293
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=453
+  [PAGE] [transformers-parsing] outline for classId=11: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=628
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 6 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 6 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #9] starting dual-model inference
+  [PAGE] [age-estimation #9] gender prediction: {gender: female, femaleScore: 0.246, maleScore: -0.246, confidence: 0.492}
+  [PAGE] [age-estimation #9] age prediction: {rawAge: 25.3, top3: 24y (25.8%), 22y (13.5%), 27y (13.1%)}
+  [PAGE] [age-estimation #10] starting dual-model inference
+  [PAGE] [age-estimation #10] gender prediction: {gender: female, femaleScore: 0.143, maleScore: -0.143, confidence: 0.287}
+  [PAGE] [age-estimation #10] age prediction: {rawAge: 25.3, top3: 24y (25.9%), 22y (13.2%), 27y (13.1%)}
+  [PAGE] [worker] age estimation: {ageA: 18.7 years (female), ageB: 18.7 years (female), confidenceA: 0.16, confidenceB: 0.10, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.97, sharedAxes: 25, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 19_1_3_20170104221847479.jpg: age 19 → raw 25.3, calibrated 18.7
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 68.1°, pitch: down 4.4°, roll: CCW 6.6°, faceB: yaw: left 61.5°, pitch: down 2.8°, roll: CCW 8.7°, disparity: 7.1°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 601
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 601
+  [PAGE] [transformers-parsing] RawImage created: 452 x 601 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 247 198 165 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 601
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 601
+  [PAGE] [transformers-parsing] RawImage created: 452 x 601 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 247 198 165 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16005 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 601 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -3.05, 4.89, -4.62, -6.74, -10.40
+  [PAGE] [transformers-parsing] class distribution: 0:130413, 18:66001, 13:37210, 1:24274, 17:8596, 2:2290, 12:744, 7:679, 6:350, 11:287
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=350
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=679
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2290
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=208
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=285
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=287
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=744
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16121 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 601 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -3.05, 4.89, -4.62, -6.74, -10.40
+  [PAGE] [transformers-parsing] class distribution: 0:130413, 18:66001, 13:37210, 1:24274, 17:8596, 2:2290, 12:744, 7:679, 6:350, 11:287
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=350
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=679
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2290
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=208
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=285
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=287
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=744
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #11] starting dual-model inference
+  [PAGE] [age-estimation #11] gender prediction: {gender: male, femaleScore: -1.095, maleScore: 1.095, confidence: 2.190}
+  [PAGE] [age-estimation #11] age prediction: {rawAge: 26.7, top3: 24y (21.4%), 29y (20.4%), 27y (18.7%)}
+  [PAGE] [age-estimation #12] starting dual-model inference
+  [PAGE] [age-estimation #12] gender prediction: {gender: male, femaleScore: -1.455, maleScore: 1.455, confidence: 2.911}
+  [PAGE] [age-estimation #12] age prediction: {rawAge: 26.7, top3: 24y (22.8%), 27y (18.4%), 29y (16.5%)}
+  [PAGE] [worker] age estimation: {ageA: 25.8 years (male), ageB: 25.6 years (male), confidenceA: 0.73, confidenceB: 0.97, ageGap: 0.2}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.94, sharedAxes: 26, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 26_1_2_20170104015910819.jpg: age 26 → raw 26.7, calibrated 25.8
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 1.6°, pitch: down 5.2°, roll: CCW 1.4°, faceB: yaw: right 7.8°, pitch: down 4.1°, roll: CCW 0.1°, disparity: 9.6°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 368 x 551
+  [PAGE] [transformers-parsing] running direct model inference on full image: 368 x 551
+  [PAGE] [transformers-parsing] RawImage created: 368 x 551 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 224 52 64 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 368 x 551
+  [PAGE] [transformers-parsing] running direct model inference on full image: 368 x 551
+  [PAGE] [transformers-parsing] RawImage created: 368 x 551 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 224 52 64 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15766 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 551 x 368
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -0.29, -5.73, -7.94, -10.69, -13.44
+  [PAGE] [transformers-parsing] class distribution: 18:133402, 0:29213, 1:17504, 13:14777, 17:5654, 2:1271, 12:281, 7:247, 9:200, 11:118
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=89
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=247
+  [PAGE] [transformers-parsing] outline for classId=7: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1271
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=9
+  [PAGE] [transformers-parsing] outline for classId=5: 2 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=118
+  [PAGE] [transformers-parsing] outline for classId=11: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=281
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 5 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 15874 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 551 x 368
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -0.29, -5.73, -7.94, -10.69, -13.44
+  [PAGE] [transformers-parsing] class distribution: 18:133402, 0:29213, 1:17504, 13:14777, 17:5654, 2:1271, 12:281, 7:247, 9:200, 11:118
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=89
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=247
+  [PAGE] [transformers-parsing] outline for classId=7: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1271
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=9
+  [PAGE] [transformers-parsing] outline for classId=5: 2 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=118
+  [PAGE] [transformers-parsing] outline for classId=11: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=281
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 5 region hints from segmentation
+  [PAGE] [worker] received 5 hints from adapter
+  [PAGE] [worker] brow hints: 2 [5 pts, 5 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [5 pts, 5 pts]
+  [PAGE] [worker] received 5 hints from adapter
+  [PAGE] [worker] brow hints: 2 [5 pts, 5 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [5 pts, 5 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #13] starting dual-model inference
+  [PAGE] [age-estimation #13] gender prediction: {gender: male, femaleScore: -0.999, maleScore: 0.999, confidence: 1.998}
+  [PAGE] [age-estimation #13] age prediction: {rawAge: 26.6, top3: 24y (18.8%), 29y (13.3%), 23y (10.2%)}
+  [PAGE] [age-estimation #14] starting dual-model inference
+  [PAGE] [age-estimation #14] gender prediction: {gender: male, femaleScore: -1.576, maleScore: 1.576, confidence: 3.152}
+  [PAGE] [age-estimation #14] age prediction: {rawAge: 26.5, top3: 24y (20.0%), 29y (14.1%), 23y (9.7%)}
+  [PAGE] [worker] age estimation: {ageA: 25.4 years (male), ageB: 25.3 years (male), confidenceA: 0.67, confidenceB: 1.00, ageGap: 0.1}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.84, sharedAxes: 23, overall: Good morphological similarity. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 29_0_4_20170103235516820.jpg: age 29 → raw 26.6, calibrated 25.4
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 38.6°, pitch: down 7.8°, roll: CCW 13.2°, faceB: yaw: right 47.7°, pitch: down 7.5°, roll: CCW 13.2°, disparity: 9.1°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 400 x 509
+  [PAGE] [transformers-parsing] running direct model inference on full image: 400 x 509
+  [PAGE] [transformers-parsing] RawImage created: 400 x 509 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 255 249 241 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 400 x 509
+  [PAGE] [transformers-parsing] running direct model inference on full image: 400 x 509
+  [PAGE] [transformers-parsing] RawImage created: 400 x 509 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 255 249 241 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15519 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 509 x 400
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.77, -0.96, -4.17, -4.32, -5.79
+  [PAGE] [transformers-parsing] class distribution: 0:179735, 18:10796, 1:9123, 13:2916, 17:1029, 5:1
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=1
+  [PAGE] [transformers-parsing] outline for classId=5: 1 points
+  [PAGE] [transformers-parsing] no segmentation hints generated, falling back to landmarks
+  [PAGE] [transformers-parsing] inference completed in 15590 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 509 x 400
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.77, -0.96, -4.17, -4.32, -5.79
+  [PAGE] [transformers-parsing] class distribution: 0:179735, 18:10796, 1:9123, 13:2916, 17:1029, 5:1
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=1
+  [PAGE] [transformers-parsing] outline for classId=5: 1 points
+  [PAGE] [transformers-parsing] no segmentation hints generated, falling back to landmarks
+  [PAGE] [worker] received 3 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 9 pts]
+  [PAGE] [worker] nose hints: 1 [11 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:2, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 9 pts]
+  [PAGE] [worker] received 3 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 9 pts]
+  [PAGE] [worker] nose hints: 1 [11 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:2, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 9 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #15] starting dual-model inference
+  [PAGE] [age-estimation #15] gender prediction: {gender: female, femaleScore: 1.580, maleScore: -1.580, confidence: 3.159}
+  [PAGE] [age-estimation #15] age prediction: {rawAge: 26.5, top3: 24y (18.4%), 26y (18.3%), 25y (13.9%)}
+  [PAGE] [age-estimation #16] starting dual-model inference
+  [PAGE] [age-estimation #16] gender prediction: {gender: female, femaleScore: 1.362, maleScore: -1.362, confidence: 2.724}
+  [PAGE] [age-estimation #16] age prediction: {rawAge: 26.6, top3: 26y (18.8%), 24y (17.1%), 25y (13.5%)}
+  [PAGE] [worker] age estimation: {ageA: 13.6 years (female), ageB: 13.6 years (female), confidenceA: 1.00, confidenceB: 0.91, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.90, sharedAxes: 23, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 35_1_1_20170109132740903.jpg: age 35 → raw 26.5, calibrated 13.6
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 24.0°, pitch: down 7.0°, roll: CCW 13.4°, faceB: yaw: left 28.9°, pitch: down 6.8°, roll: CCW 13.3°, disparity: 4.9°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 451
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 451
+  [PAGE] [transformers-parsing] RawImage created: 452 x 451 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 173 101 89 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 451
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 451
+  [PAGE] [transformers-parsing] RawImage created: 452 x 451 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 173 101 89 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16190 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 451 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -5.89, 0.36, -4.09, -8.46, -6.04
+  [PAGE] [transformers-parsing] class distribution: 0:101661, 13:36889, 18:29417, 1:24831, 17:4923, 2:1872, 10:1325, 12:1024, 9:733, 11:537
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=127
+  [PAGE] [transformers-parsing] outline for classId=6: 4 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=327
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1872
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=101
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=85
+  [PAGE] [transformers-parsing] outline for classId=5: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=1325
+  [PAGE] [transformers-parsing] outline for classId=10: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=537
+  [PAGE] [transformers-parsing] outline for classId=11: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1024
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16280 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 451 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -5.89, 0.36, -4.09, -8.46, -6.04
+  [PAGE] [transformers-parsing] class distribution: 0:101661, 13:36889, 18:29417, 1:24831, 17:4923, 2:1872, 10:1325, 12:1024, 9:733, 11:537
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=127
+  [PAGE] [transformers-parsing] outline for classId=6: 4 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=327
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1872
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=101
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=85
+  [PAGE] [transformers-parsing] outline for classId=5: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=1325
+  [PAGE] [transformers-parsing] outline for classId=10: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=537
+  [PAGE] [transformers-parsing] outline for classId=11: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1024
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [4 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [4 pts, 7 pts]
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [4 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [4 pts, 7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #17] starting dual-model inference
+  [PAGE] [age-estimation #17] gender prediction: {gender: male, femaleScore: -0.118, maleScore: 0.118, confidence: 0.236}
+  [PAGE] [age-estimation #17] age prediction: {rawAge: 25.0, top3: 22y (26.9%), 24y (15.9%), 26y (8.6%)}
+  [PAGE] [age-estimation #18] starting dual-model inference
+  [PAGE] [age-estimation #18] gender prediction: {gender: male, femaleScore: -0.354, maleScore: 0.354, confidence: 0.709}
+  [PAGE] [age-estimation #18] age prediction: {rawAge: 25.0, top3: 22y (28.3%), 24y (16.8%), 26y (8.0%)}
+  [PAGE] [worker] age estimation: {ageA: 18.4 years (male), ageB: 18.3 years (male), confidenceA: 0.08, confidenceB: 0.24, ageGap: 0.1}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.97, sharedAxes: 26, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 39_1_0_20170103182742753.jpg: age 39 → raw 25.0, calibrated 18.4
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 9.1°, pitch: down 6.3°, roll: CW 5.5°, faceB: yaw: right 20.9°, pitch: down 8.2°, roll: CW 4.8°, disparity: 12.0°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 434 x 343
+  [PAGE] [transformers-parsing] running direct model inference on full image: 434 x 343
+  [PAGE] [transformers-parsing] RawImage created: 434 x 343 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 238 192 169 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 434 x 343
+  [PAGE] [transformers-parsing] running direct model inference on full image: 434 x 343
+  [PAGE] [transformers-parsing] RawImage created: 434 x 343 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 238 192 169 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15935 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 343 x 434
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.12, 3.64, -4.34, -8.91, -10.24
+  [PAGE] [transformers-parsing] class distribution: 0:51749, 1:45728, 18:36823, 2:3069, 13:2871, 8:2514, 10:1751, 12:1491, 6:898, 7:728
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=898
+  [PAGE] [transformers-parsing] outline for classId=6: 8 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=728
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3069
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=226
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=259
+  [PAGE] [transformers-parsing] outline for classId=5: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=1751
+  [PAGE] [transformers-parsing] outline for classId=10: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=453
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1491
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16018 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 343 x 434
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.12, 3.64, -4.34, -8.91, -10.24
+  [PAGE] [transformers-parsing] class distribution: 0:51749, 1:45728, 18:36823, 2:3069, 13:2871, 8:2514, 10:1751, 12:1491, 6:898, 7:728
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=898
+  [PAGE] [transformers-parsing] outline for classId=6: 8 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=728
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3069
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=226
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=259
+  [PAGE] [transformers-parsing] outline for classId=5: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=1751
+  [PAGE] [transformers-parsing] outline for classId=10: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=453
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1491
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [8 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [8 pts, 6 pts]
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [8 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [8 pts, 6 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #19] starting dual-model inference
+  [PAGE] [age-estimation #19] gender prediction: {gender: female, femaleScore: 0.745, maleScore: -0.745, confidence: 1.491}
+  [PAGE] [age-estimation #19] age prediction: {rawAge: 27.1, top3: 29y (30.3%), 26y (20.3%), 24y (11.3%)}
+  [PAGE] [age-estimation #20] starting dual-model inference
+  [PAGE] [age-estimation #20] gender prediction: {gender: male, femaleScore: -0.579, maleScore: 0.579, confidence: 1.159}
+  [PAGE] [age-estimation #20] age prediction: {rawAge: 27.4, top3: 29y (24.1%), 26y (21.6%), 28y (11.7%)}
+  [PAGE] [worker] age estimation: {ageA: 13.6 years (female), ageB: 27.4 years (male), confidenceA: 0.50, confidenceB: 0.39, ageGap: 13.8}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.79, sharedAxes: 23, overall: Good morphological similarity. Similar brows and n…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 3_0_4_20170103202821873.jpg: age 3 → raw 27.1, calibrated 13.6
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 2.2°, pitch: down 7.3°, roll: CCW 1.1°, faceB: yaw: right 10.2°, pitch: down 9.6°, roll: CW 0.2°, disparity: 12.6°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 404 x 503
+  [PAGE] [transformers-parsing] running direct model inference on full image: 404 x 503
+  [PAGE] [transformers-parsing] RawImage created: 404 x 503 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 211 174 147 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 404 x 503
+  [PAGE] [transformers-parsing] running direct model inference on full image: 404 x 503
+  [PAGE] [transformers-parsing] RawImage created: 404 x 503 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 211 174 147 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16025 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 503 x 404
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -4.08, 3.36, -2.51, -6.39, -7.89
+  [PAGE] [transformers-parsing] class distribution: 0:60596, 13:49232, 18:48913, 1:28046, 17:11008, 2:1910, 10:747, 12:699, 7:497, 6:464
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=464
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=497
+  [PAGE] [transformers-parsing] outline for classId=7: 8 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1910
+  [PAGE] [transformers-parsing] outline for classId=2: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=145
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=167
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=747
+  [PAGE] [transformers-parsing] outline for classId=10: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=342
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=699
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16130 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 503 x 404
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -4.08, 3.36, -2.51, -6.39, -7.89
+  [PAGE] [transformers-parsing] class distribution: 0:60596, 13:49232, 18:48913, 1:28046, 17:11008, 2:1910, 10:747, 12:699, 7:497, 6:464
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=464
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=497
+  [PAGE] [transformers-parsing] outline for classId=7: 8 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1910
+  [PAGE] [transformers-parsing] outline for classId=2: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=145
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=167
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=747
+  [PAGE] [transformers-parsing] outline for classId=10: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=342
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=699
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 8 pts]
+  [PAGE] [worker] nose hints: 1 [7 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 8 pts]
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 8 pts]
+  [PAGE] [worker] nose hints: 1 [7 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 8 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #21] starting dual-model inference
+  [PAGE] [age-estimation #21] gender prediction: {gender: male, femaleScore: -2.861, maleScore: 2.861, confidence: 5.723}
+  [PAGE] [age-estimation #21] age prediction: {rawAge: 25.8, top3: 24y (18.6%), 26y (12.0%), 27y (11.5%)}
+  [PAGE] [age-estimation #22] starting dual-model inference
+  [PAGE] [age-estimation #22] gender prediction: {gender: male, femaleScore: -3.032, maleScore: 3.032, confidence: 6.065}
+  [PAGE] [age-estimation #22] age prediction: {rawAge: 26.2, top3: 24y (18.9%), 27y (12.4%), 26y (10.7%)}
+  [PAGE] [worker] age estimation: {ageA: 23.8 years (male), ageB: 24.6 years (male), confidenceA: 1.00, confidenceB: 1.00, ageGap: 0.7}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.86, sharedAxes: 22, overall: High morphological congruence. Similar eyes and br…se and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 46_1_0_20170105172417134.jpg: age 46 → raw 25.8, calibrated 23.8
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 28.4°, pitch: down 3.9°, roll: CCW 16.2°, faceB: yaw: right 14.4°, pitch: down 6.2°, roll: CCW 17.4°, disparity: 14.2°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 390 x 519
+  [PAGE] [transformers-parsing] running direct model inference on full image: 390 x 519
+  [PAGE] [transformers-parsing] RawImage created: 390 x 519 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 174 144 134 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 390 x 519
+  [PAGE] [transformers-parsing] running direct model inference on full image: 390 x 519
+  [PAGE] [transformers-parsing] RawImage created: 390 x 519 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 174 144 134 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16144 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 519 x 390
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -12.32, 7.36, -0.11, -9.63, -13.43
+  [PAGE] [transformers-parsing] class distribution: 0:72798, 1:62667, 18:34242, 17:20895, 2:3352, 8:3219, 13:1496, 9:782, 12:781, 6:548
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=548
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=509
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3352
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=344
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=327
+  [PAGE] [transformers-parsing] outline for classId=5: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=450
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=781
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16259 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 519 x 390
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -12.32, 7.36, -0.11, -9.63, -13.43
+  [PAGE] [transformers-parsing] class distribution: 0:72798, 1:62667, 18:34242, 17:20895, 2:3352, 8:3219, 13:1496, 9:782, 12:781, 6:548
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=548
+  [PAGE] [transformers-parsing] outline for classId=6: 5 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=509
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3352
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=344
+  [PAGE] [transformers-parsing] outline for classId=4: 5 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=327
+  [PAGE] [transformers-parsing] outline for classId=5: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=450
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=781
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [5 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [5 pts, 6 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [5 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [5 pts, 6 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #23] starting dual-model inference
+  [PAGE] [age-estimation #23] gender prediction: {gender: female, femaleScore: 0.134, maleScore: -0.134, confidence: 0.267}
+  [PAGE] [age-estimation #23] age prediction: {rawAge: 26.3, top3: 24y (16.6%), 29y (16.1%), 26y (10.9%)}
+  [PAGE] [age-estimation #24] starting dual-model inference
+  [PAGE] [age-estimation #24] gender prediction: {gender: male, femaleScore: -0.898, maleScore: 0.898, confidence: 1.795}
+  [PAGE] [age-estimation #24] age prediction: {rawAge: 26.3, top3: 29y (16.7%), 24y (15.3%), 26y (10.3%)}
+  [PAGE] [worker] age estimation: {ageA: 19.8 years (female), ageB: 24.8 years (male), confidenceA: 0.09, confidenceB: 0.60, ageGap: 5.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.86, sharedAxes: 24, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 47_0_0_20170104211830788.jpg: age 47 → raw 26.3, calibrated 19.8
+  [PAGE] Worker error: Could not detect a single face in one or both images.
+✗ 59_0_0_20170111203905144.jpg: page.waitForFunction: Timeout 90000ms exceeded.
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 3.4°, pitch: down 5.5°, roll: CCW 0.8°, faceB: yaw: left 1.1°, pitch: down 2.1°, roll: CCW 0.2°, disparity: 4.1°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 132 x 165
+  [PAGE] [transformers-parsing] running direct model inference on full image: 132 x 165
+  [PAGE] [transformers-parsing] RawImage created: 132 x 165 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 210 178 167 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 132 x 165
+  [PAGE] [transformers-parsing] running direct model inference on full image: 132 x 165
+  [PAGE] [transformers-parsing] RawImage created: 132 x 165 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 210 178 167 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16149 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 165 x 132
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -2.71, 0.86, 4.96, -9.84, -9.89
+  [PAGE] [transformers-parsing] class distribution: 13:8988, 1:6366, 0:2297, 18:2070, 17:1112, 2:572, 11:96, 12:83, 7:62, 6:62
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=62
+  [PAGE] [transformers-parsing] outline for classId=6: 4 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=62
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=572
+  [PAGE] [transformers-parsing] outline for classId=2: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=33
+  [PAGE] [transformers-parsing] outline for classId=4: 3 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=39
+  [PAGE] [transformers-parsing] outline for classId=5: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=96
+  [PAGE] [transformers-parsing] outline for classId=11: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=83
+  [PAGE] [transformers-parsing] outline for classId=12: 4 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16172 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 165 x 132
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -2.71, 0.86, 4.96, -9.84, -9.89
+  [PAGE] [transformers-parsing] class distribution: 13:8988, 1:6366, 0:2297, 18:2070, 17:1112, 2:572, 11:96, 12:83, 7:62, 6:62
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=62
+  [PAGE] [transformers-parsing] outline for classId=6: 4 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=62
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=572
+  [PAGE] [transformers-parsing] outline for classId=2: 7 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=33
+  [PAGE] [transformers-parsing] outline for classId=4: 3 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=39
+  [PAGE] [transformers-parsing] outline for classId=5: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=96
+  [PAGE] [transformers-parsing] outline for classId=11: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=83
+  [PAGE] [transformers-parsing] outline for classId=12: 4 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [4 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [7 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [4 pts, 4 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [4 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [7 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [4 pts, 4 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #25] starting dual-model inference
+  [PAGE] [age-estimation #25] gender prediction: {gender: female, femaleScore: 1.189, maleScore: -1.189, confidence: 2.378}
+  [PAGE] [age-estimation #25] age prediction: {rawAge: 27.3, top3: 29y (26.7%), 24y (14.5%), 27y (11.0%)}
+  [PAGE] [age-estimation #26] starting dual-model inference
+  [PAGE] [age-estimation #26] gender prediction: {gender: female, femaleScore: 1.062, maleScore: -1.062, confidence: 2.124}
+  [PAGE] [age-estimation #26] age prediction: {rawAge: 27.2, top3: 29y (27.3%), 24y (15.3%), 27y (11.3%)}
+  [PAGE] [worker] age estimation: {ageA: 13.6 years (female), ageB: 13.6 years (female), confidenceA: 0.79, confidenceB: 0.71, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.86, sharedAxes: 23, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 59_1_0_20170110122554230.jpg: age 59 → raw 27.3, calibrated 13.6
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 15.2°, pitch: down 1.5°, roll: CCW 3.9°, faceB: yaw: left 16.5°, pitch: down 0.8°, roll: CCW 3.8°, disparity: 1.5°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 400 x 268
+  [PAGE] [transformers-parsing] running direct model inference on full image: 400 x 268
+  [PAGE] [transformers-parsing] RawImage created: 400 x 268 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 115 131 94 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 400 x 268
+  [PAGE] [transformers-parsing] running direct model inference on full image: 400 x 268
+  [PAGE] [transformers-parsing] RawImage created: 400 x 268 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 115 131 94 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15940 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 268 x 400
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.46, 2.36, 3.90, -5.86, -4.52
+  [PAGE] [transformers-parsing] class distribution: 0:59846, 13:24635, 1:12148, 18:5482, 17:1902, 2:1339, 12:510, 7:265, 10:236, 6:229
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=229
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=265
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1339
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=224
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=202
+  [PAGE] [transformers-parsing] outline for classId=5: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=236
+  [PAGE] [transformers-parsing] outline for classId=10: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=182
+  [PAGE] [transformers-parsing] outline for classId=11: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=510
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 15996 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 268 x 400
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.46, 2.36, 3.90, -5.86, -4.52
+  [PAGE] [transformers-parsing] class distribution: 0:59846, 13:24635, 1:12148, 18:5482, 17:1902, 2:1339, 12:510, 7:265, 10:236, 6:229
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=229
+  [PAGE] [transformers-parsing] outline for classId=6: 6 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=265
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1339
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=224
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=202
+  [PAGE] [transformers-parsing] outline for classId=5: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=236
+  [PAGE] [transformers-parsing] outline for classId=10: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=182
+  [PAGE] [transformers-parsing] outline for classId=11: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=510
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 8 region hints from segmentation
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 4 pts]
+  [PAGE] [worker] received 8 hints from adapter
+  [PAGE] [worker] brow hints: 2 [6 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:5, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [6 pts, 4 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #27] starting dual-model inference
+  [PAGE] [age-estimation #27] gender prediction: {gender: female, femaleScore: 1.812, maleScore: -1.812, confidence: 3.624}
+  [PAGE] [age-estimation #27] age prediction: {rawAge: 25.5, top3: 24y (31.4%), 27y (14.2%), 23y (9.9%)}
+  [PAGE] [age-estimation #28] starting dual-model inference
+  [PAGE] [age-estimation #28] gender prediction: {gender: female, femaleScore: 1.492, maleScore: -1.492, confidence: 2.983}
+  [PAGE] [age-estimation #28] age prediction: {rawAge: 25.5, top3: 24y (30.5%), 27y (15.4%), 26y (9.9%)}
+  [PAGE] [worker] age estimation: {ageA: 13.5 years (female), ageB: 13.5 years (female), confidenceA: 1.00, confidenceB: 0.99, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.91, sharedAxes: 26, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 5_1_0_20170109191946614.jpg: age 5 → raw 25.5, calibrated 13.5
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 22.5°, pitch: down 7.5°, roll: CCW 7.8°, faceB: yaw: left 15.0°, pitch: down 4.8°, roll: CCW 4.9°, disparity: 8.5°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 460 x 636
+  [PAGE] [transformers-parsing] running direct model inference on full image: 460 x 636
+  [PAGE] [transformers-parsing] RawImage created: 460 x 636 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 243 243 245 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 460 x 636
+  [PAGE] [transformers-parsing] running direct model inference on full image: 460 x 636
+  [PAGE] [transformers-parsing] RawImage created: 460 x 636 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 243 243 245 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16002 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 636 x 460
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -9.09, 2.64, 7.05, -9.65, -11.51
+  [PAGE] [transformers-parsing] class distribution: 0:105578, 13:66820, 18:64504, 1:26913, 17:22143, 2:3101, 12:1318, 11:647, 7:397, 5:344
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=277
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=397
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3101
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=193
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=344
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=647
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1318
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16139 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 636 x 460
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -9.09, 2.64, 7.05, -9.65, -11.51
+  [PAGE] [transformers-parsing] class distribution: 0:105578, 13:66820, 18:64504, 1:26913, 17:22143, 2:3101, 12:1318, 11:647, 7:397, 5:344
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=277
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=397
+  [PAGE] [transformers-parsing] outline for classId=7: 6 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3101
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=193
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=344
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=647
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1318
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 6 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 6 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 6 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #29] starting dual-model inference
+  [PAGE] [age-estimation #29] gender prediction: {gender: female, femaleScore: 0.500, maleScore: -0.500, confidence: 0.999}
+  [PAGE] [age-estimation #29] age prediction: {rawAge: 26.6, top3: 24y (24.5%), 29y (14.9%), 27y (12.2%)}
+  [PAGE] [age-estimation #30] starting dual-model inference
+  [PAGE] [age-estimation #30] gender prediction: {gender: female, femaleScore: 0.800, maleScore: -0.800, confidence: 1.600}
+  [PAGE] [age-estimation #30] age prediction: {rawAge: 26.5, top3: 24y (26.2%), 29y (13.6%), 27y (13.2%)}
+  [PAGE] [worker] age estimation: {ageA: 20.1 years (female), ageB: 13.6 years (female), confidenceA: 0.33, confidenceB: 0.53, ageGap: 6.6}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.70, sharedAxes: 19, overall: Moderate morphological similarity. Similar brows and nose and cheeks and forehead, ageMethod: ML (ViT)}
+✓ 66_1_0_20170110140413980.jpg: age 66 → raw 26.6, calibrated 20.1
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 19.0°, pitch: down 10.5°, roll: CCW 0.9°, faceB: yaw: right 9.3°, pitch: down 9.5°, roll: CCW 2.4°, disparity: 9.8°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 451
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 451
+  [PAGE] [transformers-parsing] RawImage created: 452 x 451 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 208 164 139 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 452 x 451
+  [PAGE] [transformers-parsing] running direct model inference on full image: 452 x 451
+  [PAGE] [transformers-parsing] RawImage created: 452 x 451 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 208 164 139 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15936 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 451 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -12.91, 6.53, -5.61, -8.96, -14.97
+  [PAGE] [transformers-parsing] class distribution: 0:86239, 18:64139, 1:32648, 13:10832, 2:2469, 3:1951, 8:1253, 6:960, 7:946, 12:705
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=960
+  [PAGE] [transformers-parsing] outline for classId=6: 9 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=946
+  [PAGE] [transformers-parsing] outline for classId=7: 8 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2469
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=306
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=296
+  [PAGE] [transformers-parsing] outline for classId=5: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=561
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=705
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16013 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 451 x 452
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -12.91, 6.53, -5.61, -8.96, -14.97
+  [PAGE] [transformers-parsing] class distribution: 0:86239, 18:64139, 1:32648, 13:10832, 2:2469, 3:1951, 8:1253, 6:960, 7:946, 12:705
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=960
+  [PAGE] [transformers-parsing] outline for classId=6: 9 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=946
+  [PAGE] [transformers-parsing] outline for classId=7: 8 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2469
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=306
+  [PAGE] [transformers-parsing] outline for classId=4: 6 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=296
+  [PAGE] [transformers-parsing] outline for classId=5: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=561
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=705
+  [PAGE] [transformers-parsing] outline for classId=12: 7 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 8 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 8 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [9 pts, 8 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [9 pts, 8 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #31] starting dual-model inference
+  [PAGE] [age-estimation #31] gender prediction: {gender: female, femaleScore: 1.600, maleScore: -1.599, confidence: 3.199}
+  [PAGE] [age-estimation #31] age prediction: {rawAge: 27.8, top3: 26y (17.3%), 29y (15.3%), 30y (12.1%)}
+  [PAGE] [age-estimation #32] starting dual-model inference
+  [PAGE] [age-estimation #32] gender prediction: {gender: female, femaleScore: 2.154, maleScore: -2.154, confidence: 4.309}
+  [PAGE] [age-estimation #32] age prediction: {rawAge: 27.4, top3: 26y (20.0%), 29y (14.4%), 27y (10.5%)}
+  [PAGE] [worker] age estimation: {ageA: 13.6 years (female), ageB: 13.6 years (female), confidenceA: 1.00, confidenceB: 1.00, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.92, sharedAxes: 23, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 67_0_3_20161220221736930.jpg: age 67 → raw 27.8, calibrated 13.6
+  [PAGE] [worker] pose estimation: {faceA: yaw: left 12.7°, pitch: down 4.7°, roll: CW 0.2°, faceB: yaw: left 7.6°, pitch: down 4.9°, roll: CW 1.0°, disparity: 5.1°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 460 x 707
+  [PAGE] [transformers-parsing] running direct model inference on full image: 460 x 707
+  [PAGE] [transformers-parsing] RawImage created: 460 x 707 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 149 99 98 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 460 x 707
+  [PAGE] [transformers-parsing] running direct model inference on full image: 460 x 707
+  [PAGE] [transformers-parsing] RawImage created: 460 x 707 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 149 99 98 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16022 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 707 x 460
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.85, 4.97, 4.03, -7.60, -10.74
+  [PAGE] [transformers-parsing] class distribution: 0:100755, 13:95723, 18:53813, 1:34944, 17:31380, 2:3784, 12:1321, 11:884, 15:804, 5:641
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=324
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3784
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=582
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=641
+  [PAGE] [transformers-parsing] outline for classId=5: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=11
+  [PAGE] [transformers-parsing] outline for classId=10: 2 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=884
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1321
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 6 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16159 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 707 x 460
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -6.85, 4.97, 4.03, -7.60, -10.74
+  [PAGE] [transformers-parsing] class distribution: 0:100755, 13:95723, 18:53813, 1:34944, 17:31380, 2:3784, 12:1321, 11:884, 15:804, 5:641
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=324
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=3784
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=582
+  [PAGE] [transformers-parsing] outline for classId=4: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=641
+  [PAGE] [transformers-parsing] outline for classId=5: 9 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=10 pixels=11
+  [PAGE] [transformers-parsing] outline for classId=10: 2 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=884
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=1321
+  [PAGE] [transformers-parsing] outline for classId=12: 8 points
+  [PAGE] [transformers-parsing] generated 6 region hints from segmentation
+  [PAGE] [worker] received 6 hints from adapter
+  [PAGE] [worker] brow hints: 1 [7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:1, nose:1
+  [PAGE] [worker] brow polys: 1 [7 pts]
+  [PAGE] [worker] received 6 hints from adapter
+  [PAGE] [worker] brow hints: 1 [7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:1, nose:1
+  [PAGE] [worker] brow polys: 1 [7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #33] starting dual-model inference
+  [PAGE] [age-estimation #33] gender prediction: {gender: female, femaleScore: 0.627, maleScore: -0.627, confidence: 1.255}
+  [PAGE] [age-estimation #33] age prediction: {rawAge: 25.2, top3: 24y (36.4%), 22y (15.0%), 29y (12.7%)}
+  [PAGE] [age-estimation #34] starting dual-model inference
+  [PAGE] [age-estimation #34] gender prediction: {gender: female, femaleScore: 0.987, maleScore: -0.987, confidence: 1.974}
+  [PAGE] [age-estimation #34] age prediction: {rawAge: 25.4, top3: 24y (37.0%), 29y (12.3%), 22y (11.5%)}
+  [PAGE] [worker] age estimation: {ageA: 13.5 years (female), ageB: 13.5 years (female), confidenceA: 0.42, confidenceB: 0.66, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.90, sharedAxes: 23, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 76_1_0_20170110140935777.jpg: age 76 → raw 25.2, calibrated 13.5
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 3.3°, pitch: down 2.9°, roll: CW 3.3°, faceB: yaw: right 2.5°, pitch: down 3.4°, roll: CW 3.0°, disparity: 0.9°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 621 x 640
+  [PAGE] [transformers-parsing] running direct model inference on full image: 621 x 640
+  [PAGE] [transformers-parsing] RawImage created: 621 x 640 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 220 220 220 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 621 x 640
+  [PAGE] [transformers-parsing] running direct model inference on full image: 621 x 640
+  [PAGE] [transformers-parsing] RawImage created: 621 x 640 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 220 220 220 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16469 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 640 x 621
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.52, 5.93, 2.69, -5.99, -9.84
+  [PAGE] [transformers-parsing] class distribution: 0:210591, 13:107108, 1:31410, 18:29056, 17:10441, 2:2852, 9:1054, 8:1042, 12:927, 11:692
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=584
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=527
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2852
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=565
+  [PAGE] [transformers-parsing] outline for classId=4: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=591
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=692
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=927
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16610 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 640 x 621
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -8.52, 5.93, 2.69, -5.99, -9.84
+  [PAGE] [transformers-parsing] class distribution: 0:210591, 13:107108, 1:31410, 18:29056, 17:10441, 2:2852, 9:1054, 8:1042, 12:927, 11:692
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=584
+  [PAGE] [transformers-parsing] outline for classId=6: 7 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=527
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2852
+  [PAGE] [transformers-parsing] outline for classId=2: 10 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=565
+  [PAGE] [transformers-parsing] outline for classId=4: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=591
+  [PAGE] [transformers-parsing] outline for classId=5: 7 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=692
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=927
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [7 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [10 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [7 pts, 7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #35] starting dual-model inference
+  [PAGE] [age-estimation #35] gender prediction: {gender: female, femaleScore: 0.094, maleScore: -0.094, confidence: 0.187}
+  [PAGE] [age-estimation #35] age prediction: {rawAge: 25.8, top3: 24y (28.1%), 27y (17.3%), 25y (13.9%)}
+  [PAGE] [age-estimation #36] starting dual-model inference
+  [PAGE] [age-estimation #36] gender prediction: {gender: female, femaleScore: 0.070, maleScore: -0.069, confidence: 0.139}
+  [PAGE] [age-estimation #36] age prediction: {rawAge: 25.8, top3: 24y (28.6%), 27y (17.0%), 25y (13.9%)}
+  [PAGE] [worker] age estimation: {ageA: 19.2 years (female), ageB: 19.2 years (female), confidenceA: 0.06, confidenceB: 0.05, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.95, sharedAxes: 26, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 7_1_1_20170109194708063.jpg: age 7 → raw 25.8, calibrated 19.2
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 29.7°, pitch: down 7.6°, roll: CCW 8.0°, faceB: yaw: right 31.7°, pitch: down 8.1°, roll: CCW 7.9°, disparity: 2.0°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 620 x 413
+  [PAGE] [transformers-parsing] running direct model inference on full image: 620 x 413
+  [PAGE] [transformers-parsing] RawImage created: 620 x 413 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 96 84 86 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 620 x 413
+  [PAGE] [transformers-parsing] running direct model inference on full image: 620 x 413
+  [PAGE] [transformers-parsing] RawImage created: 620 x 413 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 96 84 86 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 15873 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 413 x 620
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -10.66, 3.30, -5.40, -5.04, -9.16
+  [PAGE] [transformers-parsing] class distribution: 0:129918, 18:80212, 1:19787, 13:10802, 3:6548, 17:4641, 2:1950, 8:1177, 7:381, 12:348
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=11
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=381
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1950
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=39
+  [PAGE] [transformers-parsing] outline for classId=4: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=246
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=348
+  [PAGE] [transformers-parsing] outline for classId=12: 4 points
+  [PAGE] [transformers-parsing] generated 6 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 15977 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 413 x 620
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -10.66, 3.30, -5.40, -5.04, -9.16
+  [PAGE] [transformers-parsing] class distribution: 0:129918, 18:80212, 1:19787, 13:10802, 3:6548, 17:4641, 2:1950, 8:1177, 7:381, 12:348
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=11
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=381
+  [PAGE] [transformers-parsing] outline for classId=7: 7 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1950
+  [PAGE] [transformers-parsing] outline for classId=2: 9 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=39
+  [PAGE] [transformers-parsing] outline for classId=4: 3 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=246
+  [PAGE] [transformers-parsing] outline for classId=11: 6 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=348
+  [PAGE] [transformers-parsing] outline for classId=12: 4 points
+  [PAGE] [transformers-parsing] generated 6 region hints from segmentation
+  [PAGE] [worker] received 6 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:3, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 7 pts]
+  [PAGE] [worker] received 6 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 7 pts]
+  [PAGE] [worker] nose hints: 1 [9 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:3, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 7 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #37] starting dual-model inference
+  [PAGE] [age-estimation #37] gender prediction: {gender: female, femaleScore: 1.990, maleScore: -1.989, confidence: 3.979}
+  [PAGE] [age-estimation #37] age prediction: {rawAge: 28.7, top3: 27y (20.0%), 30y (18.5%), 29y (14.5%)}
+  [PAGE] [age-estimation #38] starting dual-model inference
+  [PAGE] [age-estimation #38] gender prediction: {gender: female, femaleScore: 2.085, maleScore: -2.084, confidence: 4.169}
+  [PAGE] [age-estimation #38] age prediction: {rawAge: 28.8, top3: 27y (20.1%), 30y (17.4%), 29y (15.3%)}
+  [PAGE] [worker] age estimation: {ageA: 13.7 years (female), ageB: 13.7 years (female), confidenceA: 1.00, confidenceB: 1.00, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.94, sharedAxes: 25, overall: High morphological congruence. Similar brows and n…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 80_0_0_20170111200927317.jpg: age 80 → raw 28.7, calibrated 13.7
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 56.8°, pitch: down 7.8°, roll: CW 0.3°, faceB: yaw: right 50.9°, pitch: down 8.3°, roll: CW 0.9°, disparity: 5.9°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 458 x 588
+  [PAGE] [transformers-parsing] running direct model inference on full image: 458 x 588
+  [PAGE] [transformers-parsing] RawImage created: 458 x 588 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 39 24 17 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 458 x 588
+  [PAGE] [transformers-parsing] running direct model inference on full image: 458 x 588
+  [PAGE] [transformers-parsing] RawImage created: 458 x 588 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 39 24 17 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16100 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 588 x 458
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.21, 0.26, -5.07, -7.85, -9.63
+  [PAGE] [transformers-parsing] class distribution: 18:128661, 0:109511, 1:14889, 13:9910, 17:3806, 2:1559, 12:355, 11:250, 8:126, 6:88
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=88
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=79
+  [PAGE] [transformers-parsing] outline for classId=7: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1559
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=43
+  [PAGE] [transformers-parsing] outline for classId=4: 4 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=27
+  [PAGE] [transformers-parsing] outline for classId=5: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=250
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=355
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16220 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 588 x 458
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): 1.21, 0.26, -5.07, -7.85, -9.63
+  [PAGE] [transformers-parsing] class distribution: 18:128661, 0:109511, 1:14889, 13:9910, 17:3806, 2:1559, 12:355, 11:250, 8:126, 6:88
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=88
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=79
+  [PAGE] [transformers-parsing] outline for classId=7: 5 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=1559
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=4 pixels=43
+  [PAGE] [transformers-parsing] outline for classId=4: 4 points
+  [PAGE] [transformers-parsing] processing region=eyes classId=5 pixels=27
+  [PAGE] [transformers-parsing] outline for classId=5: 4 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=250
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=355
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 7 region hints from segmentation
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 5 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 5 pts]
+  [PAGE] [worker] received 7 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 5 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:4, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 5 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #39] starting dual-model inference
+  [PAGE] [age-estimation #39] gender prediction: {gender: female, femaleScore: 0.802, maleScore: -0.802, confidence: 1.603}
+  [PAGE] [age-estimation #39] age prediction: {rawAge: 27.1, top3: 29y (20.1%), 24y (10.6%), 22y (9.9%)}
+  [PAGE] [age-estimation #40] starting dual-model inference
+  [PAGE] [age-estimation #40] gender prediction: {gender: female, femaleScore: 1.208, maleScore: -1.208, confidence: 2.416}
+  [PAGE] [age-estimation #40] age prediction: {rawAge: 27.4, top3: 29y (23.7%), 24y (10.0%), 22y (9.0%)}
+  [PAGE] [worker] age estimation: {ageA: 13.6 years (female), ageB: 13.6 years (female), confidenceA: 0.53, confidenceB: 0.81, ageGap: 0.0}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.94, sharedAxes: 24, overall: High morphological congruence. Similar eyes and br…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 85_1_0_20170110181953748.jpg: age 85 → raw 27.1, calibrated 13.6
+  [PAGE] [worker] pose estimation: {faceA: yaw: right 32.7°, pitch: down 9.0°, roll: CW 11.8°, faceB: yaw: right 27.2°, pitch: down 8.2°, roll: CW 11.5°, disparity: 5.6°, confidenceA: 0.90, confidenceB: 0.90}
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 378 x 505
+  [PAGE] [transformers-parsing] running direct model inference on full image: 378 x 505
+  [PAGE] [transformers-parsing] RawImage created: 378 x 505 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 200 164 164 255
+  [PAGE] [transformers-parsing] image type: OffscreenCanvas size: 378 x 505
+  [PAGE] [transformers-parsing] running direct model inference on full image: 378 x 505
+  [PAGE] [transformers-parsing] RawImage created: 378 x 505 channels: 4
+  [PAGE] [transformers-parsing] sample pixel RGBA: 200 164 164 255
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] input pixel_values shape: [1, 3, 512, 512]
+  [PAGE] [transformers-parsing] inference completed in 16580 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 505 x 378
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -2.07, 3.60, -3.20, -4.63, -8.61
+  [PAGE] [transformers-parsing] class distribution: 0:62192, 18:61539, 13:29593, 1:25450, 3:6841, 17:2287, 2:2218, 12:431, 11:285, 7:40
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=14
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=40
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2218
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=285
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=431
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 5 region hints from segmentation
+  [PAGE] [transformers-parsing] inference completed in 16671 ms
+  [PAGE] [transformers-parsing] output keys: [logits]
+  [PAGE] [transformers-parsing] logits shape: [1, 19, 128, 128] classes: 19
+  [PAGE] [transformers-parsing] will upsample from 128 x 128 to 505 x 378
+  [PAGE] [transformers-parsing] center pixel logits (first 5 classes): -2.07, 3.60, -3.20, -4.63, -8.61
+  [PAGE] [transformers-parsing] class distribution: 0:62192, 18:61539, 13:29593, 1:25450, 3:6841, 17:2287, 2:2218, 12:431, 11:285, 7:40
+  [PAGE] [transformers-parsing] processing region=brows classId=6 pixels=14
+  [PAGE] [transformers-parsing] outline for classId=6: 3 points
+  [PAGE] [transformers-parsing] processing region=brows classId=7 pixels=40
+  [PAGE] [transformers-parsing] outline for classId=7: 4 points
+  [PAGE] [transformers-parsing] processing region=nose classId=2 pixels=2218
+  [PAGE] [transformers-parsing] outline for classId=2: 8 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=11 pixels=285
+  [PAGE] [transformers-parsing] outline for classId=11: 5 points
+  [PAGE] [transformers-parsing] processing region=mouth classId=12 pixels=431
+  [PAGE] [transformers-parsing] outline for classId=12: 6 points
+  [PAGE] [transformers-parsing] generated 5 region hints from segmentation
+  [PAGE] [worker] received 5 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 4 pts]
+  [PAGE] [worker] received 5 hints from adapter
+  [PAGE] [worker] brow hints: 2 [3 pts, 4 pts]
+  [PAGE] [worker] nose hints: 1 [8 pts]
+  [PAGE] [worker] using adapter brows, skipping landmark fallback
+  [PAGE] [worker] using adapter nose, skipping landmark fallback
+  [PAGE] [worker] final poly counts: eyes:2, mouth:4, jaw:1, brows:2, nose:1
+  [PAGE] [worker] brow polys: 2 [3 pts, 4 pts]
+  [PAGE] [worker] using segmentation-based scoring from masks
+  [PAGE] [worker] extracting face crops for age estimation
+  [PAGE] [worker] starting age estimation (face A will be #1, face B will be #2)
+  [PAGE] [age-estimation #41] starting dual-model inference
+  [PAGE] [age-estimation #41] gender prediction: {gender: male, femaleScore: -0.041, maleScore: 0.041, confidence: 0.082}
+  [PAGE] [age-estimation #41] age prediction: {rawAge: 29.7, top3: 34y (21.3%), 30y (16.9%), 29y (14.2%)}
+  [PAGE] [age-estimation #42] starting dual-model inference
+  [PAGE] [age-estimation #42] gender prediction: {gender: female, femaleScore: 0.136, maleScore: -0.136, confidence: 0.273}
+  [PAGE] [age-estimation #42] age prediction: {rawAge: 29.6, top3: 34y (18.9%), 29y (17.1%), 30y (16.6%)}
+  [PAGE] [worker] age estimation: {ageA: 23.5 years (male), ageB: 23.4 years (female), confidenceA: 0.03, confidenceB: 0.09, ageGap: 0.1}
+  [PAGE] [worker] detailed feature analysis: {congruence: 0.88, sharedAxes: 23, overall: High morphological congruence. Similar brows and n…th and cheeks and jaw and forehead and face shape, ageMethod: ML (ViT)}
+✓ 89_1_3_20170109150838156.jpg: age 89 → raw 29.7, calibrated 23.5
+
+✓ Processed 21/22 images (1 failed)
+
+✓ Saved calibration data to: C:\Users\miles\vcs\how-alike\calibration-data-yu4u-bgr.csv
+
+Mean Absolute Error (calibrated): 24.62 years

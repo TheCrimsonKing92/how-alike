@@ -1,0 +1,56 @@
+{
+  "dataPoints": 144,
+  "models": [
+    {
+      "name": "Piecewise-3",
+      "mae": 14.590644439617705,
+      "rmse": 17.826513772085075,
+      "params": {
+        "threshold1": 30.6,
+        "threshold2": 49.7,
+        "lowSlope": 1.090151856121942,
+        "lowIntercept": -8.90443792271939,
+        "midSlope": 0.024748831502112455,
+        "midIntercept": 15.546297656376627,
+        "highSlope": 0.8300945510294716,
+        "highIntercept": -11.38879439570616
+      }
+    },
+    {
+      "name": "Piecewise-2",
+      "mae": 14.774333585998205,
+      "rmse": 17.973350431524107,
+      "params": {
+        "threshold": 68,
+        "lowSlope": 0.40596960402667737,
+        "lowIntercept": 5.60880382807103,
+        "highSlope": 2.2570725707258803,
+        "highIntercept": -87.91881918820417
+      }
+    },
+    {
+      "name": "Polynomial",
+      "mae": 15.27270646617746,
+      "rmse": 18.16245111838884,
+      "params": {
+        "a": 47.24478056690761,
+        "b": -1.7794290617609492,
+        "c": 0.026579382323340194
+      }
+    },
+    {
+      "name": "Linear",
+      "mae": 15.507233159192863,
+      "rmse": 18.68400857108812,
+      "params": {
+        "slope": 0.5600543751593943,
+        "intercept": 0.02614017396373293
+      }
+    }
+  ],
+  "recommendation": {
+    "model": "Piecewise-3",
+    "mae": 14.590644439617705,
+    "code": "\nconst AGE_CALIBRATION = {\n  threshold1: 30.6,\n  threshold2: 49.7,\n  lowSlope: 1.0902,\n  lowIntercept: -8.90,\n  midSlope: 0.0247,\n  midIntercept: 15.55,\n  highSlope: 0.8301,\n  highIntercept: -11.39,\n  minAge: 0,\n  maxAge: 120,\n};\n\nexport function calibratePredictedAge(rawAge: number): number {\n  const { threshold1, threshold2, lowSlope, lowIntercept, midSlope, midIntercept, highSlope, highIntercept, minAge, maxAge } = AGE_CALIBRATION;\n  let calibrated;\n  if (rawAge <= threshold1) {\n    calibrated = lowSlope * rawAge + lowIntercept;\n  } else if (rawAge <= threshold2) {\n    calibrated = midSlope * rawAge + midIntercept;\n  } else {\n    calibrated = highSlope * rawAge + highIntercept;\n  }\n  return clamp(calibrated, minAge, maxAge);\n}"
+  }
+}

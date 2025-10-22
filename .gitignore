@@ -1,0 +1,8 @@
+# Large model artifacts
+web/public/models/**
+web/scripts/model-conversion/models/**
+web/scripts/model-conversion/MiVOLO/**
+web/scripts/model-conversion/age-gender-estimation/**
+utkface-uncropped/**
+facexformer/**
+

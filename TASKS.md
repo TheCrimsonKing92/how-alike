@@ -1,9 +1,96 @@
 ﻿# Tasks & Work Log
 
 ## Now
-- See **NEXT_IMPROVEMENTS.md** for comprehensive roadmap of planned enhancements (pose robustness, age model upgrade, deep feature embeddings, occlusion handling)
+- **Age-aware similarity calibration via MobileFaceNet** - NEW DIRECTION (REVISED 2025-01-20)
+  - Phase 1 COMPLETED: MobileFaceNet integration and validation
+  - ✅ Downloaded InsightFace buffalo_sc (w600k_mbf.onnx, 13MB)
+  - ✅ Validated model: 512D embeddings, tested with real images
+  - ✅ Created browser adapter (mobilefacenet-adapter.ts) with ONNX Runtime Web
+  - ✅ Extracted embeddings from 8 UTKFace samples (ages 1-70)
+  - ✅ Validated age signal: correlation -0.31 between age difference and similarity (confirms embeddings contain age-relevant features)
+  - Phase 2 COMPLETED: Age probe training
+  - ✅ Designed architecture: 512D → Dense(128) → Dense(64) → {age, uncertainty}
+  - ✅ Trained on 500 UTKFace samples (ages 10-100)
+  - ✅ Performance: 1.91y train MAE, 4.38y validation MAE
+  - ✅ Exported to ONNX: 0.30 MB (well under 2MB target)
+  - ✅ Model outputs: age prediction + epistemic uncertainty
+  - 🔄 Phase 3 NEXT: Similarity calibrator training
+  - Architecture: MobileFaceNet embeddings (512D) → age probe (Δage, unc) + similarity features → calibrator p(same|s, Δage, unc)
+  - Benefits: 86% size reduction (90MB → 13.3MB total), optimizes for actual task (similarity across age gaps)
+  - See `AGE_AWARE_SIMILARITY_PLAN.md` for full plan
+
+## Next
+- Glossary rollout follow-ups: surface DefinitionTooltip in condensed result summaries, draft copy review workflow, and scope Phase 2 SVG overlay assets.
 
 ## Done (recent)
+- Feature narratives annotated with glossary tooltips: FeatureDetailPanel and ResultsPanel use `DefinitionTooltip` + `annotateGlossaryText` for summaries and region lists (`definition-tooltip.test.tsx`, `feature-detail-panel.test.tsx`, `results-panel.test.tsx`).
+- Tooltip readability fixes: removed opacity stacking, allowed popovers to escape card boundaries, and updated summary layouts for consistent contrast (hover issues verified).
+- DefinitionTooltip component built with lazy glossary loading, hover capability detection, IntersectionObserver gating, and unit coverage (`definition-tooltip.test.tsx`).
+- **Phase 2: Age probe training completed** (2025-01-20):
+  - Created training script `scripts/train-age-probe.py` with PyTorch implementation
+  - Architecture: 512D embeddings → Dense(128,ReLU) → Dense(64,ReLU) → {age, uncertainty}
+  - Trained on 500 UTKFace samples (ages 10-100) with 85/15 train/val split
+  - Loss function: MAE + uncertainty regularization
+  - Early stopping at epoch 35 (patience=10)
+  - Final performance: 1.91y train MAE, 4.38y validation MAE
+  - Model size: 77K parameters (~0.30 MB ONNX)
+  - Exported to `web/public/models/age-probe/age_probe.onnx`
+  - Model outputs: age (years) + epistemic uncertainty
+  - Ready for browser integration via ONNX Runtime Web
+- **Phase 1: MobileFaceNet integration and age signal validation completed** (2025-01-20):
+  - Downloaded InsightFace buffalo_sc model pack and extracted w600k_mbf.onnx (13MB MobileFaceNet)
+  - Validated model with Python: 512D embeddings, correct preprocessing (pixel-127.5)/127.5
+  - Created browser adapter `web/src/models/mobilefacenet-adapter.ts` with ONNX Runtime Web
+  - Implemented preprocessing (resize 112x112, normalize to [-1,1], NCHW format)
+  - Added distance (L2) and similarity (cosine) computation functions
+  - Created unit tests for adapter functions (7/10 tests passing - preprocessing tests skip due to OffscreenCanvas in Node.js)
+  - Created `scripts/extract-embeddings.py` to extract embeddings from UTKFace samples
+  - Extracted embeddings from 8 diverse age samples (ages 1, 10, 20, 30, 40, 50, 60, 70)
+  - **Critical finding**: Correlation -0.3145 between age difference and similarity
+  - Age signal confirmed: similarity decreases as age difference increases (e.g., age 30 vs 50 (diff=20y): sim=0.50, age 1 vs 70 (diff=69y): sim=0.06)
+  - Embeddings saved to `mobilefacenet-embeddings-samples.json`
+  - Ready for Phase 2: Age probe training
+- **Project plan documentation updated** (2025-01-20):
+  - Revised `AGE_AWARE_SIMILARITY_PLAN.md` to use MobileFaceNet instead of FaceMesh embeddings
+  - Updated `NEXT_IMPROVEMENTS.md` Priority #2 with new approach and deprecated old calibration plan
+  - Updated `TASKS.md` to reflect revised architecture
+  - Archived superseded `CALIBRATION_STATUS.md` to `docs/archive/`
+  - Added `FACEXFORMER_EVALUATION.md` documenting model rejection (decade bins, not regression)
+  - Key finding: MediaPipe FaceMesh doesn't expose embeddings, pivoting to MobileFaceNet (~4MB)
+  - New architecture: MobileFaceNet → embeddings → age probe + calibrator (total ~6MB vs 90MB yu4u)
+- **Age model upgrade completed** - Priority #2 from NEXT_IMPROVEMENTS.md:
+  - Successfully converted yu4u ResNet50 to ONNX (90.4 MB, 4.41 MAE on APPA-REAL)
+  - Cloned yu4u repo to get exact model architecture (ResNet50, 224x224 input, ImageNet weights)
+  - Fixed Keras→ONNX conversion issues (weight shapes, layer naming, input size)
+  - Implemented dual-model architecture:
+    - Gender prediction: InsightFace genderage.onnx (96x96, 1.3MB, fast)
+    - Age prediction: yu4u ResNet50 (224x224, 90MB, accurate)
+  - Updated estimateAge() to:
+    - Process 96x96 input for gender (NCHW, BGR format)
+    - Process 224x224 input for age (NHWC, RGB format)
+    - Compute weighted age from 101-class output: sum(prob[i] * i)
+  - Tested successfully with UTKFace samples (ages 1-100)
+  - All 238/241 tests passing
+  - Model files: web/public/models/age-gender/yu4u_age_resnet50.onnx
+  - **Target MAE**: <5y for adults (from yu4u APPA-REAL benchmark: 4.41y)
+  - **Previous baseline**: 13.15y MAE with InsightFace + gender-specific calibration
+  - **Next step**: Run batch calibration on 143 UTKFace samples to measure actual improvement
+- **Verified pose normalization implementation (already active)**:
+  - Comprehensive pose estimation module in `web/src/lib/pose-estimation.ts` with 362 lines of code
+  - Estimates yaw, pitch, roll angles from MediaPipe FaceMesh 3D landmarks using geometric analysis
+  - `normalizeLandmarksToFrontal()` applies inverse rotation to canonicalize faces before comparison
+  - Worker (`analyze.worker.ts` lines 354-372) actively uses pose normalization:
+    - Estimates pose for both faces via `estimateFacePose()`
+    - Applies frontal normalization via `normalizeLandmarksToFrontal()`
+    - Uses normalized keypoints for all similarity comparisons
+    - Computes pose disparity metric (`poseAngularDistance`)
+    - Generates warning when disparity > 30°
+  - UI displays pose warning in blue info box (`app/page.tsx` lines 214-224)
+  - Warns users: "Photos taken at significantly different angles (X° difference). Comparison accuracy may be reduced."
+  - Notes that "Landmarks have been normalized to frontal view for comparison"
+  - Full test suite with 34 tests in `pose-estimation.test.ts` - all passing
+  - Total: 238/241 tests passing across entire codebase
+  - **Result**: Phase 1 Priority #1 from NEXT_IMPROVEMENTS.md is complete - pose normalization reduces errors from photos at different angles
 - **Implemented gender-specific age calibration (9.9% improvement)**:
   - Created `web/scripts/fit-gender-calibration.mjs` to fit separate male/female calibration curves
   - Split 144 UTKFace samples by gender (67 male, 76 female) and fitted independent 3-segment piecewise regressions

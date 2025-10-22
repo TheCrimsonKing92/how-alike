@@ -1,0 +1,82 @@
+{
+  "zygomatic": {
+    "term": "Zygomatic Prominence",
+    "definition": "The outward projection of the cheekbone; determines how prominent or flat the midface appears."
+  },
+  "philtrum": {
+    "term": "Philtrum",
+    "definition": "The vertical groove between the base of the nose and the upper lip."
+  },
+  "nasolabial_fold": {
+    "term": "Nasolabial Fold",
+    "definition": "The curved crease running from the nose's side to the mouth's corner; becomes deeper with expression or age."
+  },
+  "brow_position": {
+    "term": "Brow Position",
+    "definition": "The height of the eyebrows relative to the eyes and forehead, influencing expression and perceived alertness."
+  },
+  "brow_length": {
+    "term": "Brow Length",
+    "definition": "The horizontal span of each eyebrow from the inner bridge of the nose to its outer end."
+  },
+  "brow_shape": {
+    "term": "Brow Shape",
+    "definition": "The overall curvature and arch of the eyebrow, contributing strongly to perceived emotion and character."
+  },
+  "canthal_tilt": {
+    "term": "Canthal Tilt",
+    "definition": "The angle formed by the inner and outer eye corners; upward tilt gives a cat-eye look, downward appears softer."
+  },
+  "orbital_depth": {
+    "term": "Orbital Depth",
+    "definition": "How deep-set or prominent the eyes appear relative to the surrounding brow and cheekbone."
+  },
+  "interocular_distance": {
+    "term": "Interocular Distance",
+    "definition": "The spacing between the centers of the pupils or inner eye corners; affects facial balance perception."
+  },
+  "nasal_bridge": {
+    "term": "Nasal Bridge",
+    "definition": "The upper part of the nose between the eyes; may appear high, flat, wide, or narrow."
+  },
+  "nasal_tip": {
+    "term": "Nasal Tip",
+    "definition": "The lower end of the nose; shape and rotation define how upturned or downturned it appears."
+  },
+  "alar_width": {
+    "term": "Alar Width",
+    "definition": "The width across the nostrils at the base of the nose."
+  },
+  "lip_fullness": {
+    "term": "Lip Fullness",
+    "definition": "Relative volume or thickness of the upper and lower lips when relaxed."
+  },
+  "cupid_bow": {
+    "term": "Cupid's Bow",
+    "definition": "The double curve on the upper lip's center; sharpness defines how sculpted or smooth the lip line looks."
+  },
+  "commissure_orientation": {
+    "term": "Lip Corner Orientation",
+    "definition": "The direction mouth corners turn - neutral, upturned, or downturned - impacting perceived expression."
+  },
+  "chin_projection": {
+    "term": "Chin Projection",
+    "definition": "How far the chin extends forward relative to the lips and nose, influencing facial profile balance."
+  },
+  "jaw_angle": {
+    "term": "Jaw Angle",
+    "definition": "The angle formed between the jawline and the neck; sharper angles create a squarer, more defined lower face."
+  },
+  "mandibular_width": {
+    "term": "Mandibular Width",
+    "definition": "The horizontal distance between the jaw corners; contributes to perceived face width and strength."
+  },
+  "facial_asymmetry": {
+    "term": "Facial Asymmetry",
+    "definition": "Differences between left and right sides in shape or alignment; small asymmetry is typical in all faces."
+  },
+  "facial_length": {
+    "term": "Facial Length",
+    "definition": "The vertical distance from hairline to chin; determines overall proportion such as long, medium, or short face."
+  }
+}

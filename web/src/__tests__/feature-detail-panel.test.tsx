@@ -4,6 +4,22 @@ import userEvent from '@testing-library/user-event';
 import FeatureDetailPanel from '@/components/FeatureDetailPanel';
 import type { FeatureNarrative } from '@/workers/types';
 
+const normalize = (value?: string | null) => value?.replace(/\s+/g, ' ').trim() ?? '';
+const matchText = (needle: string | RegExp) => (_content: string, node?: Element | null) => {
+  if (!node) return false;
+  const text = normalize(node.textContent);
+  const matches =
+    typeof needle === 'string'
+      ? text.includes(needle)
+      : needle.test(text);
+  if (!matches) return false;
+
+  return Array.from(node.children).every((child) => {
+    const childText = normalize(child.textContent);
+    return typeof needle === 'string' ? !childText.includes(needle) : !needle.test(childText);
+  });
+};
+
 describe('FeatureDetailPanel', () => {
   it('renders nothing when narrative is undefined', () => {
     const { container } = render(<FeatureDetailPanel narrative={undefined} congruenceScore={undefined} />);
@@ -44,7 +60,11 @@ describe('FeatureDetailPanel', () => {
 
     render(<FeatureDetailPanel narrative={narrative} congruenceScore={0.65} />);
 
-    expect(screen.getByText('Both share positive canthal tilt and average eye size')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        matchText('Both share positive canthal tilt and average eye size')
+      )
+    ).toBeInTheDocument();
   });
 
   it('renders feature summaries in collapsible sections', () => {
@@ -88,7 +108,7 @@ describe('FeatureDetailPanel', () => {
     render(<FeatureDetailPanel narrative={narrative} congruenceScore={0.75} />);
 
     // Details should not be visible initially
-    expect(screen.queryByText('Both have positive canthal tilt')).not.toBeInTheDocument();
+    expect(screen.queryByText(matchText('Positive canthal tilt'))).not.toBeInTheDocument();
 
     // Click the button to expand
     const button = screen.getByRole('button', { name: /eyes/i });
@@ -96,7 +116,7 @@ describe('FeatureDetailPanel', () => {
 
     // Details should now be visible with sections
     expect(screen.getByText('Shared')).toBeInTheDocument();
-    expect(screen.getByText('Positive canthal tilt')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Positive canthal tilt'))).toBeInTheDocument();
     expect(screen.getByText('Image A')).toBeInTheDocument();
     expect(screen.getByText('Average eye size')).toBeInTheDocument();
     expect(screen.getByText('Image B')).toBeInTheDocument();
@@ -126,11 +146,11 @@ describe('FeatureDetailPanel', () => {
 
     // Expand
     await user.click(button);
-    expect(screen.getByText('Positive canthal tilt')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Positive canthal tilt'))).toBeInTheDocument();
 
     // Collapse
     await user.click(button);
-    expect(screen.queryByText('Positive canthal tilt')).not.toBeInTheDocument();
+    expect(screen.queryByText(matchText('Positive canthal tilt'))).not.toBeInTheDocument();
   });
 
   it('allows expanding multiple features simultaneously', async () => {
@@ -163,14 +183,14 @@ describe('FeatureDetailPanel', () => {
 
     // Expand eyes
     await user.click(eyesButton);
-    expect(screen.getByText('Positive canthal tilt')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Positive canthal tilt'))).toBeInTheDocument();
     expect(screen.queryByText(/Narrow nose width/)).not.toBeInTheDocument();
 
     // Expand nose (both should remain open)
     await user.click(noseButton);
-    expect(screen.getByText('Positive canthal tilt')).toBeInTheDocument();
-    expect(screen.getByText('Narrow nose width')).toBeInTheDocument();
-    expect(screen.getByText('Broad nose width')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Positive canthal tilt'))).toBeInTheDocument();
+    expect(screen.getByText(matchText('Narrow nose width'))).toBeInTheDocument();
+    expect(screen.getByText(matchText('Broad nose width'))).toBeInTheDocument();
   });
 
   it('handles empty axis details gracefully', async () => {

@@ -1,17 +1,18 @@
+import { annotateGlossaryText } from "@/components/DefinitionTooltip";
+
 export type RegionScore = { region: string; score: number };
 
 export default function ResultsPanel({
   scores,
   overall,
   texts,
-  hasDetailedAnalysis
+  hasDetailedAnalysis,
 }: {
   scores?: RegionScore[];
   overall?: number;
-  texts?: {region:string;text:string}[];
+  texts?: { region: string; text: string }[];
   hasDetailedAnalysis?: boolean;
 }) {
-  // Create a map of region -> text for quick lookup
   const textMap = new Map<string, string>();
   if (texts) {
     for (const t of texts) {
@@ -33,9 +34,12 @@ export default function ResultsPanel({
           return (
             <li key={s.region}>
               <span className="font-medium">{s.region}:</span> {(s.score * 100).toFixed(1)}%
-              {description && (
-                <span className="opacity-75"> — {description}</span>
-              )}
+              {description ? (
+                <span className="text-muted-foreground">
+                  {" — "}
+                  {annotateGlossaryText(description)}
+                </span>
+              ) : null}
             </li>
           );
         })}

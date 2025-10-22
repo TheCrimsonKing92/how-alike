@@ -18,6 +18,38 @@ A privacy-first, browser-based app that compares two faces and explains their re
 - Lint: `cd web && npm run lint`
 - Format: `cd web && npm run format`
 
+## Model Assets (not in Git)
+
+Large ONNX binaries stay out of version control. After cloning, download the heavy models locally before running the app:
+
+1. **Age regressor (yu4u ResNet50, ~90 MB)**
+   ```bash
+   bash web/scripts/model-conversion/download-yu4u-model.sh
+   python web/scripts/model-conversion/convert-yu4u-to-onnx.py \
+     web/scripts/model-conversion/models/age_only_resnet50_weights.061-3.300-4.410.hdf5 \
+     web/public/models/age-gender/yu4u_age_resnet50.onnx
+   ```
+   (The conversion script installs dependencies on first run; the large `.hdf5` stays outside `web/public`.)
+
+2. **Face embeddings (MobileFaceNet, ~13 MB)**
+   ```bash
+   pip install --user insightface onnxruntime
+   python scripts/download-mobilefacenet.py
+   ```
+   Copies `mobilefacenet.onnx` into `web/public/models/mobilefacenet/`.
+
+3. **Face parsing segmentation (ResNet34, ~90 MB)**
+   ```bash
+   npx --yes @xenova/transformers convert \
+     --model jonathandinu/face-parsing \
+     --task image-segmentation \
+     --format onnx \
+     --output web/public/models/parsing/face-parsing-resnet34
+   ```
+   Produces `model.onnx` plus tokenizer/config files expected by the app.
+
+Keep these binaries local (or in your own artifact store); do **not** commit them to Git to avoid the GitHub size limits noted above.
+
 ## Project Docs
 
 - Project: `PROJECT.md`
@@ -42,4 +74,3 @@ Next steps:
 ---
 
 How Alike emphasizes resemblance and explainability -- it is not intended for biometric identity or verification.
-

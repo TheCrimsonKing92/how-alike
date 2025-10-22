@@ -14,10 +14,10 @@
  * predicted gender, and confidence for each image along with the calibrated gap.
  */
 
-import fs from 'fs/promises';
-import path from 'path';
-import * as ort from 'onnxruntime-node';
-import { env, RawImage } from '@xenova/transformers';
+import fs from "fs/promises";
+import path from "path";
+import * as ort from "onnxruntime-node";
+import { env, RawImage } from "@xenova/transformers";
 
 const args = process.argv.slice(2);
 
@@ -27,26 +27,26 @@ function parseArgs() {
     imageB: null,
     ageA: null,
     ageB: null,
-    model: path.resolve('public/models/age-gender/genderage.onnx'),
+    model: path.resolve("public/models/age-gender/genderage.onnx"),
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === '--imageA') {
-      params.imageA = path.resolve(args[++i] ?? '');
-    } else if (arg === '--imageB') {
-      params.imageB = path.resolve(args[++i] ?? '');
-    } else if (arg === '--ageA') {
+    if (arg === "--imageA") {
+      params.imageA = path.resolve(args[++i] ?? "");
+    } else if (arg === "--imageB") {
+      params.imageB = path.resolve(args[++i] ?? "");
+    } else if (arg === "--ageA") {
       params.ageA = Number(args[++i]);
-    } else if (arg === '--ageB') {
+    } else if (arg === "--ageB") {
       params.ageB = Number(args[++i]);
-    } else if (arg === '--model') {
-      params.model = path.resolve(args[++i] ?? '');
+    } else if (arg === "--model") {
+      params.model = path.resolve(args[++i] ?? "");
     }
   }
 
   if (!params.imageA || !params.imageB) {
-    throw new Error('Please provide --imageA and --imageB');
+    throw new Error("Please provide --imageA and --imageB");
   }
 
   return params;
@@ -74,9 +74,7 @@ function calibrateAge(rawAge) {
   const { threshold, lowSlope, lowIntercept, highSlope, highIntercept, minAge, maxAge } =
     AGE_CALIBRATION;
   const calibrated =
-    rawAge <= threshold
-      ? lowSlope * rawAge + lowIntercept
-      : highSlope * rawAge + highIntercept;
+    rawAge <= threshold ? lowSlope * rawAge + lowIntercept : highSlope * rawAge + highIntercept;
   return clamp(calibrated, minAge, maxAge);
 }
 
@@ -114,7 +112,7 @@ async function loadImageData(imagePath) {
 async function runInference(session, imagePath, inputName, outputName) {
   const tensorData = await loadImageData(imagePath);
   const feeds = {
-    [inputName]: new ort.Tensor('float32', tensorData, [1, 3, 96, 96]),
+    [inputName]: new ort.Tensor("float32", tensorData, [1, 3, 96, 96]),
   };
   const outputs = await session.run(feeds);
   const outputTensor = outputs[outputName];
@@ -123,7 +121,7 @@ async function runInference(session, imagePath, inputName, outputName) {
   const femaleScore = data[0];
   const maleScore = data[1];
   const rawAge = data[2] * 100;
-  const gender = maleScore > femaleScore ? 'male' : 'female';
+  const gender = maleScore > femaleScore ? "male" : "female";
   const genderDelta = Math.abs(maleScore - femaleScore);
   const confidence = Math.min(1, Math.max(0, genderDelta / 3));
 
@@ -141,9 +139,9 @@ function printResult(label, result, expectedAge) {
   console.log(`  Calibrated age : ${result.age.toFixed(2)} years`);
   console.log(`  Raw age (model): ${result.rawAge.toFixed(2)} years`);
   console.log(
-    `  Gender         : ${result.gender} (confidence ${result.genderConfidence.toFixed(3)}, normalized ${result.confidence.toFixed(2)})`
+    `  Gender         : ${result.gender} (confidence ${result.genderConfidence.toFixed(3)}, normalized ${result.confidence.toFixed(2)})`,
   );
-  if (typeof expectedAge === 'number' && !Number.isNaN(expectedAge)) {
+  if (typeof expectedAge === "number" && !Number.isNaN(expectedAge)) {
     const err = result.age - expectedAge;
     console.log(`  Expected age   : ${expectedAge.toFixed(2)} (error ${err.toFixed(2)} years)`);
   }
@@ -167,8 +165,8 @@ async function main() {
     runInference(session, params.imageB, inputName, outputName),
   ]);
 
-  printResult('Image A', resultA, params.ageA);
-  printResult('Image B', resultB, params.ageB);
+  printResult("Image A", resultA, params.ageA);
+  printResult("Image B", resultB, params.ageB);
 
   const gap = Math.abs(resultA.age - resultB.age);
   console.log(`\nCalibrated age gap: ${gap.toFixed(2)} years`);
@@ -178,4 +176,3 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-

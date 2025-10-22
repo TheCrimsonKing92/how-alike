@@ -7,19 +7,20 @@
  * to reduce systematic gender-based errors in age estimation.
  */
 
-import fs from 'fs/promises';
+import fs from "fs/promises";
 
 async function loadCalibrationData(csvPath) {
-  const content = await fs.readFile(csvPath, 'utf-8');
-  const lines = content.trim().split('\n').slice(1); // Skip header
+  const content = await fs.readFile(csvPath, "utf-8");
+  const lines = content.trim().split("\n").slice(1); // Skip header
 
-  return lines.map(line => {
-    const [filename, actualAge, rawPrediction, calibratedPrediction, error, gender] = line.split(',');
+  return lines.map((line) => {
+    const [filename, actualAge, rawPrediction, calibratedPrediction, error, gender] =
+      line.split(",");
     return {
       filename,
       actual: parseFloat(actualAge),
       raw: parseFloat(rawPrediction),
-      gender: gender?.trim()
+      gender: gender?.trim(),
     };
   });
 }
@@ -27,7 +28,10 @@ async function loadCalibrationData(csvPath) {
 // Simple linear regression: y = mx + b
 function fitLinear(data) {
   const n = data.length;
-  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  let sumX = 0,
+    sumY = 0,
+    sumXY = 0,
+    sumX2 = 0;
 
   for (const point of data) {
     sumX += point.raw;
@@ -40,17 +44,17 @@ function fitLinear(data) {
   const intercept = (sumY - slope * sumX) / n;
 
   return {
-    type: 'linear',
+    type: "linear",
     params: { slope, intercept },
-    predict: (x) => slope * x + intercept
+    predict: (x) => slope * x + intercept,
   };
 }
 
 // 3-segment piecewise linear regression
 function fitPiecewise3(data, threshold1, threshold2) {
-  const lowData = data.filter(d => d.raw <= threshold1);
-  const midData = data.filter(d => d.raw > threshold1 && d.raw <= threshold2);
-  const highData = data.filter(d => d.raw > threshold2);
+  const lowData = data.filter((d) => d.raw <= threshold1);
+  const midData = data.filter((d) => d.raw > threshold1 && d.raw <= threshold2);
+  const highData = data.filter((d) => d.raw > threshold2);
 
   if (lowData.length < 2 || midData.length < 2 || highData.length < 2) {
     return null; // Not enough data for all segments
@@ -61,7 +65,7 @@ function fitPiecewise3(data, threshold1, threshold2) {
   const highFit = fitLinear(highData);
 
   return {
-    type: 'piecewise3',
+    type: "piecewise3",
     params: {
       threshold1,
       threshold2,
@@ -70,7 +74,7 @@ function fitPiecewise3(data, threshold1, threshold2) {
       midSlope: midFit.params.slope,
       midIntercept: midFit.params.intercept,
       highSlope: highFit.params.slope,
-      highIntercept: highFit.params.intercept
+      highIntercept: highFit.params.intercept,
     },
     predict: (x) => {
       if (x <= threshold1) {
@@ -80,13 +84,13 @@ function fitPiecewise3(data, threshold1, threshold2) {
       } else {
         return highFit.predict(x);
       }
-    }
+    },
   };
 }
 
 // Find best thresholds for 3-segment piecewise regression
 function findBestPiecewise3Thresholds(data) {
-  const rawValues = data.map(d => d.raw).sort((a, b) => a - b);
+  const rawValues = data.map((d) => d.raw).sort((a, b) => a - b);
   const n = rawValues.length;
 
   // Need at least 5 points per segment for gender-specific data (smaller subsets)
@@ -125,12 +129,12 @@ function findBestPiecewise3Thresholds(data) {
 }
 
 function calculateMAE(data, model) {
-  const errors = data.map(d => Math.abs(model.predict(d.raw) - d.actual));
+  const errors = data.map((d) => Math.abs(model.predict(d.raw) - d.actual));
   return errors.reduce((sum, e) => sum + e, 0) / errors.length;
 }
 
 function calculateRMSE(data, model) {
-  const squaredErrors = data.map(d => {
+  const squaredErrors = data.map((d) => {
     const error = model.predict(d.raw) - d.actual;
     return error * error;
   });
@@ -143,15 +147,15 @@ function evaluateModel(data, model) {
 
   // Calculate per-age-group errors
   const ageGroups = [
-    { name: 'Children (0-12)', min: 0, max: 12 },
-    { name: 'Teens (13-19)', min: 13, max: 19 },
-    { name: 'Young Adults (20-35)', min: 20, max: 35 },
-    { name: 'Middle Age (36-59)', min: 36, max: 59 },
-    { name: 'Seniors (60+)', min: 60, max: 120 }
+    { name: "Children (0-12)", min: 0, max: 12 },
+    { name: "Teens (13-19)", min: 13, max: 19 },
+    { name: "Young Adults (20-35)", min: 20, max: 35 },
+    { name: "Middle Age (36-59)", min: 36, max: 59 },
+    { name: "Seniors (60+)", min: 60, max: 120 },
   ];
 
-  const groupErrors = ageGroups.map(group => {
-    const groupData = data.filter(d => d.actual >= group.min && d.actual <= group.max);
+  const groupErrors = ageGroups.map((group) => {
+    const groupData = data.filter((d) => d.actual >= group.min && d.actual <= group.max);
     if (groupData.length === 0) return { ...group, mae: null, count: 0 };
 
     const mae = calculateMAE(groupData, model);
@@ -163,10 +167,10 @@ function evaluateModel(data, model) {
 
 function printModelEvaluation(name, model, evaluation) {
   console.log(`\n${name}`);
-  console.log('='.repeat(name.length));
+  console.log("=".repeat(name.length));
   console.log(`Overall MAE: ${evaluation.mae.toFixed(2)} years`);
   console.log(`Overall RMSE: ${evaluation.rmse.toFixed(2)} years`);
-  console.log('\nPer-age-group MAE:');
+  console.log("\nPer-age-group MAE:");
   for (const group of evaluation.groupErrors) {
     if (group.count > 0) {
       console.log(`  ${group.name}: ${group.mae.toFixed(2)} years (n=${group.count})`);
@@ -224,15 +228,15 @@ export function calibratePredictedAge(predictedAge: number, gender: 'male' | 'fe
 }
 
 async function main() {
-  const csvPath = process.argv[2] || '../calibration-data-all.csv';
+  const csvPath = process.argv[2] || "../calibration-data-all.csv";
 
-  console.log('Loading calibration data...');
+  console.log("Loading calibration data...");
   const data = await loadCalibrationData(csvPath);
   console.log(`Loaded ${data.length} data points\n`);
 
   // Split by gender
-  const maleData = data.filter(d => d.gender === 'male');
-  const femaleData = data.filter(d => d.gender === 'female');
+  const maleData = data.filter((d) => d.gender === "male");
+  const femaleData = data.filter((d) => d.gender === "female");
 
   console.log(`Male samples: ${maleData.length}`);
   console.log(`Female samples: ${femaleData.length}\n`);
@@ -241,59 +245,67 @@ async function main() {
   maleData.sort((a, b) => a.raw - b.raw);
   femaleData.sort((a, b) => a.raw - b.raw);
 
-  console.log('='.repeat(60));
-  console.log('FITTING GENDER-SPECIFIC CALIBRATION MODELS');
-  console.log('='.repeat(60));
+  console.log("=".repeat(60));
+  console.log("FITTING GENDER-SPECIFIC CALIBRATION MODELS");
+  console.log("=".repeat(60));
 
   // Fit male calibration
-  console.log('\n--- MALE CALIBRATION ---');
+  console.log("\n--- MALE CALIBRATION ---");
   const maleThresholds = findBestPiecewise3Thresholds(maleData);
   if (!maleThresholds) {
-    console.error('ERROR: Not enough male data for 3-segment fit');
+    console.error("ERROR: Not enough male data for 3-segment fit");
     process.exit(1);
   }
 
   const maleModel = fitPiecewise3(maleData, maleThresholds.threshold1, maleThresholds.threshold2);
   const maleEval = evaluateModel(maleData, maleModel);
-  printModelEvaluation('Male 3-Segment Piecewise', maleModel, maleEval);
+  printModelEvaluation("Male 3-Segment Piecewise", maleModel, maleEval);
 
   // Fit female calibration
-  console.log('\n--- FEMALE CALIBRATION ---');
+  console.log("\n--- FEMALE CALIBRATION ---");
   const femaleThresholds = findBestPiecewise3Thresholds(femaleData);
   if (!femaleThresholds) {
-    console.error('ERROR: Not enough female data for 3-segment fit');
+    console.error("ERROR: Not enough female data for 3-segment fit");
     process.exit(1);
   }
 
-  const femaleModel = fitPiecewise3(femaleData, femaleThresholds.threshold1, femaleThresholds.threshold2);
+  const femaleModel = fitPiecewise3(
+    femaleData,
+    femaleThresholds.threshold1,
+    femaleThresholds.threshold2,
+  );
   const femaleEval = evaluateModel(femaleData, femaleModel);
-  printModelEvaluation('Female 3-Segment Piecewise', femaleModel, femaleEval);
+  printModelEvaluation("Female 3-Segment Piecewise", femaleModel, femaleEval);
 
   // Combined evaluation using gender-specific models
-  console.log('\n--- COMBINED EVALUATION (Gender-Specific Models) ---');
-  const combinedErrors = data.map(d => {
-    const model = d.gender === 'male' ? maleModel : femaleModel;
+  console.log("\n--- COMBINED EVALUATION (Gender-Specific Models) ---");
+  const combinedErrors = data.map((d) => {
+    const model = d.gender === "male" ? maleModel : femaleModel;
     return Math.abs(model.predict(d.raw) - d.actual);
   });
   const combinedMAE = combinedErrors.reduce((sum, e) => sum + e, 0) / combinedErrors.length;
   const combinedRMSE = Math.sqrt(
-    combinedErrors.reduce((sum, e) => sum + e * e, 0) / combinedErrors.length
+    combinedErrors.reduce((sum, e) => sum + e * e, 0) / combinedErrors.length,
   );
 
   console.log(`Combined MAE: ${combinedMAE.toFixed(2)} years`);
   console.log(`Combined RMSE: ${combinedRMSE.toFixed(2)} years`);
 
   // For comparison, fit single unified model on all data
-  console.log('\n--- UNIFIED CALIBRATION (for comparison) ---');
+  console.log("\n--- UNIFIED CALIBRATION (for comparison) ---");
   const allData = [...data].sort((a, b) => a.raw - b.raw);
   const unifiedThresholds = findBestPiecewise3Thresholds(allData);
-  const unifiedModel = fitPiecewise3(allData, unifiedThresholds.threshold1, unifiedThresholds.threshold2);
+  const unifiedModel = fitPiecewise3(
+    allData,
+    unifiedThresholds.threshold1,
+    unifiedThresholds.threshold2,
+  );
   const unifiedEval = evaluateModel(allData, unifiedModel);
-  printModelEvaluation('Unified 3-Segment Piecewise', unifiedModel, unifiedEval);
+  printModelEvaluation("Unified 3-Segment Piecewise", unifiedModel, unifiedEval);
 
-  console.log('\n' + '='.repeat(60));
-  console.log('RECOMMENDATION');
-  console.log('='.repeat(60));
+  console.log("\n" + "=".repeat(60));
+  console.log("RECOMMENDATION");
+  console.log("=".repeat(60));
   console.log(`\nGender-specific MAE: ${combinedMAE.toFixed(2)} years`);
   console.log(`Unified model MAE: ${unifiedEval.mae.toFixed(2)} years`);
 
@@ -301,12 +313,16 @@ async function main() {
   const improvementPct = (improvement / unifiedEval.mae) * 100;
 
   if (improvement > 0) {
-    console.log(`\n✓ Gender-specific calibration improves MAE by ${improvement.toFixed(2)} years (${improvementPct.toFixed(1)}%)`);
+    console.log(
+      `\n✓ Gender-specific calibration improves MAE by ${improvement.toFixed(2)} years (${improvementPct.toFixed(1)}%)`,
+    );
   } else {
-    console.log(`\n✗ Gender-specific calibration does not improve MAE (worse by ${Math.abs(improvement).toFixed(2)} years)`);
+    console.log(
+      `\n✗ Gender-specific calibration does not improve MAE (worse by ${Math.abs(improvement).toFixed(2)} years)`,
+    );
   }
 
-  console.log('\nGenerated code for age-estimation.ts:');
+  console.log("\nGenerated code for age-estimation.ts:");
   console.log(generateGenderSpecificCode(maleModel, femaleModel));
 
   // Write results to file
@@ -314,38 +330,38 @@ async function main() {
     dataPoints: {
       total: data.length,
       male: maleData.length,
-      female: femaleData.length
+      female: femaleData.length,
     },
     genderSpecific: {
       male: {
         mae: maleEval.mae,
         rmse: maleEval.rmse,
-        params: maleModel.params
+        params: maleModel.params,
       },
       female: {
         mae: femaleEval.mae,
         rmse: femaleEval.rmse,
-        params: femaleModel.params
+        params: femaleModel.params,
       },
       combined: {
         mae: combinedMAE,
-        rmse: combinedRMSE
-      }
+        rmse: combinedRMSE,
+      },
     },
     unified: {
       mae: unifiedEval.mae,
       rmse: unifiedEval.rmse,
-      params: unifiedModel.params
+      params: unifiedModel.params,
     },
     improvement: {
       mae: improvement,
-      percentage: improvementPct
+      percentage: improvementPct,
     },
-    code: generateGenderSpecificCode(maleModel, femaleModel)
+    code: generateGenderSpecificCode(maleModel, femaleModel),
   };
 
-  await fs.writeFile('gender-calibration-results.json', JSON.stringify(results, null, 2));
-  console.log('\n✓ Results saved to gender-calibration-results.json');
+  await fs.writeFile("gender-calibration-results.json", JSON.stringify(results, null, 2));
+  console.log("\n✓ Results saved to gender-calibration-results.json");
 }
 
 main().catch(console.error);

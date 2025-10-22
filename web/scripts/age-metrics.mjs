@@ -48,7 +48,7 @@ export function computeAgeStats(predictions) {
     sumBias += error;
     absErrors.push(absError);
 
-    if (typeof item.confidence === 'number') {
+    if (typeof item.confidence === "number") {
       sumConfidence += item.confidence;
     }
     if (item.genderCorrect === true) {
@@ -105,4 +105,3 @@ export function decadeStats(predictions) {
     stats: computeAgeStats(items),
   }));
 }
-

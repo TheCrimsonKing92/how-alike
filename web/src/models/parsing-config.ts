@@ -55,3 +55,11 @@ export function parsingClassConfig() {
     noseSet: Array.from(new Set([nosePrimary, ...noseAliases].filter((n) => n >= 0))),
   } as const;
 }
+
+export const PARSING_NECK_GUARD = truthy(
+  typeof process !== 'undefined' ? (process.env as Record<string, string | undefined>)['NEXT_PUBLIC_PARSING_NECK_GUARD'] : undefined
+);
+
+export const PARSING_TRACE_LOGS = truthy(
+  typeof process !== 'undefined' ? (process.env as Record<string, string | undefined>)['NEXT_PUBLIC_PARSING_TRACE'] : undefined
+);

@@ -18,6 +18,11 @@ A privacy-first, browser-based app that compares two faces and explains their re
 - Lint: `cd web && npm run lint`
 - Format: `cd web && npm run format`
 
+## Environment Flags
+
+- `NEXT_PUBLIC_PARSING_NECK_GUARD` (default `false`): when `true`, the Transformers.js parsing adapter clamps SegFormer neck/necklace/cloth logits well above the jaw (~12 % inwards, 6 % outwards), requires ≥0.85 margin for true neck pixels, and removes small neck islands. Enable while tuning segmentation thresholds or validating jaw-leak fixes.
+- `NEXT_PUBLIC_PARSING_TRACE` (default `false`): enable verbose trace logging from the parsing adapter (model load, logits histograms, neck guard stats, etc.) while debugging segmentation behavior.
+
 ## Model Assets (not in Git)
 
 Large ONNX binaries stay out of version control. After cloning, download the heavy models locally before running the app:

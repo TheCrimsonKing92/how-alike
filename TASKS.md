@@ -1,6 +1,11 @@
 ﻿# Tasks & Work Log
 
 ## Now
+- **Segmentation neck cleanup guardrails** - NEW (2025-10-22)
+  - ✅ Flag scaffold plus ROI clamp/margin gating wired into transformers adapter (tests: `npm test -- parsing-config`)
+  - ✅ Flag enabled via `web/.env.local` (`NEXT_PUBLIC_PARSING_NECK_GUARD=true`)
+  - ✅ Margin ↑0.7 and guard band ↓0.18× face height to stomp residual islands (`npm test -- parsing-config`)
+  - 🔄 Next: verify cloth alias suppression clears jaw artifacts across QA set; if stable, bake default on (update docs/tests)
 - **Age-aware similarity calibration via MobileFaceNet** - NEW DIRECTION (REVISED 2025-01-20)
   - Phase 1 COMPLETED: MobileFaceNet integration and validation
   - ✅ Downloaded InsightFace buffalo_sc (w600k_mbf.onnx, 13MB)

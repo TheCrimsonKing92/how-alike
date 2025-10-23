@@ -48,6 +48,7 @@ The approach is incremental -- each stage produces a usable, testable version th
 - Lazy-load models on demand.
 - Add performance logging and quality-of-life improvements (e.g., retry, fallback on main thread).
 - Introduce PWA shell (manifest + service worker caching for static assets).
+- Gate SegFormer neck suppression with `NEXT_PUBLIC_PARSING_NECK_GUARD` (default off); enabling it clamps neck logits using jaw landmarks and removes stray neck components for QA tuning.
 
 **Outcome:** Smooth, non-blocking UI that runs efficiently across desktop and mobile.
 

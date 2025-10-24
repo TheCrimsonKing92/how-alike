@@ -13,6 +13,7 @@ A privacy-first, browser-based app that compares two faces and explains their re
 
 ## Quick Start
 
+- Requires Node.js 22.13.1 and npm 10.9.2 (`nvm use` reads `web/.nvmrc`)
 - Dev: `cd web && npm run dev`
 - Tests: `cd web && npm test`
 - Lint: `cd web && npm run lint`

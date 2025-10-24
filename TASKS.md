@@ -34,6 +34,8 @@
 - Glossary rollout follow-ups: surface DefinitionTooltip in condensed result summaries, draft copy review workflow, and scope Phase 2 SVG overlay assets.
 
 ## Done (recent)
+- Runtime tooling consistency: pinned Node.js 22.13.1 / npm 10.9.2 (`web/.nvmrc`, `package.json` engines) and noted Python 3.10 requirement in `scripts/README.md`.
+- Runtime tooling audit: recorded local CLI versions (Python 3.10.0, Node 22.13.1, npm 10.9.2) for environment reference.
 - Jaw labeling improvement plan captured in `FEATURE_AXES_PLAN.md` with synthetic jaw, blending, cleanup, wiring targets, and validation checklist.
 - Overlay hover upgrade: added segmentation-aware hit testing so tooltips fire across full SegFormer regions and validated with new `overlay-hit-test` Vitest coverage plus `npm test`.
 - Feature narratives annotated with glossary tooltips: FeatureDetailPanel and ResultsPanel use `DefinitionTooltip` + `annotateGlossaryText` for summaries and region lists (`definition-tooltip.test.tsx`, `feature-detail-panel.test.tsx`, `results-panel.test.tsx`).

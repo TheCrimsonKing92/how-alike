@@ -1,4 +1,4 @@
-export type Pt = { x: number; y: number };
+import type { Pt } from './points';
 
 // Extract point cloud from a binary mask (Uint8Array or number[])
 export function pointsFromMask(mask: ArrayLike<number>, width: number, height: number): Pt[] {
@@ -142,4 +142,3 @@ export function maskToOutline(mask: ArrayLike<number>, width: number, height: nu
   const hull = convexHull(pts);
   return simplifyRDP(hull, epsilon);
 }
-

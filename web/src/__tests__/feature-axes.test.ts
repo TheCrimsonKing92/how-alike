@@ -6,6 +6,7 @@ import {
   extractJawMeasurements,
   extractFeatureMeasurements,
   type Point,
+  type SyntheticJawInput,
 } from '@/lib/feature-axes';
 
 // Create mock landmarks array with proper indices
@@ -324,10 +325,11 @@ describe('extractJawMeasurements', () => {
     const leftEye = { x: 125, y: 100, z: 0 };
     const rightEye = { x: 225, y: 100, z: 0 };
 
-    const result = extractJawMeasurements(landmarks, leftEye, rightEye);
+  const result = extractJawMeasurements(landmarks, leftEye, rightEye);
 
-    expect(result.jawWidth).toBeGreaterThan(0);
-    expect(result.jawWidth).toBeLessThanOrEqual(1);
+  expect(result.jawWidth).toBeGreaterThan(0);
+  expect(result.jawWidth).toBeLessThanOrEqual(1);
+  expect(result.source).toBe('landmarks');
   });
 
   it('should calculate mandibular angle', () => {
@@ -385,10 +387,44 @@ describe('extractJawMeasurements', () => {
     const leftEye = { x: 125, y: 100, z: 0 };
     const rightEye = { x: 225, y: 100, z: 0 };
 
-    const result = extractJawMeasurements(landmarks, leftEye, rightEye);
+  const result = extractJawMeasurements(landmarks, leftEye, rightEye);
 
-    expect(result.symmetry).toBeLessThan(1);
-    expect(result.symmetry).toBeGreaterThanOrEqual(0);
+  expect(result.symmetry).toBeLessThan(1);
+  expect(result.symmetry).toBeGreaterThanOrEqual(0);
+});
+
+  it('uses synthetic jaw measurements when provided with confidence', () => {
+    const landmarks = createMockLandmarks({
+      234: { x: -0.5, y: 0.1, z: 0 },
+      454: { x: 0.5, y: 0.1, z: 0 },
+      152: { x: 0, y: 0.2, z: 0 },
+    });
+
+    const leftEye = { x: -0.3, y: 0, z: 0 };
+    const rightEye = { x: 0.3, y: 0, z: 0 };
+
+    const synthetic: SyntheticJawInput = {
+      polyline: [
+        { x: -0.5, y: 0.1 },
+        { x: -0.3, y: 0.14 },
+        { x: -0.15, y: 0.19 },
+        { x: 0, y: 0.22 },
+        { x: 0.15, y: 0.19 },
+        { x: 0.3, y: 0.14 },
+        { x: 0.5, y: 0.1 },
+      ],
+      confidence: 0.5,
+      leftGonion: { x: -0.5, y: 0.1 },
+      rightGonion: { x: 0.5, y: 0.1 },
+      chin: { x: 0, y: 0.22 },
+    };
+
+    const result = extractJawMeasurements(landmarks, leftEye, rightEye, synthetic);
+
+    expect(result.source).toBe('synthetic');
+    expect(result.jawWidth).toBeCloseTo(1, 2);
+    expect(result.mandibularAngle).toBeGreaterThan(0);
+    expect(result.symmetry).toBeGreaterThan(0.8);
   });
 });
 
@@ -441,5 +477,36 @@ describe('extractFeatureMeasurements', () => {
     expect(result.nose.width).toBeDefined();
     expect(result.mouth.lipFullness).toBeDefined();
     expect(result.jaw.jawWidth).toBeDefined();
+  });
+
+  it('includes synthetic jaw source when provided', () => {
+    const landmarks = createMockLandmarks({
+      234: { x: -0.5, y: 0.1, z: 0 },
+      454: { x: 0.5, y: 0.1, z: 0 },
+      152: { x: 0, y: 0.2, z: 0 },
+      133: { x: -0.3, y: 0, z: 0 },
+      263: { x: 0.3, y: 0, z: 0 },
+    });
+    const leftEye = { x: -0.3, y: 0, z: 0 };
+    const rightEye = { x: 0.3, y: 0, z: 0 };
+    const synthetic: SyntheticJawInput = {
+      polyline: [
+        { x: -0.5, y: 0.1 },
+        { x: -0.3, y: 0.14 },
+        { x: -0.15, y: 0.19 },
+        { x: 0, y: 0.22 },
+        { x: 0.15, y: 0.19 },
+        { x: 0.3, y: 0.14 },
+        { x: 0.5, y: 0.1 },
+      ],
+      confidence: 0.5,
+      leftGonion: { x: -0.5, y: 0.1 },
+      rightGonion: { x: 0.5, y: 0.1 },
+      chin: { x: 0, y: 0.22 },
+    };
+
+    const result = extractFeatureMeasurements(landmarks, leftEye, rightEye, { syntheticJaw: synthetic });
+
+    expect(result.jaw.source).toBe('synthetic');
   });
 });

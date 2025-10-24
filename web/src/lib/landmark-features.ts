@@ -1,9 +1,8 @@
 // Landmark-based feature extraction for high-frequency facial features
 // Uses MediaPipe's 468 landmarks to extract precise, anatomically-aware curves
 
+import type { Pt } from './points';
 import { LEFT_EYE_RING, RIGHT_EYE_RING, FEATURE_OUTLINES } from './regions';
-
-export type Pt = { x: number; y: number };
 
 /**
  * Compute centroid of a point set

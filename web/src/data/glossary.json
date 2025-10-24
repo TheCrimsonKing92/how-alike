@@ -78,5 +78,49 @@
   "facial_length": {
     "term": "Facial Length",
     "definition": "The vertical distance from hairline to chin; determines overall proportion such as long, medium, or short face."
+  },
+  "eye_size": {
+    "term": "Eye Size",
+    "definition": "The vertical opening of the eyelids relative to interpupillary distance; indicates whether eyes appear narrow or wide."
+  },
+  "bridge_contour": {
+    "term": "Nasal Bridge Contour",
+    "definition": "The curvature of the nose bridge between the eyes, ranging from flat or straight to convex or concave."
+  },
+  "nasal_tip_projection": {
+    "term": "Nasal Tip Projection",
+    "definition": "How far the nose tip projects forward compared with the bridge; affects how upturned or downturned the nose appears."
+  },
+  "mouth_width": {
+    "term": "Mouth Width",
+    "definition": "The horizontal distance between mouth corners relative to face width, signalling a narrow or wide mouth shape."
+  },
+  "chin_width": {
+    "term": "Chin Width",
+    "definition": "The horizontal span across the chin or jawline at its lowest point, influencing lower-face proportion."
+  },
+  "jaw_symmetry": {
+    "term": "Jaw Symmetry",
+    "definition": "How evenly the chin and jawline align with the facial midline, indicating left-right balance of the lower face."
+  },
+  "cheekbone_height": {
+    "term": "Cheekbone Height",
+    "definition": "The vertical position of the cheekbones relative to the eyes and nose, suggesting low, mid, or high-set cheekbones."
+  },
+  "forehead_height": {
+    "term": "Forehead Height",
+    "definition": "The vertical distance from brow line to hairline compared to interpupillary distance; signals short, average, or tall foreheads."
+  },
+  "forehead_contour": {
+    "term": "Forehead Contour",
+    "definition": "The curvature of the forehead profile, ranging from flat or sloped to rounded."
+  },
+  "face_shape_ratio": {
+    "term": "Face Shape Ratio",
+    "definition": "The ratio of face height to jaw width, used to distinguish oblong, oval, square, or round face shapes."
+  },
+  "facial_thirds_balance": {
+    "term": "Facial Thirds Balance",
+    "definition": "How evenly the face divides into upper, middle, and lower thirds from forehead to chin."
   }
 }

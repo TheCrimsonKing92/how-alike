@@ -45,7 +45,7 @@ const humanizeKey = (key: string): string =>
 
 const TERM_VARIANTS: Record<GlossaryKey, readonly string[]> = {
   zygomatic: ["zygomatic prominence", "zygomatic", "cheekbone"],
-  philtrum: ["philtrum"],
+  philtrum: ["philtrum", "philtrum length"],
   nasolabial_fold: ["nasolabial fold", "nasolabial"],
   brow_position: ["brow position", "eyebrow position"],
   brow_length: ["brow length", "eyebrow length"],
@@ -57,13 +57,24 @@ const TERM_VARIANTS: Record<GlossaryKey, readonly string[]> = {
   nasal_tip: ["nasal tip", "tip rotation"],
   alar_width: ["alar width", "nostril width", "nose width"],
   lip_fullness: ["lip fullness", "lip volume", "lip thickness"],
-  cupid_bow: ["cupid's bow", "cupid bow"],
+  cupid_bow: ["cupid's bow", "cupid bow", "cupid's bow definition"],
   commissure_orientation: ["lip corner orientation", "commissure orientation", "mouth corners"],
   chin_projection: ["chin projection", "chin prominence"],
   jaw_angle: ["jaw angle", "mandibular angle"],
   mandibular_width: ["mandibular width", "jaw width"],
   facial_asymmetry: ["facial asymmetry", "asymmetry"],
   facial_length: ["facial length", "face length"],
+  eye_size: ["eye size"],
+  bridge_contour: ["bridge contour", "nasal bridge contour"],
+  nasal_tip_projection: ["nasal tip projection", "tip projection"],
+  mouth_width: ["mouth width"],
+  chin_width: ["chin width"],
+  jaw_symmetry: ["jaw symmetry", "symmetry"],
+  cheekbone_height: ["cheekbone height"],
+  forehead_height: ["forehead height"],
+  forehead_contour: ["forehead contour"],
+  face_shape_ratio: ["face shape ratio"],
+  facial_thirds_balance: ["facial thirds balance", "thirds balance"],
 };
 
 type VariantEntry = { variant: string; key: GlossaryKey };

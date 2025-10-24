@@ -5,10 +5,20 @@
  * for axis-based feature analysis and comparison.
  */
 
-export interface Point {
-  x: number;
-  y: number;
-  z?: number;
+import type { Point } from '@/lib/points';
+
+export const SYNTHETIC_JAW_CONFIDENCE_THRESHOLD = 0.12;
+
+export interface SyntheticJawInput {
+  polyline: Point[];
+  confidence: number;
+  leftGonion: Point;
+  rightGonion: Point;
+  chin: Point;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 // MediaPipe FaceMesh landmark indices (468 landmarks)
@@ -284,6 +294,33 @@ export interface JawMeasurements {
   chinProjection: number;     // forward projection (z-depth)
   chinWidth: number;          // normalized horizontal span
   symmetry: number;           // left-right deviation (0-1, 1=perfect)
+  source?: 'landmarks' | 'synthetic';
+}
+
+function angleBetweenPoints(origin: Point, a: Point, b: Point): number {
+  const v1x = a.x - origin.x;
+  const v1y = a.y - origin.y;
+  const v2x = b.x - origin.x;
+  const v2y = b.y - origin.y;
+  const norm1 = Math.hypot(v1x, v1y) || 1e-6;
+  const norm2 = Math.hypot(v2x, v2y) || 1e-6;
+  const dot = (v1x * v2x + v1y * v2y) / (norm1 * norm2);
+  const clamped = clamp(dot, -1, 1);
+  return Math.acos(clamped) * (180 / Math.PI);
+}
+
+function estimateChinWidth(polyline: Point[], chinY: number, fallback: number): number {
+  const band = 0.05;
+  const near = polyline.filter((pt) => Math.abs(pt.y - chinY) <= band);
+  if (near.length >= 2) {
+    return distance(near[0], near[near.length - 1]);
+  }
+  const left = polyline[Math.max(0, Math.floor(polyline.length * 0.35))];
+  const right = polyline[Math.min(polyline.length - 1, Math.ceil(polyline.length * 0.65))];
+  if (left && right) {
+    return distance(left, right);
+  }
+  return fallback;
 }
 
 /**
@@ -292,7 +329,8 @@ export interface JawMeasurements {
 export function extractJawMeasurements(
   landmarks: Point[],
   leftEye: Point,
-  rightEye: Point
+  rightEye: Point,
+  synthetic?: SyntheticJawInput
 ): JawMeasurements {
   const leftGonion = landmarks[LANDMARKS.leftGonion];
   const rightGonion = landmarks[LANDMARKS.rightGonion];
@@ -331,12 +369,50 @@ export function extractJawMeasurements(
   const maxDeviation = ipd * 0.1; // 10% of IPD is "significant"
   const symmetry = Math.max(0, 1 - chinDeviation / maxDeviation);
 
+  if (
+    synthetic &&
+    synthetic.polyline.length >= 6 &&
+    synthetic.confidence >= SYNTHETIC_JAW_CONFIDENCE_THRESHOLD
+  ) {
+    const poly = synthetic.polyline;
+    const left = poly[0];
+    const right = poly[poly.length - 1];
+    const faceWidthSynthetic = distance(synthetic.leftGonion, synthetic.rightGonion) || distance(left, right) || 1;
+    const syntheticJawWidth = distance(left, right) / faceWidthSynthetic;
+
+    const chinIdx = poly.reduce((best, pt, idx) => (pt.y > poly[best].y ? idx : best), 0);
+    const chinPoint = poly[chinIdx];
+    const leftAnchor = poly[Math.min(Math.max(1, Math.round(poly.length * 0.15)), poly.length - 1)];
+    const rightAnchor = poly[Math.max(Math.min(poly.length - 2, Math.round(poly.length * 0.85)), 0)];
+
+    const leftAngle = angleBetweenPoints(left, leftAnchor, chinPoint);
+    const rightAngle = angleBetweenPoints(right, rightAnchor, chinPoint);
+    const syntheticMandibularAngle = (leftAngle + rightAngle) / 2;
+
+    const chinWidthAbs = estimateChinWidth(poly, chinPoint.y, distance(left, right) * 0.6);
+    const syntheticChinWidth = chinWidthAbs / faceWidthSynthetic;
+
+    const midX = (synthetic.leftGonion.x + synthetic.rightGonion.x) / 2;
+    const deviation = Math.abs(chinPoint.x - midX);
+    const syntheticSymmetry = Math.max(0, 1 - deviation / 0.08);
+
+    return {
+      jawWidth: syntheticJawWidth,
+      mandibularAngle: syntheticMandibularAngle,
+      chinProjection,
+      chinWidth: syntheticChinWidth,
+      symmetry: syntheticSymmetry,
+      source: 'synthetic',
+    };
+  }
+
   return {
     jawWidth,
     mandibularAngle,
     chinProjection,
     chinWidth,
     symmetry,
+    source: 'landmarks',
   };
 }
 
@@ -575,13 +651,18 @@ export interface FeatureMeasurements {
   faceShape: FaceShapeMeasurements;
 }
 
+export interface FeatureExtractionOptions {
+  syntheticJaw?: SyntheticJawInput;
+}
+
 /**
  * Extract all feature measurements from landmarks
  */
 export function extractFeatureMeasurements(
   landmarks: Point[],
   leftEye: Point,
-  rightEye: Point
+  rightEye: Point,
+  options?: FeatureExtractionOptions
 ): FeatureMeasurements {
   return {
     eyes: extractEyeMeasurements(landmarks, leftEye, rightEye),
@@ -589,7 +670,7 @@ export function extractFeatureMeasurements(
     nose: extractNoseMeasurements(landmarks, leftEye, rightEye),
     mouth: extractMouthMeasurements(landmarks, leftEye, rightEye),
     cheeks: extractCheekMeasurements(landmarks, leftEye, rightEye),
-    jaw: extractJawMeasurements(landmarks, leftEye, rightEye),
+    jaw: extractJawMeasurements(landmarks, leftEye, rightEye, options?.syntheticJaw),
     forehead: extractForeheadMeasurements(landmarks, leftEye, rightEye),
     faceShape: extractFaceShapeMeasurements(landmarks, leftEye, rightEye),
   };

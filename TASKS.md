@@ -24,10 +24,18 @@
   - Benefits: 86% size reduction (90MB → 13.3MB total), optimizes for actual task (similarity across age gaps)
   - See `AGE_AWARE_SIMILARITY_PLAN.md` for full plan
 
+  - **Synthetic jaw integration roadmap** - IN PROGRESS (2025-10-23)
+    - ✅ Prep adapters: expose face/skin/neck logits in `transformers-parsing-adapter.ts` and return them through worker messaging.
+    - ✅ Centralized shared `Point`/`Pt` types in `web/src/lib/points.ts` and updated consumers (`feature-axes`, `hulls`, `mask`, `landmark-features`, `overlay-hit-test`, `pose-estimation`) to prepare for mask-driven jaw geometry.
+    - ✅ Integrated `computeJawFromMasks` in `analyze.worker.ts`, replacing jaw outlines with synthetic curves when confidence ≥ 0.12 and returning `{ polyline, confidence }` alongside fallback landmarks.
+    - ✅ Updated `feature-axes.ts` jaw metrics to prioritize the synthetic curve (with fallback when confidence < τ) and ensured overlay hit-testing uses the synthetic jaw polyline.
+
 ## Next
 - Glossary rollout follow-ups: surface DefinitionTooltip in condensed result summaries, draft copy review workflow, and scope Phase 2 SVG overlay assets.
 
 ## Done (recent)
+- Jaw labeling improvement plan captured in `FEATURE_AXES_PLAN.md` with synthetic jaw, blending, cleanup, wiring targets, and validation checklist.
+- Overlay hover upgrade: added segmentation-aware hit testing so tooltips fire across full SegFormer regions and validated with new `overlay-hit-test` Vitest coverage plus `npm test`.
 - Feature narratives annotated with glossary tooltips: FeatureDetailPanel and ResultsPanel use `DefinitionTooltip` + `annotateGlossaryText` for summaries and region lists (`definition-tooltip.test.tsx`, `feature-detail-panel.test.tsx`, `results-panel.test.tsx`).
 - Tooltip readability fixes: removed opacity stacking, allowed popovers to escape card boundaries, and updated summary layouts for consistent contrast (hover issues verified).
 - DefinitionTooltip component built with lazy glossary loading, hover capability detection, IntersectionObserver gating, and unit coverage (`definition-tooltip.test.tsx`).

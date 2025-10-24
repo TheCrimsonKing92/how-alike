@@ -5,17 +5,13 @@
  * before similarity comparison. This reduces errors from photos taken at different angles.
  */
 
+import type { Point3D } from './points';
+
 export interface FacePose {
   yaw: number;    // Left-right rotation in degrees (-90 to +90, 0 = frontal)
   pitch: number;  // Up-down rotation in degrees (-90 to +90, 0 = level)
   roll: number;   // Tilt rotation in degrees (-180 to +180, 0 = upright)
   confidence: number; // 0-1 confidence in pose estimation
-}
-
-export interface Point3D {
-  x: number;
-  y: number;
-  z?: number;
 }
 
 // MediaPipe FaceMesh landmark indices for pose estimation

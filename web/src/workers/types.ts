@@ -1,3 +1,6 @@
+import type { ParsingLogits } from '@/models/detector-types';
+import type { SyntheticJawResult } from '@/lib/jaw-from-masks';
+
 export type AnalyzeInit = { type: 'INIT'; payload?: { adapter?: 'facemesh' | 'parsing' } };
 
 export type AnalyzeRequest = {
@@ -85,6 +88,10 @@ export type AnalyzeResult = {
   ortB?: string;
   maskA?: MaskOverlay;
   maskB?: MaskOverlay;
+  logitsA?: ParsingLogits;
+  logitsB?: ParsingLogits;
+  syntheticJawA?: SyntheticJawResult;
+  syntheticJawB?: SyntheticJawResult;
   featureNarrative?: FeatureNarrative;
   congruenceScore?: number;
   ageWarning?: string;

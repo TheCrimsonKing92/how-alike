@@ -6,16 +6,18 @@ import { REGION_INDICES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES, FEAT
 import { deriveRegionHints } from '@/lib/hints';
 import { summarizeRegionsFromMasks } from '@/lib/segmentation-scoring';
 import { generateNarrativeFromScores } from '@/lib/narrative';
-import { extractFeatureMeasurements } from '@/lib/feature-axes';
+import { extractFeatureMeasurements, SYNTHETIC_JAW_CONFIDENCE_THRESHOLD, type SyntheticJawInput } from '@/lib/feature-axes';
 import { classifyFeatures } from '@/lib/axis-classifiers';
 import { performComparison } from '@/lib/feature-comparisons';
 import { generateNarrative } from '@/lib/feature-narratives';
 import { initAgeClassifier, estimateAge, extractFaceCrop, computeAgePenalty } from '@/lib/age-estimation';
 import { estimateFacePose, normalizeLandmarksToFrontal, poseAngularDistance, formatPose } from '@/lib/pose-estimation';
 import type { RegionPoly, MaskOverlay } from './types';
-import type { RegionHintsArray } from '@/models/detector-types';
+import type { RegionHintsArray, ParsingLogits } from '@/models/detector-types';
+import { computeJawFromMasks, type SyntheticJawResult } from '@/lib/jaw-from-masks';
 import type { AnalyzeMessage, AnalyzeResponse } from './types';
 import type { FaceLandmarksDetectorInput, MediaPipeFaceMeshTfjsEstimationConfig } from '@tensorflow-models/face-landmarks-detection';
+import type { Point } from '@/lib/points';
 
 const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
 
@@ -59,18 +61,78 @@ function formatMaturityDebugInfo(congruenceResult: {
   };
 }
 
+const JAW_CONFIDENCE_FOR_OVERLAY = SYNTHETIC_JAW_CONFIDENCE_THRESHOLD;
+const LEFT_GONION_INDEX = 234;
+const RIGHT_GONION_INDEX = 454;
+const CHIN_INDEX = 152;
+
+function vecToPoint(vec: { x: number; y: number }): Point {
+  return { x: vec.x, y: vec.y };
+}
+
+function normalizePointsByEyes(
+  points: { x: number; y: number }[],
+  leftEye: { x: number; y: number },
+  rightEye: { x: number; y: number }
+): Point[] {
+  return normalizeByEyes(points, leftEye, rightEye).map(vecToPoint);
+}
+
+function normalizeSinglePointByEyes(
+  point: { x: number; y: number } | undefined,
+  leftEye: { x: number; y: number },
+  rightEye: { x: number; y: number }
+): Point | undefined {
+  if (!point) return undefined;
+  const normalized = normalizeByEyes([point], leftEye, rightEye);
+  if (!normalized.length) return undefined;
+  return vecToPoint(normalized[0]);
+}
+
+function buildSyntheticJawInputForMeasurements(
+  synthetic: SyntheticJawResult,
+  originalLandmarks: { x: number; y: number }[],
+  leftEye: { x: number; y: number },
+  rightEye: { x: number; y: number }
+): SyntheticJawInput | undefined {
+  if (!synthetic.polyline.length) return undefined;
+  const polyline = normalizePointsByEyes(synthetic.polyline, leftEye, rightEye);
+  if (polyline.length < 6) return undefined;
+  const leftGonion = normalizeSinglePointByEyes(originalLandmarks[LEFT_GONION_INDEX], leftEye, rightEye);
+  const rightGonion = normalizeSinglePointByEyes(originalLandmarks[RIGHT_GONION_INDEX], leftEye, rightEye);
+  const chin = normalizeSinglePointByEyes(originalLandmarks[CHIN_INDEX], leftEye, rightEye);
+  if (!leftGonion || !rightGonion || !chin) return undefined;
+  return {
+    polyline,
+    confidence: synthetic.confidence,
+    leftGonion,
+    rightGonion,
+    chin,
+  };
+}
+
 async function computeOutlinePolys(
   points: { x: number; y: number }[],
   leftEye: { x: number; y: number },
   rightEye: { x: number; y: number },
   kps: KP[],
   sourceImage?: OffscreenCanvas | HTMLCanvasElement | ImageBitmap
-): Promise<{ polys: RegionPoly[]; parseMs: number; source?: string; ort?: string; mask?: MaskOverlay }> {
+): Promise<{
+  polys: RegionPoly[];
+  parseMs: number;
+  source?: string;
+  ort?: string;
+  mask?: MaskOverlay;
+  logits?: ParsingLogits;
+  syntheticJaw?: SyntheticJawResult;
+}> {
   const polys: RegionPoly[] = [];
   let parseMs = 0;
   let source: string | undefined;
   let ort: string | undefined;
   let mask: MaskOverlay | undefined;
+  let logits: ParsingLogits | undefined;
+  let syntheticJaw: SyntheticJawResult | undefined;
   const mapPts = (idxs: number[]) => idxs.map((i) => points[i]).filter(Boolean) as {x:number;y:number}[];
   const centroid = (pts: {x:number;y:number}[]) => {
     const n = pts.length || 1;
@@ -170,7 +232,7 @@ async function computeOutlinePolys(
 
   // Add landmark-based features (except brows and nose which will be overridden by adapter)
   for (const [region, lists] of Object.entries(FEATURE_OUTLINES)) {
-    if (region === 'brows' || region === 'nose') continue; // will be provided by adapter
+    if (region === 'brows' || region === 'nose' || region === 'jaw') continue; // handled separately
     for (const seq of lists) {
       const pts = mapPts(seq);
       if (pts.length >= 2) {
@@ -181,6 +243,9 @@ async function computeOutlinePolys(
   }
 
   // Jaw via concave hull of lower-face points; extract bottom chain and draw open
+  const featureJaw = FEATURE_OUTLINES.jaw?.[0] ? mapPts(FEATURE_OUTLINES.jaw[0]) : [];
+  let fallbackJaw: { x: number; y: number }[] | null = featureJaw.length >= 2 ? featureJaw : null;
+
   try {
     const lf = LOWER_FACE_INDICES.map(i => points[i]).filter(Boolean) as {x:number;y:number}[];
     if (lf.length >= 4) {
@@ -203,9 +268,7 @@ async function computeOutlinePolys(
         const chain: {x:number;y:number}[] = [];
         for (let k = 0; k < best.len; k++) chain.push(hull[(best.start + k) % hull.length]);
         if (chain.length >= 3) {
-          // Replace any previous jaw entries
-          for (let j = polys.length - 1; j >= 0; j--) if (polys[j].region === 'jaw') polys.splice(j, 1);
-          polys.push({ region: 'jaw', points: chain, open: true });
+          fallbackJaw = chain;
         }
       }
     }
@@ -245,6 +308,19 @@ async function computeOutlinePolys(
         labels: hints.__mask.labels,
         crop: hints.__mask.crop,
       };
+    }
+    logits = hints?.__logits;
+    if (logits) {
+      try {
+        const synthetic = computeJawFromMasks(points, logits);
+        if (synthetic) {
+          syntheticJaw = synthetic;
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[worker] synthetic jaw extraction failed:', e);
+        }
+      }
     }
 
     // Add adapter hints to polys
@@ -292,6 +368,15 @@ async function computeOutlinePolys(
     if (noseAlar.length >= 2) polys.push({ region: 'nose', points: noseAlar, open: true });
     if (noseBridge.length >= 2) polys.push({ region: 'nose', points: noseBridge, open: true });
   }
+
+  const jawForOverlay =
+    syntheticJaw && syntheticJaw.polyline.length >= 2 && syntheticJaw.confidence >= JAW_CONFIDENCE_FOR_OVERLAY
+      ? syntheticJaw.polyline
+      : fallbackJaw;
+  if (jawForOverlay && jawForOverlay.length >= 2) {
+    polys.push({ region: 'jaw', points: jawForOverlay, open: true });
+  }
+
   // Debug: log final poly counts by region
   if (process.env.NODE_ENV !== 'production') {
     const regionCounts = new Map<string, number>();
@@ -303,7 +388,7 @@ async function computeOutlinePolys(
     console.info('[worker] brow polys:', browPolys.length, browPolys.map(p => `${p.points.length} pts`));
   }
 
-  return { polys, parseMs, source, ort, mask };
+  return { polys, parseMs, source, ort, mask, logits, syntheticJaw };
 }
 
 ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
@@ -397,6 +482,13 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         computeOutlinePolys(originalPtsA, originalLeftA, originalRightA, kpsA, cnvA),
         computeOutlinePolys(originalPtsB, originalLeftB, originalRightB, kpsB, cnvB),
       ]);
+
+      const syntheticJawForMeasurementsA = outlineA.syntheticJaw
+        ? buildSyntheticJawInputForMeasurements(outlineA.syntheticJaw, originalPtsA, originalLeftA, originalRightA)
+        : undefined;
+      const syntheticJawForMeasurementsB = outlineB.syntheticJaw
+        ? buildSyntheticJawInputForMeasurements(outlineB.syntheticJaw, originalPtsB, originalLeftB, originalRightB)
+        : undefined;
 
       // Use segmentation-based scoring if masks are available, otherwise fall back to Procrustes
       let scores, overall, texts: { region: string; text: string }[] = [];
@@ -518,8 +610,12 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
 
       try {
         // Extract measurements from both faces
-        const measurementsA = extractFeatureMeasurements(ptsA, leftA, rightA);
-        const measurementsB = extractFeatureMeasurements(ptsB, leftB, rightB);
+        const measurementsA = extractFeatureMeasurements(ptsA, leftA, rightA, {
+          syntheticJaw: syntheticJawForMeasurementsA,
+        });
+        const measurementsB = extractFeatureMeasurements(ptsB, leftB, rightB, {
+          syntheticJaw: syntheticJawForMeasurementsB,
+        });
 
         // Classify measurements into categorical descriptors
         const classificationsA = classifyFeatures(measurementsA);
@@ -624,6 +720,10 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         ortB: outlineB.ort,
         maskA: outlineA.mask,
         maskB: outlineB.mask,
+        logitsA: outlineA.logits,
+        logitsB: outlineB.logits,
+        syntheticJawA: outlineA.syntheticJaw,
+        syntheticJawB: outlineB.syntheticJaw,
         featureNarrative,
         congruenceScore,
         ageWarning,

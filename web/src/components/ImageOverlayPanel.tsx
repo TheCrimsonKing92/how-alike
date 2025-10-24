@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import type { RegionPoly, MaskOverlay } from "@/workers/types";
+import { hitTestRegion } from "@/lib/overlay-hit-test";
 
 export type OverlayPoint = { x: number; y: number };
 
@@ -253,46 +254,15 @@ export default function ImageOverlayPanel({
     const rect = canvas.getBoundingClientRect();
     const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
     const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
-    let hit: RegionPoly | null = null;
-    const pointInPoly = (px: number, py: number, pts: { x: number; y: number }[]) => {
-      let inside = false;
-      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-        const xi = pts[i].x, yi = pts[i].y;
-        const xj = pts[j].x, yj = pts[j].y;
-        const intersect = yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi + 1e-9) + xi;
-        if (intersect) inside = !inside;
-      }
-      return inside;
-    };
-    const distToSeg = (px: number, py: number, ax: number, ay: number, bx: number, by: number) => {
-      const vx = bx - ax, vy = by - ay;
-      const wx = px - ax, wy = py - ay;
-      const c1 = vx * wx + vy * wy;
-      const c2 = vx * vx + vy * vy || 1e-9;
-      const t = Math.max(0, Math.min(1, c1 / c2));
-      const cx = ax + t * vx, cy = ay + t * vy;
-      const dx = px - cx, dy = py - cy;
-      return Math.hypot(dx, dy);
-    };
-    // Hover priority: brows over eyes to avoid overlap swallowing
-    const hoverOrder = ['brows','eyes','mouth','nose','jaw'];
-    const sorted = [...regions].sort((a,b)=> hoverOrder.indexOf(a.region)-hoverOrder.indexOf(b.region));
-    for (const r of sorted) {
-      const closed = !(r.open === true);
-      if (closed) {
-        if (r.points.length >= 3 && pointInPoly(x, y, r.points)) { hit = r; break; }
-      } else {
-        // line-distance hit-test for open paths
-        for (let i = 1; i < r.points.length; i++) {
-          const a = r.points[i-1], b = r.points[i];
-          if (distToSeg(x, y, a.x, a.y, b.x, b.y) <= 6) { hit = r; break; }
-        }
-        if (hit) break;
-      }
-    }
-    if (hit) {
-      draw(hit.region);
-      setHover({ region: hit.region, x: e.clientX - rect.left + 8, y: e.clientY - rect.top + 8 });
+    const regionName = hitTestRegion({
+      x,
+      y,
+      regions,
+      mask,
+    });
+    if (regionName) {
+      draw(regionName);
+      setHover({ region: regionName, x: e.clientX - rect.left + 8, y: e.clientY - rect.top + 8 });
     } else {
       draw();
       setHover(null);

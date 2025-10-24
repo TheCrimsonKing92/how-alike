@@ -1,7 +1,7 @@
+import type { Pt } from '@/lib/points';
 import { FEATURE_OUTLINES, LEFT_EYE_CENTER_INDICES, RIGHT_EYE_CENTER_INDICES } from '@/lib/regions';
 import { extractLandmarkBrows, extractLandmarkNose } from '@/lib/landmark-features';
 
-export type Pt = { x: number; y: number };
 export type RegionHint = { region: string; points: Pt[]; open?: boolean };
 
 function mapPts(points: Pt[], idxs: number[]): Pt[] {
@@ -95,4 +95,3 @@ export function deriveRegionHints(points: Pt[]): RegionHint[] {
 
   return hints;
 }
-

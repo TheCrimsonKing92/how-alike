@@ -14,11 +14,28 @@ export type RegionMaskDebug = {
   crop: { sx: number; sy: number; sw: number; sh: number };
 };
 
+export type ParsingLogits = {
+  width: number;
+  height: number;
+  crop: { sx: number; sy: number; sw: number; sh: number };
+  classIds: {
+    skin?: number;
+    neck?: number;
+    hair?: number;
+    background?: number;
+  };
+  skin?: Float32Array;
+  neck?: Float32Array;
+  hair?: Float32Array;
+  background?: Float32Array;
+};
+
 export type RegionHintsArray = RegionHint[] & {
   __source?: 'onnx' | 'heuristic' | 'landmarks' | 'transformers';
   __ort?: 'ok' | 'missing' | 'error';
   __transformers?: 'ok' | 'missing' | 'error' | 'no-hints';
   __mask?: RegionMaskDebug;
+  __logits?: ParsingLogits;
 };
 
 export interface DetectorAdapter {

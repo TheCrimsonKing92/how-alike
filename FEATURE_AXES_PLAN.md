@@ -314,3 +314,34 @@ Results Panel
 - Confidence scoring for each axis
 - Custom axis weighting for similarity
 - Export detailed analysis as PDF/JSON
+
+## Upcoming Enhancement: Jaw Labeling Reliability
+**Goal**: Replace noisy landmark-only jaw metrics with a segmentation-informed synthetic jaw curve that remains WebGL-friendly and works without new model training.
+
+### A. Synthetic Jaw From Existing Masks
+- Normalize faces in the same coordinate space used by FaceMesh before processing logits.
+- Derive a lower-face band from mandible landmarks plus a narrow strip below them to bound marching-squares search.
+- From SegFormer logits expose `p(face_skin)` and `p(non_face) = p(hair ∪ background ∪ neck)` and locate the zero crossing of `p_face_skin − p_non_face` between jaw-angle landmarks to obtain a crisp polyline.
+- Post-process the polyline with Chaikin or Savitzky–Golay smoothing, enforce monotonicity along the arc, and snap endpoints toward the near-ear landmark cluster.
+- Export a thin polygon plus derived measurements (mandibular width, mandibular angle, chin projection) as the synthetic jaw descriptor.
+
+### B. Landmark Prior + Confidence Blending
+- Treat the existing landmark jaw curve as the base spline.
+- Measure offsets from the landmark curve to the iso-contour inside a narrow normal band and compute blend weights via `α = clamp((p_skin − p_neck)/τ, 0..1)`.
+- Blend curves per vertex and return both the fused polyline and an overall confidence score for downstream fallbacks.
+
+### C. Logit Cleanup & Error Guards
+- Inside the face ROI lower neck logits dramatically (e.g., subtract 1e6) to prevent neck bleed into cheeks/chin.
+- Drop neck-connected components that appear above the jaw search band.
+
+### Wiring Targets
+- `web/src/lib/transformers-parsing-adapter.ts`: expose raw logits for face/skin/neck classes rather than only binary masks.
+- `web/src/workers/analyze.worker.ts`: add `computeJawFromMasks()` to build the band, extract the iso-contour, blend with landmarks, and emit `{ polyline, confidence }`.
+- `web/src/lib/feature-axes.ts`: consume the synthetic jaw metrics for width/angle/face-height calculations; fall back to landmarks when confidence < τ.
+- `web/src/lib/overlay-hit-test.ts`: register the synthetic jaw polygon so overlays and tooltips remain interactive.
+
+### Validation Checklist
+- Hand-label ~50 reference jaw polylines (6–8 points each) for evaluation.
+- Track mean surface distance between landmark-only and synthetic curves (lower is better).
+- Measure stability under slight scale/flip/brightness perturbations (report standard deviation in pixels).
+- Compare downstream metric variance (mandibular width/angle) and disagreement with human-provided tags to confirm improvements.

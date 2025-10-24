@@ -1,4 +1,4 @@
-export type Pt = { x: number; y: number };
+import type { Pt } from './points';
 
 // Andrew's monotone chain convex hull
 export function convexHull(pts: Pt[]): Pt[] {
@@ -141,4 +141,3 @@ export function offsetPolygon(poly: Pt[], distPx: number) {
   }
   return out;
 }
-

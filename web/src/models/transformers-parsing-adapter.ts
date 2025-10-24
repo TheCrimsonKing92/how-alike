@@ -15,6 +15,7 @@ import type {
   DetectorImage,
   RegionHint,
   RegionMaskDebug,
+  ParsingLogits,
 } from './detector-types';
 import type { Pt } from '@/lib/hints';
 import { deriveRegionHints } from '@/lib/hints';
@@ -55,6 +56,8 @@ const LABEL_TO_CLASS_ID: Record<string, number> = {
 
 const NECK_CLASS_ID = LABEL_TO_CLASS_ID['neck'];
 const SKIN_CLASS_ID = LABEL_TO_CLASS_ID['skin'];
+const BACKGROUND_CLASS_ID = LABEL_TO_CLASS_ID['background'];
+const HAIR_CLASS_ID = LABEL_TO_CLASS_ID['hair'];
 const NECK_ALIAS_CLASS_IDS = [
   LABEL_TO_CLASS_ID['necklace'],
   LABEL_TO_CLASS_ID['cloth'],
@@ -625,6 +628,7 @@ export const transformersParsingAdapter: DetectorAdapter = {
     const faceBounds = computeFaceBounds(points as Landmark2D[]);
     const neckDebug = (PARSING_NECK_GUARD && process.env.NODE_ENV !== 'production') ? createNeckGuardDebug() : undefined;
     let clampInfo: NeckClampInfo | null = null;
+    let exportedLogits: ParsingLogits | undefined;
 
     if (!image) {
       const arr = landmarkHints as RegionHintsArray;
@@ -778,6 +782,44 @@ export const transformersParsingAdapter: DetectorAdapter = {
         console.info('[transformers-parsing] center pixel logits (first 5 classes):', centerPixelLogits.join(', '));
       }
 
+      const planeSize = outWidth * outHeight;
+      const logitData = logits.data;
+      if (planeSize > 0 && logitData instanceof Float32Array) {
+        const copyPlane = (classId: number | undefined) => {
+          if (classId === undefined || classId < 0 || classId >= numClasses) return undefined;
+          const start = classId * planeSize;
+          const end = start + planeSize;
+          const plane = new Float32Array(planeSize);
+          plane.set(logitData.subarray(start, end));
+          return plane;
+        };
+
+        const classIds = {
+          skin: SKIN_CLASS_ID >= 0 && SKIN_CLASS_ID < numClasses ? SKIN_CLASS_ID : undefined,
+          neck: NECK_CLASS_ID >= 0 && NECK_CLASS_ID < numClasses ? NECK_CLASS_ID : undefined,
+          hair: HAIR_CLASS_ID >= 0 && HAIR_CLASS_ID < numClasses ? HAIR_CLASS_ID : undefined,
+          background: BACKGROUND_CLASS_ID >= 0 && BACKGROUND_CLASS_ID < numClasses ? BACKGROUND_CLASS_ID : undefined,
+        };
+
+        const skinPlane = copyPlane(classIds.skin);
+        const neckPlane = copyPlane(classIds.neck);
+        const hairPlane = copyPlane(classIds.hair);
+        const backgroundPlane = copyPlane(classIds.background);
+
+        if (skinPlane || neckPlane || hairPlane || backgroundPlane) {
+          exportedLogits = {
+            width: outWidth,
+            height: outHeight,
+            crop: { sx: 0, sy: 0, sw: iw, sh: ih },
+            classIds,
+          };
+          if (skinPlane) exportedLogits.skin = skinPlane;
+          if (neckPlane) exportedLogits.neck = neckPlane;
+          if (hairPlane) exportedLogits.hair = hairPlane;
+          if (backgroundPlane) exportedLogits.background = backgroundPlane;
+        }
+      }
+
       // Use the documented post-processing method to upsample and apply argmax
       // This handles bilinear interpolation and argmax internally
       const processed = processor.feature_extractor?.post_process_semantic_segmentation(
@@ -910,6 +952,7 @@ export const transformersParsingAdapter: DetectorAdapter = {
         result.__source = 'landmarks';
         result.__transformers = 'no-hints';
         result.__mask = debugMask;
+        if (exportedLogits) result.__logits = exportedLogits;
         return result;
       }
 
@@ -917,6 +960,7 @@ export const transformersParsingAdapter: DetectorAdapter = {
       result.__source = 'transformers';
       result.__transformers = 'ok';
       result.__mask = debugMask;
+      if (exportedLogits) result.__logits = exportedLogits;
 
       if (PARSING_TRACE_LOGS && process.env.NODE_ENV !== 'production') {
         console.info('[transformers-parsing] generated', hints.length, 'region hints from segmentation');
@@ -931,6 +975,7 @@ export const transformersParsingAdapter: DetectorAdapter = {
       const fb = landmarkHints as RegionHintsArray;
       fb.__source = 'landmarks';
       fb.__transformers = 'error';
+      if (exportedLogits) fb.__logits = exportedLogits;
       return fb;
     }
   },

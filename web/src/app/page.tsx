@@ -37,9 +37,17 @@ export default function Home() {
   const [mounted, setMounted] = React.useState(false);
   const [featureNarrative, setFeatureNarrative] = React.useState<FeatureNarrative | undefined>(undefined);
   const [congruenceScore, setCongruenceScore] = React.useState<number | undefined>(undefined);
-  const [ageWarning, setAgeWarning] = React.useState<string | undefined>(undefined);
-  const [agePenalty, setAgePenalty] = React.useState<number | undefined>(undefined);
   const [poseWarning, setPoseWarning] = React.useState<string | undefined>(undefined);
+  const [disableAxisTolerance, setDisableAxisTolerance] = React.useState(false);
+
+  const updateAxisTolerance = React.useCallback((disabled: boolean) => {
+    setDisableAxisTolerance(disabled);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("disableAxisTolerance", disabled ? "true" : "false");
+      } catch {}
+    }
+  }, []);
 
   // Derived state for UI controls
   const hasResults = !!imageA && !!imageB;
@@ -74,16 +82,38 @@ export default function Home() {
   }, []);
 
   React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem("disableAxisTolerance");
+      if (stored !== null) {
+        updateAxisTolerance(stored === "true");
+      }
+    } catch {}
+  }, [updateAxisTolerance]);
+
+  React.useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const raw = params.get("showMask");
-    if (!raw) return;
-    const parsed = Number.parseInt(raw, 10);
-    if (Number.isFinite(parsed)) {
-      setMaskClass(parsed);
+    const rawMask = params.get("showMask");
+    if (rawMask) {
+      const parsed = Number.parseInt(rawMask, 10);
+      if (Number.isFinite(parsed)) {
+        setMaskClass(parsed);
+      }
     }
-  }, []);
+    const axisParam = params.get("axisTol") ?? params.get("disableAxisTolerance");
+    if (axisParam) {
+      const normalized = axisParam.toLowerCase();
+      const disableValues = new Set(['1', 'true', 'yes', 'disable', 'off']);
+      const enableValues = new Set(['0', 'false', 'no', 'enable', 'on']);
+      if (disableValues.has(normalized)) {
+        updateAxisTolerance(true);
+      } else if (enableValues.has(normalized)) {
+        updateAxisTolerance(false);
+      }
+    }
+  }, [updateAxisTolerance]);
 
   const onAdapterChange = (v: "facemesh" | "parsing" | "transformers") => {
     setAdapter(v);
@@ -111,8 +141,6 @@ export default function Home() {
     setMaskB(undefined);
     setFeatureNarrative(undefined);
     setCongruenceScore(undefined);
-    setAgeWarning(undefined);
-    setAgePenalty(undefined);
     setPoseWarning(undefined);
   };
 
@@ -154,8 +182,6 @@ export default function Home() {
             setMaskB(msg.maskB);
             setFeatureNarrative(msg.featureNarrative);
             setCongruenceScore(msg.congruenceScore);
-            setAgeWarning(msg.ageWarning);
-            setAgePenalty(msg.agePenalty);
             setPoseWarning(msg.poseWarning);
             w.removeEventListener("message", onMessage as EventListener);
             resolve();
@@ -165,7 +191,19 @@ export default function Home() {
           }
         };
         w.addEventListener("message", onMessage as EventListener);
-        w.postMessage({ type: "ANALYZE", payload: { jobId, fileA: fa, fileB: fb, maxDim: 1280, settings: { buffers } } });
+        w.postMessage({
+          type: "ANALYZE",
+          payload: {
+            jobId,
+            fileA: fa,
+            fileB: fb,
+            maxDim: 1280,
+            settings: {
+              buffers,
+              debug: { disableAxisTolerance },
+            },
+          },
+        });
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -179,8 +217,6 @@ export default function Home() {
       setMaskB(undefined);
       setFeatureNarrative(undefined);
       setCongruenceScore(undefined);
-      setAgeWarning(undefined);
-      setAgePenalty(undefined);
       setPoseWarning(undefined);
     } finally {
       setLoading(false);
@@ -195,22 +231,6 @@ export default function Home() {
         <div>
           {loading ? <p className="text-sm">Analyzing... {progress}</p> : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          {ageWarning ? (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-              <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-amber-800 mb-1">Age Difference Detected</h3>
-                  <p className="text-sm text-amber-700">{ageWarning}</p>
-                  {typeof agePenalty === 'number' && agePenalty > 0 ? (
-                    <p className="text-xs text-amber-600 mt-1">Similarity score adjusted by {(agePenalty * 100).toFixed(0)}% to account for age difference.</p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          ) : null}
           {poseWarning ? (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <div className="flex items-start gap-2">
@@ -263,6 +283,9 @@ export default function Home() {
                   <>
                     {" "}• Mask class: {maskClass}
                   </>
+                ) : null}
+                {process.env.NODE_ENV !== "production" ? (
+                  <> • Axis tolerance: {disableAxisTolerance ? "disabled" : "enabled"}</>
                 ) : null}
               </p>
             ) : null}
@@ -356,6 +379,15 @@ export default function Home() {
                 >
                   Clear
                 </button>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3 rounded border-gray-300"
+                    checked={!disableAxisTolerance}
+                    onChange={(e) => updateAxisTolerance(!e.target.checked)}
+                  />
+                  Axis noise tolerance
+                </label>
               </div>
             ) : null}
           </div>

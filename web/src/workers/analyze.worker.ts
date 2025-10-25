@@ -10,7 +10,6 @@ import { extractFeatureMeasurements, SYNTHETIC_JAW_CONFIDENCE_THRESHOLD, type Sy
 import { classifyFeatures } from '@/lib/axis-classifiers';
 import { performComparison } from '@/lib/feature-comparisons';
 import { generateNarrative } from '@/lib/feature-narratives';
-import { initAgeClassifier, estimateAge, extractFaceCrop, computeAgePenalty } from '@/lib/age-estimation';
 import { estimateFacePose, normalizeLandmarksToFrontal, poseAngularDistance, formatPose } from '@/lib/pose-estimation';
 import type { RegionPoly, MaskOverlay } from './types';
 import type { RegionHintsArray, ParsingLogits } from '@/models/detector-types';
@@ -37,29 +36,6 @@ async function preprocessBitmap(bmp: ImageBitmap, maxDim = 1280) {
 }
 
 type KP = { x: number; y: number; z?: number };
-
-function formatMaturityDebugInfo(congruenceResult: {
-  maturityA?: { score: number; confidence: number };
-  maturityB?: { score: number; confidence: number };
-  agePenalty?: number;
-  ageWarning?: string;
-}) {
-  if (!congruenceResult.maturityA || !congruenceResult.maturityB) return {};
-
-  const maturityGap = Math.abs(
-    congruenceResult.maturityA.score - congruenceResult.maturityB.score
-  );
-
-  return {
-    maturityA: congruenceResult.maturityA.score.toFixed(2),
-    maturityB: congruenceResult.maturityB.score.toFixed(2),
-    maturityGap: maturityGap.toFixed(2),
-    confidenceA: congruenceResult.maturityA.confidence.toFixed(2),
-    confidenceB: congruenceResult.maturityB.confidence.toFixed(2),
-    agePenalty: (congruenceResult.agePenalty ?? 0).toFixed(3),
-    ageWarning: congruenceResult.ageWarning || '(none)',
-  };
-}
 
 const JAW_CONFIDENCE_FOR_OVERLAY = SYNTHETIC_JAW_CONFIDENCE_THRESHOLD;
 const LEFT_GONION_INDEX = 234;
@@ -399,10 +375,7 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         const adapter = data.payload?.adapter;
         if (adapter) setAdapter(adapter);
       } catch {}
-      await Promise.all([
-        getDetector(),
-        initAgeClassifier()
-      ]);
+      await getDetector();
       return;
     }
     if (data.type === 'ANALYZE') {
@@ -562,51 +535,9 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         }
       }
 
-      // Estimate ages using ML classifier (if available)
-      let ageEstimateA, ageEstimateB, ageGap: number | undefined;
-      try {
-        if (process.env.NODE_ENV !== 'production') {
-          console.info('[worker] extracting face crops for age estimation');
-        }
-        // Use original landmarks for face crop (must match un-transformed images)
-        const faceCropA = extractFaceCrop(cnvA, originalPtsA);
-        const faceCropB = extractFaceCrop(cnvB, originalPtsB);
-
-        if (process.env.NODE_ENV !== 'production') {
-          console.info('[worker] starting age estimation (face A will be #1, face B will be #2)');
-        }
-        [ageEstimateA, ageEstimateB] = await Promise.all([
-          estimateAge(faceCropA),
-          estimateAge(faceCropB)
-        ]);
-
-        const agePenaltyResult = computeAgePenalty(ageEstimateA, ageEstimateB);
-        ageGap = agePenaltyResult.ageGap;
-
-        if (process.env.NODE_ENV !== 'production') {
-          console.info('[worker] age estimation:', {
-            ageA: `${ageEstimateA.age.toFixed(1)} years (${ageEstimateA.gender})`,
-            ageB: `${ageEstimateB.age.toFixed(1)} years (${ageEstimateB.gender})`,
-            confidenceA: ageEstimateA.confidence.toFixed(2),
-            confidenceB: ageEstimateB.confidence.toFixed(2),
-            ageGap: ageGap.toFixed(1),
-            penalty: (agePenaltyResult.penalty * 100).toFixed(1) + '%',
-            warning: agePenaltyResult.warning || '(none)'
-          });
-        }
-      } catch (e) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('[worker] ML age estimation unavailable or failed, will use landmark-based fallback:', e);
-        }
-        // ageEstimateA and ageEstimateB remain undefined, performComparison will use legacy method
-      }
-
       // Compute detailed feature axis analysis
       let featureNarrative: { overall: string; featureSummaries: Record<string, string>; axisDetails: Record<string, string[]> } | undefined;
       let congruenceScore: number | undefined;
-      let ageWarning: string | undefined;
-      let maturityA, maturityB;
-      let agePenalty: number | undefined;
 
       try {
         // Extract measurements from both faces
@@ -621,58 +552,31 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         const classificationsA = classifyFeatures(measurementsA);
         const classificationsB = classifyFeatures(measurementsB);
 
-        // Perform comparison and generate narratives (with ML age-aware scoring if available)
+        // Perform comparison and generate narratives from morphological data
         const comparison = performComparison(
           measurementsA,
           measurementsB,
           classificationsA,
           classificationsB,
-          ptsA,
-          ptsB,
-          ageEstimateA && ageEstimateB ? { ageEstimateA, ageEstimateB } : undefined
+          {
+            disableAxisTolerance: settings?.debug?.disableAxisTolerance,
+          }
         );
         const narrative = generateNarrative(comparison.comparisons, comparison.sharedAxes, comparison.congruenceScore);
 
         featureNarrative = narrative;
         congruenceScore = comparison.congruenceScore;
 
-        // Extract age-aware information
-        if (comparison.congruenceResult) {
-          ageWarning = comparison.congruenceResult.ageWarning;
-          maturityA = comparison.congruenceResult.maturityA;
-          maturityB = comparison.congruenceResult.maturityB;
-          agePenalty = comparison.congruenceResult.agePenalty;
-        }
-
         if (process.env.NODE_ENV !== 'production') {
           const debugInfo: {
             congruence: string;
             sharedAxes: number;
             overall: string;
-            ageMethod?: string;
-            maturityA?: string;
-            maturityB?: string;
-            maturityGap?: string;
-            confidenceA?: string;
-            confidenceB?: string;
-            agePenalty?: string;
-            ageWarning?: string;
           } = {
             congruence: comparison.congruenceScore.toFixed(2),
             sharedAxes: comparison.sharedAxes.length,
             overall: narrative.overall,
           };
-
-          // Show which age detection method was used
-          if (ageEstimateA && ageEstimateB) {
-            debugInfo.ageMethod = 'ML (ViT)';
-          } else if (comparison.congruenceResult?.maturityA && comparison.congruenceResult?.maturityB) {
-            debugInfo.ageMethod = 'landmark-based (deprecated)';
-            // Show legacy maturity info if used
-            Object.assign(debugInfo, formatMaturityDebugInfo(comparison.congruenceResult));
-          } else {
-            debugInfo.ageMethod = 'none';
-          }
 
           console.info('[worker] detailed feature analysis:', debugInfo);
         }
@@ -726,13 +630,6 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         syntheticJawB: outlineB.syntheticJaw,
         featureNarrative,
         congruenceScore,
-        ageWarning,
-        maturityA,
-        maturityB,
-        agePenalty,
-        ageEstimateA,
-        ageEstimateB,
-        ageGap,
         poseA,
         poseB,
         poseDisparity,

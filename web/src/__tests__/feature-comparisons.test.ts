@@ -48,10 +48,10 @@ describe('compareFeatures', () => {
     expect(result[0].feature).toBe('eyes');
     expect(result[0].axes.length).toBe(3);
     expect(result[0].axes.every(a => a.agreement)).toBe(true);
-    // Hybrid scoring: even with categorical agreement, slight measurement differences
-    // reduce score from 1.0 to ~0.96 (40% categorical + 60% continuous)
-    expect(result[0].overallAgreement).toBeGreaterThan(0.95);
-    expect(result[0].overallAgreement).toBeLessThan(1.0);
+    // Hybrid scoring with per-axis noise tolerance:
+    // All three axes (canthal tilt 10.5%, eye size 4.9%, IPD 2.5%) are within
+    // their respective noise thresholds (30%, 10%, 5%) → 100% overall agreement
+    expect(result[0].overallAgreement).toBe(1.0);
   });
 
   it('should detect axis disagreement when categories differ', () => {
@@ -117,8 +117,9 @@ describe('compareFeatures', () => {
 
     const result = compareFeatures(classificationsA, classificationsB);
 
-    // Very close raw measurements should have high similarity
-    expect(result[0].axes[0].similarity).toBeGreaterThan(0.9);
+    // Canthal tilt has 30% noise tolerance
+    // 9.5% difference (5 vs 5.5) is below threshold → 100% similarity
+    expect(result[0].axes[0].similarity).toBe(1.0);
   });
 
   it('should calculate percentage difference', () => {
@@ -224,6 +225,40 @@ describe('compareFeatures', () => {
     // Total: roughly (0.95 + 0.75 + 0.75) / 3 ≈ 0.65 instead of pure categorical 1/3 = 0.33
     expect(result[0].overallAgreement).toBeGreaterThan(0.5);
     expect(result[0].overallAgreement).toBeLessThan(0.75);
+  });
+
+  it('allows disabling noise tolerance via options', () => {
+    const classificationsA: FeatureClassifications = {
+      eyes: [
+        { axis: 'eye size', value: 'average', confidence: 0.9, rawMeasurement: 0.20 },
+      ],
+      brows: [],
+      nose: [],
+      mouth: [],
+      cheeks: [],
+      jaw: [],
+      forehead: [],
+      faceShape: [],
+    };
+
+    const classificationsB: FeatureClassifications = {
+      eyes: [
+        { axis: 'eye size', value: 'average', confidence: 0.9, rawMeasurement: 0.208 }, // 4% delta (inside tolerance)
+      ],
+      brows: [],
+      nose: [],
+      mouth: [],
+      cheeks: [],
+      jaw: [],
+      forehead: [],
+      faceShape: [],
+    };
+
+    const withTolerance = compareFeatures(classificationsA, classificationsB);
+    expect(withTolerance[0].overallAgreement).toBe(1);
+
+    const withoutTolerance = compareFeatures(classificationsA, classificationsB, { disableAxisTolerance: true });
+    expect(withoutTolerance[0].overallAgreement).toBeLessThan(1);
   });
 });
 

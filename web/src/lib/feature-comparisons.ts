@@ -6,9 +6,7 @@
  */
 
 import type { FeatureClassifications, AxisClassification } from './axis-classifiers';
-import type { FeatureMeasurements, FacialMaturityEstimate, Point } from './feature-axes';
-import type { AgeEstimate } from '@/workers/types';
-import { estimateFacialMaturity } from './feature-axes';
+import type { FeatureMeasurements } from './feature-axes';
 
 export interface AxisComparison {
   axis: string;
@@ -26,12 +24,96 @@ export interface FeatureComparison {
   overallAgreement: number; // 0-1 (proportion of axes that match)
 }
 
+export interface FeatureComparisonOptions {
+  disableAxisTolerance?: boolean;
+}
+
+/**
+ * Per-axis noise tolerance configuration
+ *
+ * Maps axis names to either:
+ * - Relative threshold (0-1): normalized difference threshold for ratio-based comparison
+ * - Absolute threshold (object): fixed value for axes where zero is meaningful
+ *
+ * Tolerances calibrated from measurement-variance.test.ts analysis:
+ * - Tested with 0.5% MediaPipe landmark noise (realistic WebGL variance)
+ * - Threshold set to 3x observed variance for robust noise suppression
+ */
+export type ToleranceConfig = number | { absolute: number };
+
+export const AXIS_NOISE_TOLERANCE: Record<string, ToleranceConfig> = {
+  // Eyes (calibrated from measurement-variance.test.ts)
+  'canthal tilt': { absolute: 6.0 },  // Absolute threshold in degrees (~3x observed variance)
+  'eye size': 0.24,                   // 0.5% coordinate jitter -> ~0.08 normalized diff (x3 safety)
+  'interocular distance': 0.09,       // 0.5% coordinate jitter -> ~0.03 normalized diff (x3 safety)
+
+  // Brows (estimated - needs calibration)
+  'brow shape': 0.20,             // Arc height sensitive to landmark position
+  'brow position': 0.12,          // Vertical distance with moderate jitter
+  'brow length': 0.10,            // Horizontal span, moderately stable
+
+  // Nose (estimated - needs calibration)
+  'nose width': 0.08,
+  'bridge contour': 0.15,
+  'nasal tip projection': 0.10,
+
+  // Mouth (estimated - needs calibration)
+  'lip fullness': 0.10,
+  'cupid\'s bow definition': 0.20,        // Small curvature, sensitive to noise
+  'lip corner orientation': { absolute: 5.0 }, // Angle in degrees, neutral ~0°
+  'philtrum length': 0.08,
+  'mouth width': 0.08,
+
+  // Jaw (estimated - needs calibration)
+  'jaw width': 0.08,
+  'mandibular angle': { absolute: 10.0 },  // Angle in degrees, typical 120°
+  'chin projection': 0.10,
+  'chin width': 0.10,
+  'symmetry': 0.15,                // Jaw symmetry
+
+  // Cheeks (estimated - needs calibration)
+  'zygomatic prominence': 0.12,
+  'nasolabial fold depth': 0.15,
+  'cheekbone height': 0.10,
+
+  // Forehead (estimated - needs calibration)
+  'forehead height': 0.10,
+  'forehead contour': 0.15,
+
+  // Face shape (estimated - needs calibration)
+  'face shape ratio': 0.08,
+  'facial thirds balance': 0.12,
+};
+
+/**
+ * Get noise tolerance configuration for a specific measurement axis
+ *
+ * Returns calibrated threshold from AXIS_NOISE_TOLERANCE map,
+ * or conservative default for unmapped axes.
+ */
+function getAxisNoiseToleranceConfig(axisName: string): ToleranceConfig {
+  const tolerance = AXIS_NOISE_TOLERANCE[axisName];
+
+  if (tolerance !== undefined) {
+    return tolerance;
+  }
+
+  // Conservative default for uncalibrated axes
+  // TODO: Log warning in dev mode for missing calibrations
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(`[feature-comparisons] No calibrated tolerance for axis "${axisName}", using default 0.15`);
+  }
+
+  return 0.15;
+}
+
 /**
  * Compare two axis classifications
  */
 function compareAxis(
   axisA: AxisClassification,
-  axisB: AxisClassification
+  axisB: AxisClassification,
+  options?: FeatureComparisonOptions
 ): AxisComparison {
   const agreement = axisA.value === axisB.value;
 
@@ -39,16 +121,72 @@ function compareAxis(
   // For measurements close in value, similarity is high even if categories differ
   const rawA = axisA.rawMeasurement;
   const rawB = axisB.rawMeasurement;
-  const avgMagnitude = (Math.abs(rawA) + Math.abs(rawB)) / 2 || 1;
   const diff = Math.abs(rawA - rawB);
-  const normalizedDiff = diff / avgMagnitude;
-  const similarity = Math.max(0, 1 - normalizedDiff);
-
-  // Compute percentage difference
-  const percentDiff = avgMagnitude !== 0 ? (diff / avgMagnitude) * 100 : 0;
-
-  // Determine direction
   const direction = rawA > rawB ? 'higher' : 'lower';
+  const avgMagnitude = (Math.abs(rawA) + Math.abs(rawB)) / 2 || 1;
+  const percentDiffRelative = avgMagnitude !== 0 ? (diff / avgMagnitude) * 100 : 0;
+
+  if (options?.disableAxisTolerance) {
+    const normalizedDiff = diff / avgMagnitude;
+    const similarity = Math.max(0, 1 - normalizedDiff);
+    return {
+      axis: axisA.axis,
+      valueA: axisA.value,
+      valueB: axisB.value,
+      agreement,
+      similarity,
+      percentDiff: percentDiffRelative,
+      direction,
+    };
+  }
+
+  // Get tolerance configuration (absolute or relative)
+  const toleranceConfig = getAxisNoiseToleranceConfig(axisA.axis);
+  const isAbsolute = typeof toleranceConfig === 'object' && 'absolute' in toleranceConfig;
+
+  if (isAbsolute) {
+    const threshold = toleranceConfig.absolute;
+
+    if (diff < threshold) {
+      return {
+        axis: axisA.axis,
+        valueA: axisA.value,
+        valueB: axisB.value,
+        agreement,
+        similarity: 1.0,
+        percentDiff: (diff / threshold) * 100,
+        direction,
+      };
+    }
+
+    const similarity = Math.max(0, 1 - (diff - threshold) / threshold);
+    return {
+      axis: axisA.axis,
+      valueA: axisA.value,
+      valueB: axisB.value,
+      agreement,
+      similarity,
+      percentDiff: (diff / threshold) * 100,
+      direction,
+    };
+  }
+
+  const noiseTolerance = toleranceConfig;
+  const normalizedDiff = diff / avgMagnitude;
+
+  if (normalizedDiff < noiseTolerance) {
+    return {
+      axis: axisA.axis,
+      valueA: axisA.value,
+      valueB: axisB.value,
+      agreement,
+      similarity: 1.0,
+      percentDiff: percentDiffRelative,
+      direction,
+    };
+  }
+
+  const similarity = Math.max(0, 1 - (normalizedDiff - noiseTolerance) / (1 - noiseTolerance));
 
   return {
     axis: axisA.axis,
@@ -56,7 +194,7 @@ function compareAxis(
     valueB: axisB.value,
     agreement,
     similarity,
-    percentDiff,
+    percentDiff: percentDiffRelative,
     direction,
   };
 }
@@ -83,7 +221,8 @@ function computeHybridAxisScore(axis: AxisComparison): number {
 function compareFeature(
   featureName: string,
   axesA: AxisClassification[],
-  axesB: AxisClassification[]
+  axesB: AxisClassification[],
+  options?: FeatureComparisonOptions
 ): FeatureComparison {
   const axes: AxisComparison[] = [];
 
@@ -91,7 +230,7 @@ function compareFeature(
   for (const axisA of axesA) {
     const axisB = axesB.find(b => b.axis === axisA.axis);
     if (axisB) {
-      axes.push(compareAxis(axisA, axisB));
+      axes.push(compareAxis(axisA, axisB, options));
     }
   }
 
@@ -115,17 +254,18 @@ function compareFeature(
  */
 export function compareFeatures(
   classificationsA: FeatureClassifications,
-  classificationsB: FeatureClassifications
+  classificationsB: FeatureClassifications,
+  options?: FeatureComparisonOptions
 ): FeatureComparison[] {
   return [
-    compareFeature('eyes', classificationsA.eyes, classificationsB.eyes),
-    compareFeature('brows', classificationsA.brows, classificationsB.brows),
-    compareFeature('nose', classificationsA.nose, classificationsB.nose),
-    compareFeature('mouth', classificationsA.mouth, classificationsB.mouth),
-    compareFeature('cheeks', classificationsA.cheeks, classificationsB.cheeks),
-    compareFeature('jaw', classificationsA.jaw, classificationsB.jaw),
-    compareFeature('forehead', classificationsA.forehead, classificationsB.forehead),
-    compareFeature('face shape', classificationsA.faceShape, classificationsB.faceShape),
+    compareFeature('eyes', classificationsA.eyes, classificationsB.eyes, options),
+    compareFeature('brows', classificationsA.brows, classificationsB.brows, options),
+    compareFeature('nose', classificationsA.nose, classificationsB.nose, options),
+    compareFeature('mouth', classificationsA.mouth, classificationsB.mouth, options),
+    compareFeature('cheeks', classificationsA.cheeks, classificationsB.cheeks, options),
+    compareFeature('jaw', classificationsA.jaw, classificationsB.jaw, options),
+    compareFeature('forehead', classificationsA.forehead, classificationsB.forehead, options),
+    compareFeature('face shape', classificationsA.faceShape, classificationsB.faceShape, options),
   ];
 }
 
@@ -221,195 +361,38 @@ export function featureAgreementSummary(
 }
 
 /**
- * Congruence result with age/maturity information
- */
-export interface CongruenceResult {
-  score: number;
-  maturityA?: FacialMaturityEstimate;
-  maturityB?: FacialMaturityEstimate;
-  ageWarning?: string;
-  agePenalty?: number;
-}
-
-/**
- * Complete comparison result with all metrics
+ * Complete comparison result with all metrics.
+ * Age-aware adjustments have been removed; congruence relies purely on morphology.
  */
 export interface ComparisonResult {
   comparisons: FeatureComparison[];
   sharedAxes: string[];
   congruenceScore: number;
   agreementSummary: string;
-  congruenceResult?: CongruenceResult;
 }
 
 /**
- * Compute age-aware congruence using ML-based age estimates (ViT classifier)
- *
- * Uses actual age predictions instead of unreliable landmark-based maturity heuristics.
- * Applies penalty for cross-age comparisons to prevent false positives when comparing
- * faces at different developmental stages.
- */
-export function computeMLAgeAwareCongruence(
-  comparisons: FeatureComparison[],
-  ageEstimateA: AgeEstimate,
-  ageEstimateB: AgeEstimate
-): CongruenceResult {
-  // Base score from hybrid feature comparisons
-  const baseScore = morphologicalCongruence(comparisons);
-
-  const ageGap = Math.abs(ageEstimateA.age - ageEstimateB.age);
-  const minConfidence = Math.min(ageEstimateA.confidence, ageEstimateB.confidence);
-
-  // Apply penalty for cross-age comparison
-  let agePenalty = 0;
-  let ageWarning: string | undefined;
-
-  // Only apply penalty if we're confident in both predictions
-  if (ageGap >= 5 && minConfidence >= 0.4) {
-    // Scale penalty: 5-10 years = 5%, 10-20 = 10-20%, 20-30 = 20-30%, 30+ = 30%
-    if (ageGap < 10) {
-      agePenalty = 0.05;
-    } else if (ageGap < 20) {
-      agePenalty = 0.10 + (ageGap - 10) * 0.01; // 10-20%
-    } else if (ageGap < 30) {
-      agePenalty = 0.20 + (ageGap - 20) * 0.01; // 20-30%
-    } else {
-      agePenalty = 0.30; // Max 30%
-    }
-
-    // Generate warning message
-    const stageA = getAgeStageFromAge(ageEstimateA.age);
-    const stageB = getAgeStageFromAge(ageEstimateB.age);
-    ageWarning = `Cross-age comparison: ${stageA} (~${Math.round(ageEstimateA.age)}) vs ${stageB} (~${Math.round(ageEstimateB.age)}). Similarity may be less meaningful.`;
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.info('[feature-comparisons] ML age penalty applied:', {
-        baseScore: baseScore.toFixed(3),
-        ageGap: ageGap.toFixed(1),
-        minConfidence: minConfidence.toFixed(2),
-        penalty: (agePenalty * 100).toFixed(1) + '%',
-        adjustedScore: (baseScore * (1 - agePenalty)).toFixed(3)
-      });
-    }
-  }
-
-  const adjustedScore = baseScore * (1 - agePenalty);
-
-  return {
-    score: adjustedScore,
-    ageWarning,
-    agePenalty
-  };
-}
-
-/**
- * Get descriptive age stage from estimated age
- */
-function getAgeStageFromAge(age: number): string {
-  if (age < 3) return 'Infant';
-  if (age < 10) return 'Child';
-  if (age < 20) return 'Adolescent';
-  if (age < 30) return 'Young Adult';
-  if (age < 50) return 'Adult';
-  if (age < 70) return 'Middle-Aged Adult';
-  return 'Senior';
-}
-
-/**
- * Compute age-aware congruence score with maturity estimation (LEGACY - uses landmark heuristics)
- *
- * Applies penalty for cross-age comparisons to prevent false positives
- * when comparing faces at different developmental stages.
- *
- * @deprecated Use computeMLAgeAwareCongruence with ViT age estimates instead
- */
-export function computeAgeAwareCongruence(
-  comparisons: FeatureComparison[],
-  measurementsA: FeatureMeasurements,
-  measurementsB: FeatureMeasurements,
-  landmarksA: Point[],
-  landmarksB: Point[]
-): CongruenceResult {
-  // Base score from hybrid feature comparisons
-  const baseScore = morphologicalCongruence(comparisons);
-
-  // Estimate maturity for both faces
-  const maturityA = estimateFacialMaturity(measurementsA, landmarksA);
-  const maturityB = estimateFacialMaturity(measurementsB, landmarksB);
-
-  const maturityGap = Math.abs(maturityA.score - maturityB.score);
-
-  // Apply penalty for cross-age comparison
-  let agePenalty = 0;
-  let ageWarning: string | undefined;
-
-  if (maturityGap > 0.15 && Math.min(maturityA.confidence, maturityB.confidence) > 0.5) {
-    // Significant age difference detected with confidence
-    // Penalty scales from 10% (gap=0.15) to 30% (gap=0.45+)
-    agePenalty = Math.min((maturityGap - 0.15) * 0.67, 0.30);
-
-    const stageA = maturityA.score < 0.3 ? "Child" : maturityA.score < 0.6 ? "Adolescent" : "Adult";
-    const stageB = maturityB.score < 0.3 ? "Child" : maturityB.score < 0.6 ? "Adolescent" : "Adult";
-
-    ageWarning = `Cross-age comparison detected: ${stageA} vs ${stageB}. Similarity may be less meaningful.`;
-  }
-
-  const adjustedScore = baseScore * (1 - agePenalty);
-
-  return {
-    score: adjustedScore,
-    maturityA,
-    maturityB,
-    ageWarning,
-    agePenalty
-  };
-}
-
-/**
- * Perform complete feature comparison with all derived metrics
- *
- * Supports both ML-based age estimation (preferred) and legacy landmark-based maturity.
- * If ageEstimates are provided, uses ML-based scoring. Otherwise falls back to landmark maturity.
+ * Perform complete feature comparison using morphological data only.
  */
 export function performComparison(
   measurementsA: FeatureMeasurements,
   measurementsB: FeatureMeasurements,
   classificationsA: FeatureClassifications,
   classificationsB: FeatureClassifications,
-  landmarksA?: Point[],
-  landmarksB?: Point[],
-  ageEstimates?: { ageEstimateA: AgeEstimate; ageEstimateB: AgeEstimate }
+  options?: FeatureComparisonOptions
 ): ComparisonResult {
-  const comparisons = compareFeatures(classificationsA, classificationsB);
+  void measurementsA;
+  void measurementsB;
+
+  const comparisons = compareFeatures(classificationsA, classificationsB, options);
   const sharedAxes = sharedAxisValues(comparisons);
   const agreementSummary = featureAgreementSummary(comparisons);
-
-  // Compute age-aware congruence
-  let congruenceResult: CongruenceResult | undefined;
-  let congruenceScore: number;
-
-  // Prefer ML-based age estimation if available
-  if (ageEstimates) {
-    congruenceResult = computeMLAgeAwareCongruence(
-      comparisons,
-      ageEstimates.ageEstimateA,
-      ageEstimates.ageEstimateB
-    );
-    congruenceScore = congruenceResult.score;
-  } else if (landmarksA && landmarksB) {
-    // Fallback to legacy landmark-based maturity
-    congruenceResult = computeAgeAwareCongruence(comparisons, measurementsA, measurementsB, landmarksA, landmarksB);
-    congruenceScore = congruenceResult.score;
-  } else {
-    // No age adjustment available
-    congruenceScore = morphologicalCongruence(comparisons);
-  }
+  const congruenceScore = morphologicalCongruence(comparisons);
 
   return {
     comparisons,
     sharedAxes,
     congruenceScore,
     agreementSummary,
-    congruenceResult,
   };
 }

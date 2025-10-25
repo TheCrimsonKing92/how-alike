@@ -3,6 +3,10 @@ import type { SyntheticJawResult } from '@/lib/jaw-from-masks';
 
 export type AnalyzeInit = { type: 'INIT'; payload?: { adapter?: 'facemesh' | 'parsing' } };
 
+export type DebugSettings = {
+  disableAxisTolerance?: boolean;
+};
+
 export type AnalyzeRequest = {
   type: 'ANALYZE';
   payload: {
@@ -12,6 +16,7 @@ export type AnalyzeRequest = {
     maxDim?: number;
     settings?: {
       buffers?: Partial<Record<'brows' | 'eyes' | 'mouth' | 'nose' | 'jaw', number>>;
+      debug?: DebugSettings;
     };
   };
 };
@@ -37,20 +42,6 @@ export type DetailedNarrative = {
   imageA: string[];
   imageB: string[];
   agreement?: number; // 0-1 score for this feature's overall agreement
-};
-
-export type FacialMaturityEstimate = {
-  score: number;           // 0-1 scale (0=child, 1=adult)
-  confidence: number;      // 0-1 how confident we are
-  indicators: string[];    // Descriptive indicators
-};
-
-export type AgeEstimate = {
-  age: number;             // Predicted age (continuous value)
-  confidence: number;      // 0-1 how confident we are
-  gender: 'male' | 'female';  // Predicted gender
-  genderConfidence: number;   // Gender prediction confidence
-  rawAge?: number;
 };
 
 export type PoseEstimate = {
@@ -94,13 +85,6 @@ export type AnalyzeResult = {
   syntheticJawB?: SyntheticJawResult;
   featureNarrative?: FeatureNarrative;
   congruenceScore?: number;
-  ageWarning?: string;
-  maturityA?: FacialMaturityEstimate;
-  maturityB?: FacialMaturityEstimate;
-  agePenalty?: number;
-  ageEstimateA?: AgeEstimate;
-  ageEstimateB?: AgeEstimate;
-  ageGap?: number;
   poseA?: PoseEstimate;
   poseB?: PoseEstimate;
   poseDisparity?: number;  // Angular distance between poses in degrees

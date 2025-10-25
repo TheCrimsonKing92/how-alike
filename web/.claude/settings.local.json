@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vitest:*)",
+      "Bash(npm test)",
+      "Bash(where:*)",
+      "Bash(node --version:*)",
+      "Bash(node .claude/scripts/consult-openai.mjs --model gpt-5-nano \"What is 2+2? Answer in one word.\")",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

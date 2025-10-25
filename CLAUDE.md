@@ -240,9 +240,7 @@ Read these before making architectural changes:
 - `ARCHITECTURE.md` — High-level system design
 - `AGENTS.md` — Agent-specific rules and workflow guidance
 - `TASKS.md` — Work log and current tasks
-- `CALIBRATION_STATUS.md` — Age calibration status
-- `NEXT_IMPROVEMENTS.md` — Future enhancement roadmap
-- `docs/archive/` — Historical planning documents (feature axes, age calibration, implementation stages)
+- `docs/archive/` — Historical planning documents (feature axes, implementation stages)
 
 **IMPORTANT**: Keep `CLAUDE.md` and `AGENTS.md` synchronized. When updating workflow guidance, testing requirements, or development practices, apply changes to both files to maintain consistency. CLAUDE.md provides high-level guidance for new Claude Code instances, while AGENTS.md contains detailed rules for ongoing work.
 

@@ -1,4 +1,0 @@
-filename,actual_age,raw_prediction,calibrated_prediction,error,gender
-10_1_0_20170109204617417.jpg,10,35.7,48.9,25.7,female
-26_1_2_20170104015910819.jpg,26,31.2,11.6,5.2,male
-59_1_0_20170110122554230.jpg,59,26.3,0,-32.7,female

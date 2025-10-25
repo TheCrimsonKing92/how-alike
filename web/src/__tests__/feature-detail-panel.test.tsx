@@ -118,9 +118,9 @@ describe('FeatureDetailPanel', () => {
     expect(screen.getByText('Shared')).toBeInTheDocument();
     expect(screen.getByText(matchText('Positive canthal tilt'))).toBeInTheDocument();
     expect(screen.getByText('Image A')).toBeInTheDocument();
-    expect(screen.getByText('Average eye size')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Average eye size'))).toBeInTheDocument();
     expect(screen.getByText('Image B')).toBeInTheDocument();
-    expect(screen.getByText('Wide eye size')).toBeInTheDocument();
+    expect(screen.getByText(matchText('Wide eye size'))).toBeInTheDocument();
   });
 
   it('collapses expanded feature on second click', async () => {

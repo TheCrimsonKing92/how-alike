@@ -159,6 +159,7 @@ describe('overallNarrative', () => {
     const result = overallNarrative(comparisons, 0.88);
 
     expect(result).toContain('High morphological congruence');
+    expect(result).toContain('Strong similarity across eyes and nose');
   });
 
   it('should generate moderate similarity narrative', () => {
@@ -181,6 +182,7 @@ describe('overallNarrative', () => {
     const result = overallNarrative(comparisons, 0.25);
 
     expect(result).toContain('Distinct morphological features');
+    expect(result).toContain('Major contrasts appear around eyes and nose');
   });
 
   it('should include feature-specific details for high agreement', () => {
@@ -191,8 +193,24 @@ describe('overallNarrative', () => {
 
     const result = overallNarrative(comparisons, 0.60);
 
-    expect(result).toContain('Similar eyes');
-    expect(result).toContain('different nose');
+    expect(result).toContain('Some similarity across eyes');
+    expect(result).toContain('differences remain around nose');
+  });
+
+  it('summarizes multiple similar regions without run-ons', () => {
+    const comparisons: FeatureComparison[] = [
+      { feature: 'eyes', axes: [], overallAgreement: 0.92 },
+      { feature: 'brows', axes: [], overallAgreement: 0.9 },
+      { feature: 'nose', axes: [], overallAgreement: 0.88 },
+      { feature: 'cheeks', axes: [], overallAgreement: 0.86 },
+      { feature: 'mouth', axes: [], overallAgreement: 0.83 },
+      { feature: 'jaw', axes: [], overallAgreement: 0.82 },
+    ];
+
+    const result = overallNarrative(comparisons, 0.91);
+
+    expect(result).toContain('Very strong similarity across eyes, brows, and mid-face features');
+    expect(result).toContain('Lower face structure also closely aligned');
   });
 });
 

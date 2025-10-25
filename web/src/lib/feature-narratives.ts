@@ -7,6 +7,39 @@
 
 import type { AxisComparison, FeatureComparison } from './feature-comparisons';
 
+type FeatureBucket = 'upper' | 'mid' | 'lower' | 'global';
+
+const FEATURE_BUCKETS: Record<string, FeatureBucket> = {
+  eyes: 'upper',
+  brows: 'upper',
+  forehead: 'upper',
+  nose: 'mid',
+  cheeks: 'mid',
+  mouth: 'lower',
+  jaw: 'lower',
+  faceShape: 'global',
+  'face shape': 'global',
+};
+
+const FEATURE_LABELS: Record<string, string> = {
+  faceShape: 'face shape',
+  'face shape': 'face shape',
+};
+
+const BUCKET_DESCRIPTORS: Record<FeatureBucket, string> = {
+  upper: 'eyes and brows',
+  mid: 'mid-face features',
+  lower: 'lower face structure',
+  global: 'overall face shape',
+};
+
+const BUCKET_ORDER: FeatureBucket[] = ['upper', 'mid', 'lower', 'global'];
+
+interface BucketPhrase {
+  bucket: FeatureBucket;
+  label: string;
+}
+
 /**
  * Generate narrative text for a single axis comparison
  */
@@ -113,21 +146,37 @@ export function overallNarrative(
     description = 'Distinct morphological features';
   }
 
-  // Add feature-specific details
+  const sentences = [description];
   const highAgreement = comparisons.filter(c => c.overallAgreement >= 0.67);
   const lowAgreement = comparisons.filter(c => c.overallAgreement <= 0.33);
+  const positivePhrases = createBucketPhrases(highAgreement.map(c => c.feature));
 
-  if (highAgreement.length > 0) {
-    const features = highAgreement.map(c => c.feature).join(' and ');
-    description += `. Similar ${features}`;
+  if (positivePhrases.length > 0) {
+    const qualifier = selectSimilarityQualifier(congruenceScore);
+    const nonLowerTargets = positivePhrases.filter(phrase => phrase.bucket !== 'lower');
+    const primaryTargets = nonLowerTargets.length > 0 ? nonLowerTargets : positivePhrases;
+    sentences.push(`${qualifier} similarity across ${formatList(primaryTargets.map(p => p.label))}`);
+
+    if (nonLowerTargets.length > 0) {
+      const lowerPhrase = positivePhrases.find(phrase => phrase.bucket === 'lower');
+      if (lowerPhrase) {
+        const alignment = selectAlignmentQualifier(congruenceScore);
+        sentences.push(`${capitalize(lowerPhrase.label)} also ${alignment}`);
+      }
+    }
   }
 
-  if (lowAgreement.length > 0) {
-    const features = lowAgreement.map(c => c.feature).join(' and ');
-    description += `, but different ${features}`;
+  const negativePhrases = createBucketPhrases(lowAgreement.map(c => c.feature));
+  if (negativePhrases.length > 0) {
+    const clause = `${selectDifferenceQualifier(congruenceScore)} ${formatList(negativePhrases.map(p => p.label))}`;
+    if (sentences.length > 1) {
+      sentences.push(`However, ${clause}`);
+    } else {
+      sentences.push(capitalize(clause));
+    }
   }
 
-  return description;
+  return sentences.join('. ');
 }
 
 /**
@@ -207,6 +256,136 @@ function getComparator(axis: string, higher: boolean): string {
 
   // Axes where "higher" means "more extreme"
   return higher ? 'more pronounced' : 'less pronounced';
+}
+
+function createBucketPhrases(features: string[]): BucketPhrase[] {
+  if (features.length === 0) {
+    return [];
+  }
+
+  const grouped = bucketizeFeatures(features);
+  const phrases: BucketPhrase[] = [];
+
+  for (const bucket of BUCKET_ORDER) {
+    const entries = grouped[bucket];
+    if (!entries || entries.length === 0) {
+      continue;
+    }
+
+    if (bucket === 'upper') {
+      for (const feature of entries) {
+        phrases.push({
+          bucket,
+          label: humanizeFeatureName(feature),
+        });
+      }
+      continue;
+    }
+
+    phrases.push({
+      bucket,
+      label: descriptorForBucket(bucket, entries),
+    });
+  }
+
+  return phrases;
+}
+
+function bucketizeFeatures(features: string[]): Record<FeatureBucket, string[]> {
+  const grouped: Record<FeatureBucket, string[]> = {
+    upper: [],
+    mid: [],
+    lower: [],
+    global: [],
+  };
+
+  for (const feature of features) {
+    const bucket = FEATURE_BUCKETS[feature] ?? 'global';
+    grouped[bucket].push(feature);
+  }
+
+  return grouped;
+}
+
+function descriptorForBucket(bucket: FeatureBucket, features: string[]): string {
+  if (features.length === 1) {
+    return humanizeFeatureName(features[0]);
+  }
+
+  return BUCKET_DESCRIPTORS[bucket];
+}
+
+function humanizeFeatureName(feature: string): string {
+  if (FEATURE_LABELS[feature]) {
+    return FEATURE_LABELS[feature];
+  }
+
+  return feature
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]/g, ' ')
+    .toLowerCase();
+}
+
+function formatList(items: string[]): string {
+  if (items.length === 1) {
+    return items[0];
+  }
+
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+
+  const start = items.slice(0, -1).join(', ');
+  const end = items[items.length - 1];
+  return `${start}, and ${end}`;
+}
+
+function selectSimilarityQualifier(score: number): string {
+  if (score >= 0.9) {
+    return 'Very strong';
+  }
+
+  if (score >= 0.8) {
+    return 'Strong';
+  }
+
+  if (score >= 0.7) {
+    return 'Notable';
+  }
+
+  return 'Some';
+}
+
+function selectAlignmentQualifier(score: number): string {
+  if (score >= 0.9) {
+    return 'closely aligned';
+  }
+
+  if (score >= 0.8) {
+    return 'well aligned';
+  }
+
+  if (score >= 0.7) {
+    return 'aligned';
+  }
+
+  return 'generally aligned';
+}
+
+function selectDifferenceQualifier(score: number): string {
+  if (score >= 0.7) {
+    return 'minor differences remain around';
+  }
+
+  if (score >= 0.5) {
+    return 'differences remain around';
+  }
+
+  if (score >= 0.3) {
+    return 'key differences remain around';
+  }
+
+  return 'major contrasts appear around';
 }
 
 /**

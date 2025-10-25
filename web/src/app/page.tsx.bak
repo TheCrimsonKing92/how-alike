@@ -1,1 +1,0 @@
-"}"  const [adapter, setAdapter] = React.useState<"facemesh" | "parsing">(() => {    if (typeof window === 'undefined') return 'facemesh';    const saved = window.localStorage.getItem('adapter');    return (saved === 'parsing' || saved === 'facemesh') ? saved : 'facemesh';  });u"

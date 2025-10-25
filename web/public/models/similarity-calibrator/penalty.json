@@ -1,7 +1,0 @@
-{
-  "type": "penalty",
-  "alpha": 0.005,
-  "tau": 5.0,
-  "M": 30.0,
-  "description": "Age-aware similarity penalty: score' = s - alpha*clip(|age_diff| - tau, 0, M)"
-}

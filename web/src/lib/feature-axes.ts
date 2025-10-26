@@ -62,7 +62,7 @@ const LANDMARKS = {
   foreheadLeft: 109,
   foreheadRight: 338,
 
-  // Brows (MediaPipe eyebrow landmarks)
+  // Brows (MediaPipe eyebrow landmarks - primary points)
   leftBrowInner: 70,
   leftBrowMid: 107,
   leftBrowOuter: 66,
@@ -112,6 +112,155 @@ function faceWidth(landmarks: Point[]): number {
   return distance(leftJaw, rightJaw);
 }
 
+// Extended landmark sets for robust canthal tilt (8-10 points per corner)
+const LEFT_EYE_OUTER_CORNER_INDICES = [33, 7, 163, 144, 145, 246, 161, 160, 159, 158];
+const LEFT_EYE_INNER_CORNER_INDICES = [133, 173, 157, 158, 159, 160, 161, 246];
+const RIGHT_EYE_OUTER_CORNER_INDICES = [263, 249, 390, 373, 374, 466, 388, 387, 386, 385];
+const RIGHT_EYE_INNER_CORNER_INDICES = [362, 398, 384, 385, 386, 387, 388, 466];
+
+const LEFT_EYE_UPPER_INDICES = [159, 158, 160, 161, 246];
+const LEFT_EYE_LOWER_INDICES = [145, 144, 153, 154, 155];
+const RIGHT_EYE_UPPER_INDICES = [386, 385, 384, 387, 388];
+const RIGHT_EYE_LOWER_INDICES = [374, 380, 381, 382, 383];
+
+// Iris center landmarks (available with refineLandmarks: true)
+const LEFT_IRIS_CENTER = 468;
+const RIGHT_IRIS_CENTER = 473;
+
+// Complete eyebrow landmark sets (10 points each for robust measurements)
+// Left eyebrow: inner to outer progression
+const LEFT_EYEBROW_INDICES = [70, 63, 105, 66, 107, 55, 65, 52, 53, 46];
+// Right eyebrow: inner to outer progression
+const RIGHT_EYEBROW_INDICES = [300, 293, 334, 296, 336, 285, 295, 282, 283, 276];
+
+function averageLandmarks(landmarks: Point[], indices: number[]): Point {
+  let sumX = 0;
+  let sumY = 0;
+  let sumZ = 0;
+  const count = indices.length || 1;
+  for (const idx of indices) {
+    const lm = landmarks[idx];
+    sumX += lm.x;
+    sumY += lm.y;
+    sumZ += lm.z ?? 0;
+  }
+  return {
+    x: sumX / count,
+    y: sumY / count,
+    z: sumZ / count,
+  };
+}
+
+const RAD_TO_DEG = 180 / Math.PI;
+
+/**
+ * Fit a line through points using PCA and return the slope angle in degrees.
+ * This is more robust than simple linear regression for noisy landmark data.
+ */
+function pcaLineAngle(points: Point[]): number {
+  const n = points.length;
+  if (n === 0) return 0;
+
+  // Compute centroid
+  let meanX = 0;
+  let meanY = 0;
+  for (const p of points) {
+    meanX += p.x;
+    meanY += p.y;
+  }
+  meanX /= n;
+  meanY /= n;
+
+  // Compute covariance matrix elements
+  let cov_xx = 0;
+  let cov_xy = 0;
+  let cov_yy = 0;
+  for (const p of points) {
+    const dx = p.x - meanX;
+    const dy = p.y - meanY;
+    cov_xx += dx * dx;
+    cov_xy += dx * dy;
+    cov_yy += dy * dy;
+  }
+
+  // Find the principal eigenvector (direction of maximum variance)
+  // For 2x2 matrix, eigenvalues are: λ = (trace ± sqrt(trace² - 4*det)) / 2
+  const trace = cov_xx + cov_yy;
+  const det = cov_xx * cov_yy - cov_xy * cov_xy;
+  const discriminant = trace * trace - 4 * det;
+
+  if (discriminant < 0 || trace === 0) {
+    return 0; // Degenerate case
+  }
+
+  const lambda1 = (trace + Math.sqrt(discriminant)) / 2;
+
+  // Eigenvector corresponding to lambda1: [cov_xy, lambda1 - cov_xx]
+  // (unless cov_xy ≈ 0, then use [1, 0] or [0, 1])
+  let vx: number, vy: number;
+  if (Math.abs(cov_xy) > 1e-10) {
+    vx = cov_xy;
+    vy = lambda1 - cov_xx;
+  } else if (cov_xx >= cov_yy) {
+    vx = 1;
+    vy = 0;
+  } else {
+    vx = 0;
+    vy = 1;
+  }
+
+  // Normalize eigenvector
+  const norm = Math.sqrt(vx * vx + vy * vy);
+  if (norm < 1e-10) return 0;
+  vx /= norm;
+  vy /= norm;
+
+  // Return angle in degrees
+  return Math.atan2(vy, vx) * RAD_TO_DEG;
+}
+
+function slopeAngle(points: Point[]): number {
+  const n = points.length || 1;
+  let sumX = 0;
+  let sumY = 0;
+  for (const p of points) {
+    sumX += p.x;
+    sumY += p.y;
+  }
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+
+  let cov = 0;
+  let varX = 0;
+  for (const p of points) {
+    const dx = p.x - meanX;
+    const dy = p.y - meanY;
+    cov += dx * dy;
+    varX += dx * dx;
+  }
+  if (varX === 0) {
+    return 0;
+  }
+  const slope = cov / varX;
+  return Math.atan(slope) * RAD_TO_DEG;
+}
+
+function rotatePointAround(
+  point: Point,
+  center: Point,
+  angleRad: number
+): Point {
+  const cos = Math.cos(angleRad);
+  const sin = Math.sin(angleRad);
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  return {
+    x: dx * cos - dy * sin,
+    y: dx * sin + dy * cos,
+    z: point.z,
+  };
+}
+
 // ============================================================================
 // Eyes
 // ============================================================================
@@ -120,57 +269,74 @@ export interface EyeMeasurements {
   canthalTilt: number;           // degrees (positive = upward slant)
   eyeSize: number;               // normalized height
   interocularDistance: number;   // ratio to face width
+  leftCanthalTilt?: number;      // individual eye tilts (for debugging)
+  rightCanthalTilt?: number;
+  irisTracking?: {               // iris centers for eyeball pose
+    leftIris: Point;
+    rightIris: Point;
+  };
 }
 
 /**
- * Extract eye measurements from landmarks
+ * Extract eye measurements from landmarks with improved stability
  */
 export function extractEyeMeasurements(
   landmarks: Point[],
   leftEye: Point,
   rightEye: Point
 ): EyeMeasurements {
-  // Canthal tilt: angle between inner and outer eye corners
-  // Average multiple landmarks near each corner to reduce noise from single points
-
-  // Left eye corner regions (indices from LEFT_EYE_RING)
-  const leftOuterRegion = [33, 7, 173].map(i => landmarks[i]);
-  const leftInnerRegion = [133, 246, 155].map(i => landmarks[i]);
-
-  // Right eye corner regions (indices from RIGHT_EYE_RING)
-  const rightOuterRegion = [263, 249, 398].map(i => landmarks[i]);
-  const rightInnerRegion = [362, 466, 382].map(i => landmarks[i]);
-
-  // Compute robust corner positions by averaging neighboring landmarks
-  const leftOuter = {
-    x: leftOuterRegion.reduce((sum, p) => sum + p.x, 0) / leftOuterRegion.length,
-    y: leftOuterRegion.reduce((sum, p) => sum + p.y, 0) / leftOuterRegion.length,
+  // Setup rotation to normalize for face roll
+  const eyeMid = {
+    x: (leftEye.x + rightEye.x) / 2,
+    y: (leftEye.y + rightEye.y) / 2,
   };
-  const leftInner = {
-    x: leftInnerRegion.reduce((sum, p) => sum + p.x, 0) / leftInnerRegion.length,
-    y: leftInnerRegion.reduce((sum, p) => sum + p.y, 0) / leftInnerRegion.length,
-  };
-  const rightOuter = {
-    x: rightOuterRegion.reduce((sum, p) => sum + p.x, 0) / rightOuterRegion.length,
-    y: rightOuterRegion.reduce((sum, p) => sum + p.y, 0) / rightOuterRegion.length,
-  };
-  const rightInner = {
-    x: rightInnerRegion.reduce((sum, p) => sum + p.x, 0) / rightInnerRegion.length,
-    y: rightInnerRegion.reduce((sum, p) => sum + p.y, 0) / rightInnerRegion.length,
-  };
+  const rollRad = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+  const rotate = (pt: Point) => rotatePointAround(pt, eyeMid, -rollRad);
 
-  const leftTilt = angleDegrees(leftInner, leftOuter);
-  const rightTilt = angleDegrees(rightOuter, rightInner); // reversed for symmetry
-  const canthalTilt = (leftTilt + rightTilt) / 2;
+  // Gather all corner landmarks (8-10 points per corner) and rotate them
+  const leftOuterPoints = LEFT_EYE_OUTER_CORNER_INDICES.map(idx => landmarks[idx]).filter(Boolean).map(rotate);
+  const leftInnerPoints = LEFT_EYE_INNER_CORNER_INDICES.map(idx => landmarks[idx]).filter(Boolean).map(rotate);
+  const rightOuterPoints = RIGHT_EYE_OUTER_CORNER_INDICES.map(idx => landmarks[idx]).filter(Boolean).map(rotate);
+  const rightInnerPoints = RIGHT_EYE_INNER_CORNER_INDICES.map(idx => landmarks[idx]).filter(Boolean).map(rotate);
 
-  // Eye size: vertical aperture height
-  const leftTop = landmarks[LANDMARKS.leftEyeTop];
-  const leftBottom = landmarks[LANDMARKS.leftEyeBottom];
-  const rightTop = landmarks[LANDMARKS.rightEyeTop];
-  const rightBottom = landmarks[LANDMARKS.rightEyeBottom];
+  // Compute average positions for each corner region
+  const leftOuterAvg = averageLandmarks(landmarks, LEFT_EYE_OUTER_CORNER_INDICES);
+  const leftInnerAvg = averageLandmarks(landmarks, LEFT_EYE_INNER_CORNER_INDICES);
+  const rightOuterAvg = averageLandmarks(landmarks, RIGHT_EYE_OUTER_CORNER_INDICES);
+  const rightInnerAvg = averageLandmarks(landmarks, RIGHT_EYE_INNER_CORNER_INDICES);
+
+  // Rotate averages
+  const leftOuterAvgRot = rotate(leftOuterAvg);
+  const leftInnerAvgRot = rotate(leftInnerAvg);
+  const rightOuterAvgRot = rotate(rightOuterAvg);
+  const rightInnerAvgRot = rotate(rightInnerAvg);
+
+  // Canthal tilt: angle from inner to outer corner
+  // Positive = outer corner higher (upward slant), Negative = outer corner lower (downward slant)
+  // Note: Y increases downward in screen coordinates, so we negate dy
+  const leftCanthalTilt = Math.atan2(
+    -(leftOuterAvgRot.y - leftInnerAvgRot.y),  // negate for screen coords
+    leftOuterAvgRot.x - leftInnerAvgRot.x
+  ) * RAD_TO_DEG;
+
+  const rightCanthalTilt = Math.atan2(
+    -(rightOuterAvgRot.y - rightInnerAvgRot.y),  // negate for screen coords
+    rightOuterAvgRot.x - rightInnerAvgRot.x
+  ) * RAD_TO_DEG;
+
+  // Bilateral smoothing: average left and right tilts for symmetry
+  const canthalTilt = (leftCanthalTilt + rightCanthalTilt) / 2;
+
+  // Eye size: vertical aperture height averaged across multiple lid points
+  const leftTop = rotate(averageLandmarks(landmarks, LEFT_EYE_UPPER_INDICES));
+  const leftBottom = rotate(averageLandmarks(landmarks, LEFT_EYE_LOWER_INDICES));
+  const rightTop = rotate(averageLandmarks(landmarks, RIGHT_EYE_UPPER_INDICES));
+  const rightBottom = rotate(averageLandmarks(landmarks, RIGHT_EYE_LOWER_INDICES));
 
   const leftHeight = distance(leftTop, leftBottom);
   const rightHeight = distance(rightTop, rightBottom);
+
+  // Bilateral smoothing for eye size
   const avgEyeHeight = (leftHeight + rightHeight) / 2;
 
   // Normalize by interocular distance
@@ -179,12 +345,24 @@ export function extractEyeMeasurements(
 
   // Interocular distance: ratio to face width
   const fw = faceWidth(landmarks);
-  const ipdRatio = ipd / fw;
+  const ipdRatio = ipd / (fw || 1);
+
+  // Track iris centers if available (requires refineLandmarks: true)
+  let irisTracking: { leftIris: Point; rightIris: Point } | undefined;
+  if (landmarks[LEFT_IRIS_CENTER] && landmarks[RIGHT_IRIS_CENTER]) {
+    irisTracking = {
+      leftIris: landmarks[LEFT_IRIS_CENTER],
+      rightIris: landmarks[RIGHT_IRIS_CENTER],
+    };
+  }
 
   return {
     canthalTilt,
     eyeSize,
     interocularDistance: ipdRatio,
+    leftCanthalTilt,
+    rightCanthalTilt,
+    irisTracking,
   };
 }
 
@@ -447,22 +625,31 @@ export interface BrowMeasurements {
   shape: number;               // arc height ratio (0=straight, 1=highly arched)
   position: number;            // vertical distance from eyes (normalized)
   length: number;              // horizontal span ratio to eye width
+  leftShape?: number;          // individual brow shapes (for debugging)
+  rightShape?: number;
 }
 
 /**
- * Extract eyebrow measurements from landmarks
+ * Extract eyebrow measurements from landmarks with improved stability
  */
 export function extractBrowMeasurements(
   landmarks: Point[],
   leftEye: Point,
   rightEye: Point
 ): BrowMeasurements {
-  const leftBrowInner = landmarks[LANDMARKS.leftBrowInner];
-  const leftBrowMid = landmarks[LANDMARKS.leftBrowMid];
-  const leftBrowOuter = landmarks[LANDMARKS.leftBrowOuter];
-  const rightBrowInner = landmarks[LANDMARKS.rightBrowInner];
-  const rightBrowMid = landmarks[LANDMARKS.rightBrowMid];
-  const rightBrowOuter = landmarks[LANDMARKS.rightBrowOuter];
+  const ipd = interocularDistance(leftEye, rightEye);
+
+  // Use all 10 landmarks per brow for robust measurements
+  const leftBrowPoints = LEFT_EYEBROW_INDICES.map(idx => landmarks[idx]).filter(Boolean);
+  const rightBrowPoints = RIGHT_EYEBROW_INDICES.map(idx => landmarks[idx]).filter(Boolean);
+
+  // Compute average positions for inner/mid/outer regions
+  const leftBrowInner = averageLandmarks(landmarks, [70, 63, 105]);
+  const leftBrowMid = averageLandmarks(landmarks, [66, 107, 55]);
+  const leftBrowOuter = averageLandmarks(landmarks, [65, 52, 53, 46]);
+  const rightBrowInner = averageLandmarks(landmarks, [300, 293, 334]);
+  const rightBrowMid = averageLandmarks(landmarks, [296, 336, 285]);
+  const rightBrowOuter = averageLandmarks(landmarks, [295, 282, 283, 276]);
 
   const leftEyeTop = landmarks[LANDMARKS.leftEyeTop];
   const rightEyeTop = landmarks[LANDMARKS.rightEyeTop];
@@ -470,8 +657,6 @@ export function extractBrowMeasurements(
   const leftEyeOuter = landmarks[LANDMARKS.leftEyeOuter];
   const rightEyeInner = landmarks[LANDMARKS.rightEyeInner];
   const rightEyeOuter = landmarks[LANDMARKS.rightEyeOuter];
-
-  const ipd = interocularDistance(leftEye, rightEye);
 
   // Shape: arc height of brow (distance from mid-brow to line between inner/outer)
   const leftBrowWidth = distance(leftBrowInner, leftBrowOuter);
@@ -488,15 +673,17 @@ export function extractBrowMeasurements(
   // Normalize by brow width
   const leftShape = leftArcHeight / (leftBrowWidth || 1);
   const rightShape = rightArcHeight / (rightBrowWidth || 1);
+
+  // Bilateral smoothing: average left and right for symmetry
   const shape = (leftShape + rightShape) / 2;
 
-  // Position: vertical distance from brow to eye top
+  // Position: vertical distance from brow to eye top (bilateral smoothed)
   const leftGap = distance(leftBrowMid, leftEyeTop);
   const rightGap = distance(rightBrowMid, rightEyeTop);
   const avgGap = (leftGap + rightGap) / 2;
   const position = avgGap / ipd;
 
-  // Length: horizontal span of brow vs eye width
+  // Length: horizontal span of brow vs eye width (bilateral smoothed)
   const leftEyeWidth = distance(leftEyeInner, leftEyeOuter);
   const rightEyeWidth = distance(rightEyeInner, rightEyeOuter);
   const avgEyeWidth = (leftEyeWidth + rightEyeWidth) / 2;
@@ -507,6 +694,8 @@ export function extractBrowMeasurements(
     shape,
     position,
     length,
+    leftShape,
+    rightShape,
   };
 }
 

@@ -21,16 +21,39 @@ function createMockLandmarks(overrides: Record<number, Partial<Point>> = {}): Po
 describe('extractEyeMeasurements', () => {
   it('should calculate positive canthal tilt for upward-slanting eyes', () => {
     const landmarks = createMockLandmarks({
-      133: { x: 100, y: 100, z: 0 }, // left inner
-      33: { x: 150, y: 95, z: 0 },   // left outer (higher = upward tilt)
-      362: { x: 200, y: 100, z: 0 }, // right inner
-      263: { x: 250, y: 95, z: 0 },  // right outer
-      159: { x: 125, y: 90, z: 0 },  // left top
-      145: { x: 125, y: 110, z: 0 }, // left bottom
-      386: { x: 225, y: 90, z: 0 },  // right top
-      374: { x: 225, y: 110, z: 0 }, // right bottom
-      234: { x: 50, y: 200, z: 0 },  // left gonion
-      454: { x: 300, y: 200, z: 0 }, // right gonion
+      // Left eye outer corner region (upward tilt)
+      33: { x: 150, y: 95, z: 0 },
+      7: { x: 151, y: 94, z: 0 },
+      163: { x: 149, y: 96, z: 0 },
+      144: { x: 150, y: 97, z: 0 },
+      145: { x: 150, y: 98, z: 0 },
+      246: { x: 148, y: 93, z: 0 },
+      161: { x: 147, y: 94, z: 0 },
+      160: { x: 149, y: 95, z: 0 },
+      158: { x: 148, y: 96, z: 0 },
+      // Left eye inner corner region
+      133: { x: 100, y: 100, z: 0 },
+      173: { x: 101, y: 100, z: 0 },
+      157: { x: 99, y: 101, z: 0 },
+      159: { x: 100, y: 99, z: 0 },
+      // Right eye outer corner region (upward tilt)
+      263: { x: 250, y: 95, z: 0 },
+      249: { x: 251, y: 94, z: 0 },
+      390: { x: 249, y: 96, z: 0 },
+      373: { x: 250, y: 97, z: 0 },
+      374: { x: 250, y: 98, z: 0 },
+      466: { x: 248, y: 93, z: 0 },
+      388: { x: 247, y: 94, z: 0 },
+      387: { x: 249, y: 95, z: 0 },
+      385: { x: 248, y: 96, z: 0 },
+      // Right eye inner corner region
+      362: { x: 200, y: 100, z: 0 },
+      398: { x: 201, y: 100, z: 0 },
+      384: { x: 199, y: 101, z: 0 },
+      386: { x: 200, y: 99, z: 0 },
+      // Jaw
+      234: { x: 50, y: 200, z: 0 },
+      454: { x: 300, y: 200, z: 0 },
     });
 
     const leftEye = { x: 125, y: 100, z: 0 };
@@ -47,14 +70,37 @@ describe('extractEyeMeasurements', () => {
 
   it('should calculate negative canthal tilt for downward-slanting eyes', () => {
     const landmarks = createMockLandmarks({
-      133: { x: 100, y: 100, z: 0 }, // left inner
-      33: { x: 150, y: 105, z: 0 },  // left outer (lower = downward tilt)
-      362: { x: 200, y: 100, z: 0 }, // right inner
-      263: { x: 250, y: 105, z: 0 }, // right outer
-      159: { x: 125, y: 90, z: 0 },
-      145: { x: 125, y: 110, z: 0 },
-      386: { x: 225, y: 90, z: 0 },
-      374: { x: 225, y: 110, z: 0 },
+      // Left eye outer corner region (downward tilt)
+      33: { x: 150, y: 105, z: 0 },
+      7: { x: 151, y: 106, z: 0 },
+      163: { x: 149, y: 104, z: 0 },
+      144: { x: 150, y: 103, z: 0 },
+      145: { x: 150, y: 102, z: 0 },
+      246: { x: 148, y: 107, z: 0 },
+      161: { x: 147, y: 106, z: 0 },
+      160: { x: 149, y: 105, z: 0 },
+      158: { x: 148, y: 104, z: 0 },
+      // Left eye inner corner region
+      133: { x: 100, y: 100, z: 0 },
+      173: { x: 101, y: 100, z: 0 },
+      157: { x: 99, y: 101, z: 0 },
+      159: { x: 100, y: 99, z: 0 },
+      // Right eye outer corner region (downward tilt)
+      263: { x: 250, y: 105, z: 0 },
+      249: { x: 251, y: 106, z: 0 },
+      390: { x: 249, y: 104, z: 0 },
+      373: { x: 250, y: 103, z: 0 },
+      374: { x: 250, y: 102, z: 0 },
+      466: { x: 248, y: 107, z: 0 },
+      388: { x: 247, y: 106, z: 0 },
+      387: { x: 249, y: 105, z: 0 },
+      385: { x: 248, y: 104, z: 0 },
+      // Right eye inner corner region
+      362: { x: 200, y: 100, z: 0 },
+      398: { x: 201, y: 100, z: 0 },
+      384: { x: 199, y: 101, z: 0 },
+      386: { x: 200, y: 99, z: 0 },
+      // Jaw
       234: { x: 50, y: 200, z: 0 },
       454: { x: 300, y: 200, z: 0 },
     });
@@ -69,14 +115,37 @@ describe('extractEyeMeasurements', () => {
 
   it('should calculate larger eye size for wider aperture', () => {
     const landmarks = createMockLandmarks({
-      133: { x: 100, y: 100, z: 0 },
+      // Left eye outer corner region
       33: { x: 150, y: 100, z: 0 },
-      362: { x: 200, y: 100, z: 0 },
+      7: { x: 151, y: 100, z: 0 },
+      163: { x: 149, y: 100, z: 0 },
+      144: { x: 150, y: 100, z: 0 },
+      145: { x: 150, y: 120, z: 0 },  // large vertical aperture
+      246: { x: 148, y: 80, z: 0 },
+      161: { x: 147, y: 80, z: 0 },
+      160: { x: 149, y: 80, z: 0 },
+      158: { x: 148, y: 80, z: 0 },
+      159: { x: 100, y: 80, z: 0 },
+      // Left eye inner corner region
+      133: { x: 100, y: 100, z: 0 },
+      173: { x: 101, y: 100, z: 0 },
+      157: { x: 99, y: 100, z: 0 },
+      // Right eye outer corner region
       263: { x: 250, y: 100, z: 0 },
-      159: { x: 125, y: 80, z: 0 },  // large vertical aperture
-      145: { x: 125, y: 120, z: 0 },
-      386: { x: 225, y: 80, z: 0 },
-      374: { x: 225, y: 120, z: 0 },
+      249: { x: 251, y: 100, z: 0 },
+      390: { x: 249, y: 100, z: 0 },
+      373: { x: 250, y: 100, z: 0 },
+      374: { x: 250, y: 120, z: 0 },  // large vertical aperture
+      466: { x: 248, y: 80, z: 0 },
+      388: { x: 247, y: 80, z: 0 },
+      387: { x: 249, y: 80, z: 0 },
+      385: { x: 248, y: 80, z: 0 },
+      386: { x: 200, y: 80, z: 0 },
+      // Right eye inner corner region
+      362: { x: 200, y: 100, z: 0 },
+      398: { x: 201, y: 100, z: 0 },
+      384: { x: 199, y: 100, z: 0 },
+      // Jaw
       234: { x: 50, y: 200, z: 0 },
       454: { x: 300, y: 200, z: 0 },
     });
@@ -91,15 +160,38 @@ describe('extractEyeMeasurements', () => {
 
   it('should calculate higher interocular distance ratio for wide-set eyes', () => {
     const landmarks = createMockLandmarks({
-      133: { x: 100, y: 100, z: 0 },
+      // Left eye outer corner region
       33: { x: 150, y: 100, z: 0 },
-      362: { x: 200, y: 100, z: 0 },
-      263: { x: 250, y: 100, z: 0 },
+      7: { x: 151, y: 100, z: 0 },
+      163: { x: 149, y: 100, z: 0 },
+      144: { x: 150, y: 110, z: 0 },
+      145: { x: 150, y: 110, z: 0 },
+      246: { x: 148, y: 90, z: 0 },
+      161: { x: 147, y: 90, z: 0 },
+      160: { x: 149, y: 90, z: 0 },
+      158: { x: 148, y: 90, z: 0 },
       159: { x: 125, y: 90, z: 0 },
-      145: { x: 125, y: 110, z: 0 },
+      // Left eye inner corner region
+      133: { x: 100, y: 100, z: 0 },
+      173: { x: 101, y: 100, z: 0 },
+      157: { x: 99, y: 100, z: 0 },
+      // Right eye outer corner region
+      263: { x: 250, y: 100, z: 0 },
+      249: { x: 251, y: 100, z: 0 },
+      390: { x: 249, y: 100, z: 0 },
+      373: { x: 250, y: 110, z: 0 },
+      374: { x: 250, y: 110, z: 0 },
+      466: { x: 248, y: 90, z: 0 },
+      388: { x: 247, y: 90, z: 0 },
+      387: { x: 249, y: 90, z: 0 },
+      385: { x: 248, y: 90, z: 0 },
       386: { x: 225, y: 90, z: 0 },
-      374: { x: 225, y: 110, z: 0 },
-      234: { x: 50, y: 200, z: 0 },   // narrow face width
+      // Right eye inner corner region
+      362: { x: 200, y: 100, z: 0 },
+      398: { x: 201, y: 100, z: 0 },
+      384: { x: 199, y: 100, z: 0 },
+      // Jaw (narrow face width)
+      234: { x: 50, y: 200, z: 0 },
       454: { x: 300, y: 200, z: 0 },
     });
 

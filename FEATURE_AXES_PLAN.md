@@ -345,3 +345,28 @@ Results Panel
 - Track mean surface distance between landmark-only and synthetic curves (lower is better).
 - Measure stability under slight scale/flip/brightness perturbations (report standard deviation in pixels).
 - Compare downstream metric variance (mandibular width/angle) and disagreement with human-provided tags to confirm improvements.
+
+## Upcoming Enhancement: Eye Stability & Sub-Region Metrics
+**Goal**: Reduce jitter in eye-related similarity scores and expose richer narratives that distinguish eyelids, iris/sclera, and orbital structure.
+
+### A. Landmark Utilization & Filtering
+- Extend canthal tilt inputs from 3-point averages to full upper/lower ring fits; evaluate PCA-based line through 8–10 outer-canthus neighbors to dampen single-point drift.
+- Add iris center landmarks (468-series indices) to track eyeball pose; compare against eyelid arcs for explicit scleral-show measurements.
+- Apply bilateral temporal smoothing by averaging aligned left/right measurements before classification, ensuring symmetry stays consistent.
+
+### B. Eyelid & Crease Metrics
+- Extract upper-lid curvature (fit quadratic/arc across 5–7 lid points) and classify as straight/curved/hooded.
+- Compute upper-lid coverage ratio (distance from brow to lid vs eye height) to separate monolid vs defined-crease axes labeled in the spec but not yet implemented.
+- Introduce lower-lid droop metric using inner-ring points to capture eye fatigue vs uplifted corners.
+
+### C. Orbit & Eyeball Segmentation
+- Reuse SegFormer classes (eyes vs skin vs eyebrows) to derive a tight mask for the eyeball itself; measure eyeball area, scleral-show percentage, and horizontal span relative to brow anchors.
+- Prototype an “orbital depth” metric by comparing brow ridge/cheekbone z-depth to eye center, using FaceMesh z-values normalized by IPD.
+
+### D. Overlay & Narrative Upgrades
+- Split the current “eyes” outline into separate overlays: eyelid contour, iris/eyeball fill, and optional orbital guide lines for debugging.
+- Update `feature-narratives.ts` to surface the new axes (crease definition, scleral show, orbital depth) with glossary links.
+
+### E. Validation & Rollout
+- Extend `measurement-variance.test.ts` to cover the new eye axes, logging observed jitter so we can derive per-axis tolerances instead of reuse the generic 0.24/0.09 defaults.
+- Compare identical-image runs with/without the new metrics to ensure variance stays <⅓ of the calibrated thresholds before exposing the axes in UI.

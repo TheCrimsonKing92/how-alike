@@ -112,11 +112,13 @@ function faceWidth(landmarks: Point[]): number {
   return distance(leftJaw, rightJaw);
 }
 
-// Extended landmark sets for robust canthal tilt (8-10 points per corner)
-const LEFT_EYE_OUTER_CORNER_INDICES = [33, 7, 163, 144, 145, 246, 161, 160, 159, 158];
-const LEFT_EYE_INNER_CORNER_INDICES = [133, 173, 157, 158, 159, 160, 161, 246];
-const RIGHT_EYE_OUTER_CORNER_INDICES = [263, 249, 390, 373, 374, 466, 388, 387, 386, 385];
-const RIGHT_EYE_INNER_CORNER_INDICES = [362, 398, 384, 385, 386, 387, 388, 466];
+// Extended landmark sets for robust canthal tilt (8 points per corner, no overlap)
+// Left eye outline: [33(outer), 7, 163, 144, 145, 153, 154, 155, 133(inner), 173, 157, 158, 159, 160, 161, 246]
+// Right eye outline: [362(inner), 382, 381, 380, 374, 373, 390, 249, 263(outer), 466, 388, 387, 386, 385, 384, 398]
+const LEFT_EYE_OUTER_CORNER_INDICES = [159, 160, 161, 246, 33, 7, 163, 144];
+const LEFT_EYE_INNER_CORNER_INDICES = [145, 153, 154, 155, 133, 173, 157, 158];
+const RIGHT_EYE_OUTER_CORNER_INDICES = [374, 373, 390, 249, 263, 466, 388, 387];
+const RIGHT_EYE_INNER_CORNER_INDICES = [386, 385, 384, 398, 362, 382, 381, 380];
 
 const LEFT_EYE_UPPER_INDICES = [159, 158, 160, 161, 246];
 const LEFT_EYE_LOWER_INDICES = [145, 144, 153, 154, 155];
@@ -314,10 +316,10 @@ export function extractEyeMeasurements(
   // Canthal tilt: angle from inner to outer corner
   // Positive = outer corner higher (upward slant), Negative = outer corner lower (downward slant)
   // Note: Y increases downward in screen coordinates, so we negate dy
-  const leftCanthalTilt = Math.atan2(
-    -(leftOuterAvgRot.y - leftInnerAvgRot.y),  // negate for screen coords
-    leftOuterAvgRot.x - leftInnerAvgRot.x
-  ) * RAD_TO_DEG;
+  const dx = leftOuterAvgRot.x - leftInnerAvgRot.x;
+  const dy_raw = leftOuterAvgRot.y - leftInnerAvgRot.y;
+  const dy = -dy_raw;
+  const leftCanthalTilt = Math.atan2(dy, dx) * RAD_TO_DEG;
 
   const rightCanthalTilt = Math.atan2(
     -(rightOuterAvgRot.y - rightInnerAvgRot.y),  // negate for screen coords

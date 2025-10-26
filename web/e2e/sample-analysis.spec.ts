@@ -27,8 +27,11 @@ test("analyze two sample images shows results", async ({ page }) => {
       /Analyzing.*(load|preprocess|detectA|detectB|score)/i.test(document.body.textContent || ""),
     { timeout: 120_000 },
   );
-  // Expect overall similarity text to appear (indicates RESULT processed)
-  await expect(page.getByText(/overall similarity:/i)).toBeVisible({ timeout: 120_000 });
-  // And at least one region line
+  // Expect detailed analysis section to appear (indicates RESULT processed)
+  await expect(page.getByRole("heading", { name: /Detailed Feature Analysis/i })).toBeVisible({
+    timeout: 120_000,
+  });
+  await expect(page.getByText(/Overall Congruence/i)).toBeVisible();
+  // And at least one region line in Results list
   await expect(page.getByText(/eyes:/i)).toBeVisible();
 });

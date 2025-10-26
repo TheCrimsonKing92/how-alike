@@ -16,46 +16,53 @@ export function createCanonicalLandmarks(): Point[] {
   };
 
   // Eyes - Extended landmark sets for robust measurements
-  // Slight positive canthal tilt (outer ~3% higher than inner)
-  // Left eye inner corner region
-  set(133, { x: 0.30, y: 0.43, z: 0.02 });
-  set(173, { x: 0.305, y: 0.43, z: 0.02 });
-  set(157, { x: 0.295, y: 0.435, z: 0.02 });
-  set(158, { x: 0.302, y: 0.425, z: 0.02 });
-  set(159, { x: 0.31, y: 0.40, z: 0.02 }); // also used for top
-  set(160, { x: 0.315, y: 0.42, z: 0.02 });
-  set(161, { x: 0.318, y: 0.425, z: 0.02 });
-  set(246, { x: 0.320, y: 0.43, z: 0.02 });
-  // Left eye outer corner region
-  set(33, { x: 0.40, y: 0.40, z: 0.02 });
-  set(7, { x: 0.395, y: 0.395, z: 0.02 });
-  set(163, { x: 0.405, y: 0.405, z: 0.02 });
-  set(144, { x: 0.398, y: 0.41, z: 0.02 });
-  set(145, { x: 0.40, y: 0.44, z: 0.02 }); // also used for bottom
-  set(155, { x: 0.402, y: 0.415, z: 0.02 });
-  // Right eye inner corner region
-  set(362, { x: 0.70, y: 0.43, z: 0.02 });
-  set(398, { x: 0.695, y: 0.43, z: 0.02 });
-  set(384, { x: 0.705, y: 0.435, z: 0.02 });
-  set(385, { x: 0.698, y: 0.425, z: 0.02 });
-  set(386, { x: 0.69, y: 0.40, z: 0.02 }); // also used for top
-  set(387, { x: 0.685, y: 0.42, z: 0.02 });
-  set(388, { x: 0.682, y: 0.425, z: 0.02 });
-  set(466, { x: 0.680, y: 0.43, z: 0.02 });
-  // Right eye outer corner region
-  set(263, { x: 0.60, y: 0.40, z: 0.02 });
-  set(249, { x: 0.605, y: 0.395, z: 0.02 });
-  set(390, { x: 0.595, y: 0.405, z: 0.02 });
-  set(373, { x: 0.602, y: 0.41, z: 0.02 });
-  set(374, { x: 0.60, y: 0.44, z: 0.02 }); // also used for bottom
-  set(382, { x: 0.598, y: 0.415, z: 0.02 });
-  // Left eye upper/lower lid landmarks
-  set(153, { x: 0.365, y: 0.42, z: 0.02 });
-  set(154, { x: 0.370, y: 0.42, z: 0.02 });
-  // Right eye upper/lower lid landmarks
-  set(380, { x: 0.635, y: 0.42, z: 0.02 });
-  set(381, { x: 0.630, y: 0.42, z: 0.02 });
-  set(383, { x: 0.625, y: 0.42, z: 0.02 });
+  // Positive canthal tilt: outer corner ~2% higher than inner (Y decreases upward)
+  // Left eye outline: [33(outer), 7, 163, 144, 145, 153, 154, 155, 133(inner), 173, 157, 158, 159, 160, 161, 246]
+
+  // Left eye: inner at (0.30, 0.42), outer at (0.40, 0.40) for ~11° positive tilt
+  // Outer corner region (8 points around 33): X ≈ 0.37-0.40, Y ≈ 0.40-0.42
+  set(159, { x: 0.370, y: 0.410, z: 0.02 }); // upper lid approaching outer
+  set(160, { x: 0.380, y: 0.406, z: 0.02 });
+  set(161, { x: 0.390, y: 0.403, z: 0.02 });
+  set(246, { x: 0.397, y: 0.401, z: 0.02 }); // upper lid at outer corner
+  set(33, { x: 0.40, y: 0.40, z: 0.02 });    // OUTER CORNER
+  set(7, { x: 0.397, y: 0.403, z: 0.02 });   // lower lid at outer corner
+  set(163, { x: 0.390, y: 0.408, z: 0.02 });
+  set(144, { x: 0.380, y: 0.414, z: 0.02 }); // lower lid leaving outer
+
+  // Inner corner region (8 points around 133): X ≈ 0.30-0.33, Y ≈ 0.41-0.43
+  set(145, { x: 0.330, y: 0.418, z: 0.02 }); // lower lid approaching inner
+  set(153, { x: 0.320, y: 0.420, z: 0.02 });
+  set(154, { x: 0.310, y: 0.421, z: 0.02 });
+  set(155, { x: 0.303, y: 0.421, z: 0.02 }); // lower lid at inner corner
+  set(133, { x: 0.30, y: 0.42, z: 0.02 });   // INNER CORNER
+  set(173, { x: 0.303, y: 0.419, z: 0.02 }); // upper lid at inner corner
+  set(157, { x: 0.310, y: 0.418, z: 0.02 });
+  set(158, { x: 0.320, y: 0.416, z: 0.02 }); // upper lid leaving inner
+
+  // Right eye: mirror of left, inner at (0.70, 0.42), outer at (0.60, 0.40)
+  // Outer corner region (8 points around 263): X ≈ 0.60-0.63
+  set(374, { x: 0.620, y: 0.414, z: 0.02 }); // lower lid leaving outer
+  set(373, { x: 0.610, y: 0.408, z: 0.02 });
+  set(390, { x: 0.603, y: 0.403, z: 0.02 });
+  set(249, { x: 0.603, y: 0.403, z: 0.02 });
+  set(263, { x: 0.60, y: 0.40, z: 0.02 });   // OUTER CORNER
+  set(466, { x: 0.603, y: 0.401, z: 0.02 }); // upper lid at outer corner
+  set(388, { x: 0.610, y: 0.403, z: 0.02 });
+  set(387, { x: 0.620, y: 0.406, z: 0.02 }); // upper lid approaching outer
+
+  // Inner corner region (8 points around 362): X ≈ 0.67-0.70
+  set(386, { x: 0.680, y: 0.416, z: 0.02 }); // upper lid leaving inner
+  set(385, { x: 0.690, y: 0.418, z: 0.02 });
+  set(384, { x: 0.697, y: 0.419, z: 0.02 });
+  set(398, { x: 0.697, y: 0.421, z: 0.02 }); // upper lid at inner corner
+  set(362, { x: 0.70, y: 0.42, z: 0.02 });   // INNER CORNER
+  set(382, { x: 0.697, y: 0.421, z: 0.02 }); // lower lid at inner corner
+  set(381, { x: 0.690, y: 0.421, z: 0.02 });
+  set(380, { x: 0.680, y: 0.420, z: 0.02 }); // lower lid approaching inner
+
+  // Additional lid landmarks for eye size measurement
+  set(383, { x: 0.670, y: 0.418, z: 0.02 });
 
   // Brows - Extended landmark sets (10 points each)
   // Left eyebrow: [70, 63, 105, 66, 107, 55, 65, 52, 53, 46]

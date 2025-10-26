@@ -21,36 +21,42 @@ function createMockLandmarks(overrides: Record<number, Partial<Point>> = {}): Po
 describe('extractEyeMeasurements', () => {
   it('should calculate positive canthal tilt for upward-slanting eyes', () => {
     const landmarks = createMockLandmarks({
-      // Left eye outer corner region (upward tilt)
-      33: { x: 150, y: 95, z: 0 },
-      7: { x: 151, y: 94, z: 0 },
-      163: { x: 149, y: 96, z: 0 },
-      144: { x: 150, y: 97, z: 0 },
-      145: { x: 150, y: 98, z: 0 },
-      246: { x: 148, y: 93, z: 0 },
-      161: { x: 147, y: 94, z: 0 },
-      160: { x: 149, y: 95, z: 0 },
-      158: { x: 148, y: 96, z: 0 },
-      // Left eye inner corner region
-      133: { x: 100, y: 100, z: 0 },
+      // Left eye outer corner region (upward tilt) - X≈145-150, Y≈93-97 (outer higher)
+      159: { x: 140, y: 96, z: 0 },
+      160: { x: 145, y: 95, z: 0 },
+      161: { x: 148, y: 94, z: 0 },
+      246: { x: 149, y: 93, z: 0 },
+      33: { x: 150, y: 93, z: 0 },     // outer corner
+      7: { x: 149, y: 94, z: 0 },
+      163: { x: 148, y: 95, z: 0 },
+      144: { x: 145, y: 96, z: 0 },
+      // Left eye inner corner region - X≈100-110, Y≈99-101 (inner lower)
+      145: { x: 110, y: 99, z: 0 },
+      153: { x: 105, y: 100, z: 0 },
+      154: { x: 102, y: 100, z: 0 },
+      155: { x: 101, y: 100, z: 0 },
+      133: { x: 100, y: 100, z: 0 },   // inner corner
       173: { x: 101, y: 100, z: 0 },
-      157: { x: 99, y: 101, z: 0 },
-      159: { x: 100, y: 99, z: 0 },
-      // Right eye outer corner region (upward tilt)
-      263: { x: 250, y: 95, z: 0 },
+      157: { x: 102, y: 100, z: 0 },
+      158: { x: 105, y: 99, z: 0 },
+      // Right eye outer corner region (upward tilt) - X≈250-260, Y≈93-97
+      374: { x: 255, y: 96, z: 0 },
+      373: { x: 252, y: 95, z: 0 },
+      390: { x: 251, y: 94, z: 0 },
       249: { x: 251, y: 94, z: 0 },
-      390: { x: 249, y: 96, z: 0 },
-      373: { x: 250, y: 97, z: 0 },
-      374: { x: 250, y: 98, z: 0 },
-      466: { x: 248, y: 93, z: 0 },
-      388: { x: 247, y: 94, z: 0 },
-      387: { x: 249, y: 95, z: 0 },
-      385: { x: 248, y: 96, z: 0 },
-      // Right eye inner corner region
-      362: { x: 200, y: 100, z: 0 },
-      398: { x: 201, y: 100, z: 0 },
-      384: { x: 199, y: 101, z: 0 },
-      386: { x: 200, y: 99, z: 0 },
+      263: { x: 250, y: 93, z: 0 },    // outer corner
+      466: { x: 251, y: 93, z: 0 },
+      388: { x: 252, y: 94, z: 0 },
+      387: { x: 255, y: 95, z: 0 },
+      // Right eye inner corner region - X≈290-300, Y≈99-101
+      386: { x: 295, y: 99, z: 0 },
+      385: { x: 298, y: 100, z: 0 },
+      384: { x: 299, y: 100, z: 0 },
+      398: { x: 299, y: 100, z: 0 },
+      362: { x: 300, y: 100, z: 0 },   // inner corner
+      382: { x: 299, y: 100, z: 0 },
+      381: { x: 298, y: 100, z: 0 },
+      380: { x: 295, y: 100, z: 0 },
       // Jaw
       234: { x: 50, y: 200, z: 0 },
       454: { x: 300, y: 200, z: 0 },
@@ -70,36 +76,42 @@ describe('extractEyeMeasurements', () => {
 
   it('should calculate negative canthal tilt for downward-slanting eyes', () => {
     const landmarks = createMockLandmarks({
-      // Left eye outer corner region (downward tilt)
-      33: { x: 150, y: 105, z: 0 },
-      7: { x: 151, y: 106, z: 0 },
-      163: { x: 149, y: 104, z: 0 },
-      144: { x: 150, y: 103, z: 0 },
-      145: { x: 150, y: 102, z: 0 },
-      246: { x: 148, y: 107, z: 0 },
-      161: { x: 147, y: 106, z: 0 },
-      160: { x: 149, y: 105, z: 0 },
-      158: { x: 148, y: 104, z: 0 },
-      // Left eye inner corner region
-      133: { x: 100, y: 100, z: 0 },
+      // Left eye outer corner region (downward tilt) - X≈145-150, Y≈103-107 (outer lower)
+      159: { x: 140, y: 104, z: 0 },
+      160: { x: 145, y: 105, z: 0 },
+      161: { x: 148, y: 106, z: 0 },
+      246: { x: 149, y: 107, z: 0 },
+      33: { x: 150, y: 107, z: 0 },    // outer corner (lower than inner)
+      7: { x: 149, y: 106, z: 0 },
+      163: { x: 148, y: 105, z: 0 },
+      144: { x: 145, y: 104, z: 0 },
+      // Left eye inner corner region - X≈100-110, Y≈99-101 (inner higher)
+      145: { x: 110, y: 101, z: 0 },
+      153: { x: 105, y: 100, z: 0 },
+      154: { x: 102, y: 100, z: 0 },
+      155: { x: 101, y: 100, z: 0 },
+      133: { x: 100, y: 100, z: 0 },   // inner corner (higher than outer)
       173: { x: 101, y: 100, z: 0 },
-      157: { x: 99, y: 101, z: 0 },
-      159: { x: 100, y: 99, z: 0 },
-      // Right eye outer corner region (downward tilt)
-      263: { x: 250, y: 105, z: 0 },
+      157: { x: 102, y: 100, z: 0 },
+      158: { x: 105, y: 101, z: 0 },
+      // Right eye outer corner region (downward tilt) - X≈250-260, Y≈103-107
+      374: { x: 255, y: 104, z: 0 },
+      373: { x: 252, y: 105, z: 0 },
+      390: { x: 251, y: 106, z: 0 },
       249: { x: 251, y: 106, z: 0 },
-      390: { x: 249, y: 104, z: 0 },
-      373: { x: 250, y: 103, z: 0 },
-      374: { x: 250, y: 102, z: 0 },
-      466: { x: 248, y: 107, z: 0 },
-      388: { x: 247, y: 106, z: 0 },
-      387: { x: 249, y: 105, z: 0 },
-      385: { x: 248, y: 104, z: 0 },
-      // Right eye inner corner region
-      362: { x: 200, y: 100, z: 0 },
-      398: { x: 201, y: 100, z: 0 },
-      384: { x: 199, y: 101, z: 0 },
-      386: { x: 200, y: 99, z: 0 },
+      263: { x: 250, y: 107, z: 0 },   // outer corner (lower than inner)
+      466: { x: 251, y: 107, z: 0 },
+      388: { x: 252, y: 106, z: 0 },
+      387: { x: 255, y: 105, z: 0 },
+      // Right eye inner corner region - X≈290-300, Y≈99-101 (inner higher)
+      386: { x: 295, y: 101, z: 0 },
+      385: { x: 298, y: 100, z: 0 },
+      384: { x: 299, y: 100, z: 0 },
+      398: { x: 299, y: 100, z: 0 },
+      362: { x: 300, y: 100, z: 0 },   // inner corner (higher than outer)
+      382: { x: 299, y: 100, z: 0 },
+      381: { x: 298, y: 100, z: 0 },
+      380: { x: 295, y: 100, z: 0 },
       // Jaw
       234: { x: 50, y: 200, z: 0 },
       454: { x: 300, y: 200, z: 0 },

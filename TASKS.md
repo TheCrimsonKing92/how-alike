@@ -20,9 +20,10 @@
   - Plan captured in `FEATURE_AXES_PLAN.md`: extend landmark smoothing, add eyelid curvature/crease metrics, derive scleral show + orbital depth from segmentation, and update narratives/overlays
   - Done (Point A - Eyes): Extended canthal tilt to use 8-10 outer canthus landmarks, implemented bilateral smoothing (left/right averaging), and added iris center tracking (landmarks 468/473) for eyeball pose
   - Done (Eyebrows): Expanded from 3 to 10 landmarks per eyebrow (left: [70, 63, 105, 66, 107, 55, 65, 52, 53, 46], right: [300, 293, 334, 296, 336, 285, 295, 282, 283, 276]) with bilateral smoothing for shape/position/length measurements
-  - Done: Updated canonical fixture to define all extended eye and brow landmarks
+  - Done: Fixed eye corner landmark index overlap bug - corrected LEFT/RIGHT_EYE_OUTER/INNER_CORNER_INDICES to use proper non-overlapping regions (8 points each around MediaPipe eye outline), resolving 90° baseline canthal tilt issue
+  - Done: Updated canonical fixture and test fixtures to define all extended eye/brow landmarks with proper spatial distribution
   - Done: All tests pass including measurement variance (232/232 tests passing)
-  - Next: implement Point B (eyelid & crease metrics) and Point C (orbit & eyeball segmentation)
+  - Next: test measurements with real sample images to verify classification accuracy, then implement Point B (eyelid & crease metrics) and Point C (orbit & eyeball segmentation)
 ## Next
 - Glossary rollout follow-ups: surface `DefinitionTooltip` in condensed result summaries, draft copy review workflow, and scope Phase 2 SVG overlay assets.
 

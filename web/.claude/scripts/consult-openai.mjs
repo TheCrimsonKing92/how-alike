@@ -1,89 +1,239 @@
 #!/usr/bin/env node
 
 /**
- * Consult OpenAI API with a prompt
- * Usage: node consult-openai.mjs [--model MODEL] "your question here"
- * Models: gpt-5 (flagship), gpt-5-mini (default, balanced), gpt-5-nano (fastest)
+ * consult-openai.mjs — Summary-first OpenAI consultation tool
  *
- * Reads OPENAI_API_KEY from:
- * 1. .env.local file in project root (if exists)
- * 2. Environment variable
+ * Defaults:
+ *   - SUMMARY-only response (bounded by --max-out-tokens)
+ *   - DETAILS only generated/persisted when using --expand
+ *   - Preflight cost guard via --budget (no call if exceeded)
+ *
+ * Common use:
+ *   node consult-openai.mjs "my prompt"
+ *   node consult-openai.mjs --expand --out docs/ai/consult.md --append "my prompt"
+ *
+ * Model options:
+ *   --model gpt-5 | gpt-5-mini (default) | gpt-5-nano
+ *
+ * OPENAI_API_KEY is loaded from .env.local or environment variables
+ *
+ * See consult.md for usage policy (auto-expand rules etc.)
  */
 
 import { config } from 'dotenv';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
-// Load .env.local if it exists
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const envPath = join(__dirname, '..', '..', '.env.local');
-config({ path: envPath });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+config({ path: path.join(__dirname, '..', '..', '.env.local') });
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
 if (!OPENAI_API_KEY) {
-  console.error('Error: OPENAI_API_KEY not found');
-  console.error('Set it in .env.local or as an environment variable');
+  console.error('Error: OPENAI_API_KEY not found (.env.local or env)');
   process.exit(1);
 }
 
-// Parse arguments
-const args = process.argv.slice(2);
-let model = 'gpt-5-mini'; // default
-let promptArgs = [];
+const argv = yargs(hideBin(process.argv))
+  .usage('Usage: $0 [options] "prompt"')
+  .option('model', { type: 'string', default: 'gpt-5-mini', describe: 'Model: gpt-5 | gpt-5-mini | gpt-5-nano' })
+  .option('expand', { type: 'boolean', default: false, describe: 'Generate SUMMARY+DETAILS and persist DETAILS to file' })
+  .option('out', { type: 'string', describe: 'Markdown file path for DETAILS (used with --expand). Default: docs/ai/consultations/<ts>_<slug>.md' })
+  .option('append', { type: 'boolean', default: false, describe: 'Append to --out instead of overwriting (requires --expand)' })
+  .option('inline-full', { type: 'boolean', default: false, describe: 'Also print DETAILS to stdout (discouraged; bloats chat). Only with --expand.' })
+  .option('max-out-tokens', { type: 'number', default: 500, describe: 'Max tokens for SUMMARY (both modes)' })
+  .option('max-details-tokens', { type: 'number', default: 2000, describe: 'Max tokens for DETAILS (only with --expand)' })
+  .option('budget', { type: 'number', describe: 'USD ceiling; preflight worst-case must be <= budget or call is refused' })
+  .option('title', { type: 'string', describe: 'Front-matter title for saved DETAILS (used with --expand)' })
+  .option('git-commit', { type: 'boolean', default: false, describe: 'git add/commit the output file (used with --expand)' })
+  .demandCommand(1)
+  .strict()
+  .help()
+  .argv;
 
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--model' && i + 1 < args.length) {
-    model = args[i + 1];
-    i++; // skip next arg
-  } else if (args[i].startsWith('--model=')) {
-    model = args[i].substring(8);
-  } else {
-    promptArgs.push(args[i]);
-  }
+const PROMPT = argv._.join(' ').trim();
+const MODEL = argv.model;
+const EXPAND = !!argv.expand;
+const INLINE_FULL = !!argv['inline-full'];
+const GIT_COMMIT = !!argv['git-commit'];
+const SUMMARY_MAX = Math.max(128, Math.min(argv['max-out-tokens'] ?? 500, 4000));
+const DETAILS_MAX = Math.max(256, Math.min(argv['max-details-tokens'] ?? 2000, 8000));
+const TITLE = argv.title?.trim();
+
+const PRICE = {
+  'gpt-5':       { input: 0.0025, output: 0.01 },     // $ per 1k tokens (conservative examples)
+  'gpt-5-mini':  { input: 0.0005, output: 0.0015 },
+  'gpt-5-nano':  { input: 0.0001, output: 0.0003 },
+};
+const priceFor = (m) => PRICE[m] ?? PRICE['gpt-5-mini'];
+
+// ~4 chars/token conservative heuristic (no tiktoken)
+const TOK_PER_CHAR = 1 / 4;
+const estTokens = (s) => Math.ceil((s?.length ?? 0) * TOK_PER_CHAR);
+
+const systemSummary = (cap) => [
+  'You are a concise consultant. Return ONLY a SUMMARY section.',
+  `SUMMARY: (≤${cap} tokens)`,
+  '- Actionable bullet points and decisions.',
+  '- Minimal code unless necessary; ensure correctness.',
+].join('\n');
+
+const systemExpand = (sumCap) => [
+  'You are a precise consultant. Return two sections ONLY in this order:',
+  `SUMMARY: (≤${sumCap} tokens)`,
+  '- Actionable bullet points and decisions.',
+  '- Minimal code unless necessary; ensure correctness.',
+  'DETAILS:',
+  '- Full reasoning, references, examples, and step-by-step instructions.',
+  '- Rich code samples where appropriate.',
+].join('\n');
+
+function worstCaseUSD({ sysTok, userTok, completionMax, model }) {
+  const p = priceFor(model);
+  return ((sysTok + userTok) / 1000) * p.input + (completionMax / 1000) * p.output;
 }
 
-const prompt = promptArgs.join(' ');
-
-if (!prompt) {
-  console.error('Error: Please provide a prompt as an argument');
-  console.error('Usage: node consult-openai.mjs [--model MODEL] "your question here"');
-  console.error('Models: gpt-5 (flagship), gpt-5-mini (default), gpt-5-nano (fastest)');
-  process.exit(1);
+function defaultOutFile(promptText) {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const ts = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+  const slug = (promptText || 'consultation').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  const dir = path.resolve(process.cwd(), 'docs', 'ai', 'consultations');
+  fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, `${ts}_${slug}.md`);
 }
 
-async function consultOpenAI(userPrompt, modelName) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callOpenAI({ model, messages, maxTokens }) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
     },
-    body: JSON.stringify({
-      model: modelName,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt
-        }
-      ]
-    })
+    body: JSON.stringify({ model, temperature: 0.2, max_tokens: maxTokens, messages }),
   });
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`OpenAI API ${res.status}: ${err}`);
+  }
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content ?? '';
+  const usage = data?.usage ?? { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+  return { text, usage };
+}
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} ${error}`);
+function writeOut(filePath, content, append=false) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  if (append && fs.existsSync(filePath)) {
+    fs.appendFileSync(filePath, '\n\n' + content);
+  } else {
+    fs.writeFileSync(filePath, content);
+  }
+}
+
+function tryGitCommit(filePath, titleForCommit) {
+  try {
+    execSync(`git add ${JSON.stringify(filePath)}`, { stdio: 'ignore' });
+    const msg = titleForCommit ? `[consult-openai] ${titleForCommit}` : '[consult-openai] update';
+    execSync(`git commit -m ${JSON.stringify(msg)}`, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+(async () => {
+  if (!PROMPT) {
+    console.error('Error: missing prompt.\nTry: consult-openai.mjs --budget 0.50 "What’s the approach for …"');
+    process.exit(1);
   }
 
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
+  const sys = EXPAND ? systemExpand(SUMMARY_MAX) : systemSummary(SUMMARY_MAX);
+  const sysTok = estTokens(sys);
+  const userTok = estTokens(PROMPT);
+  const completionMax = EXPAND ? DETAILS_MAX : SUMMARY_MAX;
 
-try {
-  console.log(`Consulting OpenAI (${model})...\n`);
-  const answer = await consultOpenAI(prompt, model);
-  console.log(answer);
-} catch (error) {
-  console.error('Error:', error.message);
+  if (argv.budget != null) {
+    const worst = worstCaseUSD({ sysTok, userTok, completionMax, model: MODEL });
+    if (worst > argv.budget) {
+      console.error([
+        `Refused: worst-case $${worst.toFixed(4)} exceeds --budget $${Number(argv.budget).toFixed(2)}.`,
+        `Model=${MODEL}, prompt≈${userTok} tok, system≈${sysTok} tok, completionMax=${completionMax} tok.`,
+        'Tips: shorten prompt, lower --max-* tokens, choose cheaper model, or raise --budget.',
+      ].join('\n'));
+      process.exit(3);
+    }
+  }
+
+  const started = Date.now();
+  const { text, usage } = await callOpenAI({
+    model: MODEL,
+    maxTokens: completionMax,
+    messages: [
+      { role: 'system', content: sys },
+      { role: 'user', content: PROMPT },
+    ],
+  });
+
+  let SUMMARY = '';
+  let DETAILS = '';
+
+  if (EXPAND) {
+    const m =
+      /SUMMARY:\s*([\s\S]*?)\n+DETAILS:\s*([\s\S]*)$/i.exec(text) ||
+      /SUMMARY:\s*([\s\S]*?)\n[- ]*DETAILS:\s*([\s\S]*)$/i.exec(text);
+    SUMMARY = (m ? m[1] : text).trim();
+    DETAILS  = (m ? m[2] : text).trim();
+  } else {
+    SUMMARY = text.trim();
+  }
+
+  let savedPath = null;
+  if (EXPAND) {
+    const outFile = argv.out ? path.resolve(process.cwd(), argv.out) : defaultOutFile(PROMPT);
+    const prompt_hash = crypto.createHash('sha1').update(PROMPT).digest('hex').slice(0, 12);
+    const header = [
+      '---',
+      `title: ${JSON.stringify(TITLE || 'OpenAI Consultation')}`,
+      `model: ${MODEL}`,
+      `prompt_hash: ${prompt_hash}`,
+      `timestamp: ${new Date().toISOString()}`,
+      `prompt: ${JSON.stringify(PROMPT)}`,
+      `usage: ${JSON.stringify(usage)}`,
+      '---',
+      '',
+    ].join('\n');
+    const body = header + '## SUMMARY\n\n' + SUMMARY + '\n\n## DETAILS\n\n' + DETAILS + '\n';
+    writeOut(outFile, body, argv.append);
+    savedPath = outFile;
+
+    if (GIT_COMMIT) {
+      tryGitCommit(outFile, TITLE || `Consultation ${new Date().toISOString()}`);
+    }
+  }
+
+  const durMs = Date.now() - started;
+  const p = priceFor(MODEL);
+  const est$ = (usage.prompt_tokens / 1000) * p.input + (usage.completion_tokens / 1000) * p.output;
+
+  console.log('=== SUMMARY ===');
+  console.log(SUMMARY);
+  console.log();
+
+  const receipt = [
+    EXPAND && savedPath ? `Saved DETAILS → ${path.relative(process.cwd(), savedPath)}` : null,
+    `Model: ${MODEL} | tokens: in ${usage.prompt_tokens}, out ${usage.completion_tokens}, total ${usage.total_tokens} | est $${est$.toFixed(4)} | ${durMs}ms`,
+  ].filter(Boolean).join('\n');
+  console.log(receipt);
+
+  if (EXPAND && INLINE_FULL && DETAILS) {
+    console.log('\n=== DETAILS (inline) ===\n' + DETAILS);
+  }
+})().catch((e) => {
+  console.error('consult-openai failed:', e?.message || e);
   process.exit(1);
-}
+});

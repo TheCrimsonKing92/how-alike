@@ -126,34 +126,19 @@ export function extractLandmarkBrows(
   rightEyeCenter: Pt,
   ipd: number
 ): Pt[][] {
-  // Use MediaPipe's actual eyebrow landmarks from FEATURE_OUTLINES
-  // Left brow: [70, 63, 105, 66, 107, 55, 193, 35, 124]
-  // Right brow: [300, 293, 334, 296, 336, 285, 417, 265, 353]
+  // Use MediaPipe's complete eyebrow landmarks from FEATURE_OUTLINES (14 landmarks per brow)
+  // Left brow: [156, 70, 63, 105, 66, 107, 55, 193, 35, 124, 46, 53, 52, 65]
+  // Right brow: [383, 300, 293, 334, 296, 336, 285, 417, 265, 353, 276, 283, 282, 295]
 
   const leftBrowIndices = FEATURE_OUTLINES.brows?.[0] || [];
   const rightBrowIndices = FEATURE_OUTLINES.brows?.[1] || [];
 
-  // Extract points and sort by angle from eye center to follow natural arc
-  let leftBrowPts = leftBrowIndices.map(i => points[i]).filter(Boolean) as Pt[];
-  let rightBrowPts = rightBrowIndices.map(i => points[i]).filter(Boolean) as Pt[];
+  // Extract points - preserve MediaPipe's natural landmark ordering
+  // MediaPipe landmarks are already sequenced to follow the anatomical contour
+  const leftBrowPts = leftBrowIndices.map(i => points[i]).filter(Boolean) as Pt[];
+  const rightBrowPts = rightBrowIndices.map(i => points[i]).filter(Boolean) as Pt[];
 
-  // Sort left brow by angle from eye center (inner to outer)
-  // atan2 gives angle from eye center to each point
-  // Sorting by angle ensures we follow the natural curve
-  leftBrowPts.sort((a, b) => {
-    const angleA = Math.atan2(a.y - leftEyeCenter.y, a.x - leftEyeCenter.x);
-    const angleB = Math.atan2(b.y - leftEyeCenter.y, b.x - leftEyeCenter.x);
-    return angleB - angleA; // Reverse order: inner (right) to outer (left)
-  });
-
-  // Sort right brow by angle from eye center (inner to outer)
-  rightBrowPts.sort((a, b) => {
-    const angleA = Math.atan2(a.y - rightEyeCenter.y, a.x - rightEyeCenter.x);
-    const angleB = Math.atan2(b.y - rightEyeCenter.y, b.x - rightEyeCenter.x);
-    return angleA - angleB; // Normal order: inner (left) to outer (right)
-  });
-
-  // Apply light smoothing to reduce jitter
+  // Apply light smoothing to reduce jitter while preserving arch shape
   return [
     leftBrowPts.length >= 3 ? smoothCurve(leftBrowPts, 3) : leftBrowPts,
     rightBrowPts.length >= 3 ? smoothCurve(rightBrowPts, 3) : rightBrowPts

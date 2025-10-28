@@ -132,13 +132,80 @@ export function largestConnectedComponent(mask: ArrayLike<number>, width: number
   return result;
 }
 
-// High-level conversion: mask -> outline polyline (convex approximation), simplified
+// Moore-Neighbor boundary tracing (extracts concave boundary)
+function traceBoundary(mask: ArrayLike<number>, width: number, height: number): Pt[] {
+  const w = Math.max(1, width | 0);
+  const h = Math.max(1, height | 0);
+
+  // Find starting point (leftmost pixel in topmost row with a foreground pixel)
+  let startX = -1, startY = -1;
+  outer: for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (mask[y * w + x]) {
+        startX = x;
+        startY = y;
+        break outer;
+      }
+    }
+  }
+
+  if (startX === -1) return [];
+
+  // Moore neighborhood: 8 directions (starting from west, going clockwise)
+  const dirs = [
+    [-1, 0], [-1, -1], [0, -1], [1, -1],
+    [1, 0], [1, 1], [0, 1], [-1, 1]
+  ];
+
+  const boundary: Pt[] = [];
+  let x = startX, y = startY;
+  let dir = 0; // Start looking west
+
+  const maxIter = w * h * 2; // Safety limit
+  let iter = 0;
+
+  do {
+    boundary.push({ x: x + 0.5, y: y + 0.5 });
+
+    // Search for next boundary pixel (Moore neighbor tracing)
+    let found = false;
+    for (let i = 0; i < 8; i++) {
+      const checkDir = (dir + i) % 8;
+      const [dx, dy] = dirs[checkDir];
+      const nx = x + dx;
+      const ny = y + dy;
+
+      if (nx >= 0 && nx < w && ny >= 0 && ny < h && mask[ny * w + nx]) {
+        x = nx;
+        y = ny;
+        dir = (checkDir + 6) % 8; // Backtrack 2 steps for next search
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) break;
+    iter++;
+
+    // Stop when we return to start position
+    if (x === startX && y === startY && boundary.length > 2) break;
+
+  } while (iter < maxIter);
+
+  console.log(`[traceBoundary] traced ${boundary.length} boundary points (iterations: ${iter})`);
+  return boundary;
+}
+
+// High-level conversion: mask -> outline polyline (concave boundary tracing), simplified
 // Uses largest connected component to avoid merging disconnected regions
 export function maskToOutline(mask: ArrayLike<number>, width: number, height: number, epsilon = 1.5): Pt[] {
   // Extract only the largest connected component to avoid merging separate regions
   const component = largestConnectedComponent(mask, width, height);
-  const pts = pointsFromMask(component, width, height);
-  if (pts.length === 0) return [];
-  const hull = convexHull(pts);
-  return simplifyRDP(hull, epsilon);
+
+  // Use boundary tracing for concave shapes (like eyebrows)
+  const boundary = traceBoundary(component, width, height);
+  if (boundary.length === 0) return [];
+
+  // Simplify the boundary to reduce point count
+  return simplifyRDP(boundary, epsilon);
 }

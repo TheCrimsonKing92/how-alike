@@ -45,10 +45,12 @@ export const AXIS_NOISE_TOLERANCE: Record<string, ToleranceConfig> = {
   // Eyes (calibrated from measurement-variance.test.ts)
   'canthal tilt': { absolute: 6.0 },  // Absolute threshold in degrees (~3x observed variance)
   'eye size': 0.24,                   // 0.5% coordinate jitter -> ~0.08 normalized diff (x3 safety)
-  'interocular distance': 0.09,       // 0.5% coordinate jitter -> ~0.03 normalized diff (x3 safety)
+  'interocular distance': 0.18,       // ICD/eye-width metric: 0.5% jitter -> ~0.054 normalized diff (x3 safety)
 
   // Brows (estimated - needs calibration)
   'brow shape': 0.20,             // Arc height sensitive to landmark position
+  'left brow shape': 0.20,
+  'right brow shape': 0.20,
   'brow position': 0.12,          // Vertical distance with moderate jitter
   'brow length': 0.10,            // Horizontal span, moderately stable
 
@@ -224,13 +226,29 @@ function compareFeature(
   axesB: AxisClassification[],
   options?: FeatureComparisonOptions
 ): FeatureComparison {
-  const axes: AxisComparison[] = [];
+  const comparisons: AxisComparison[] = [];
 
   // Match axes by name
   for (const axisA of axesA) {
     const axisB = axesB.find(b => b.axis === axisA.axis);
     if (axisB) {
-      axes.push(compareAxis(axisA, axisB, options));
+      comparisons.push(compareAxis(axisA, axisB, options));
+    }
+  }
+
+  let axes = comparisons;
+
+  if (featureName === 'brows') {
+    const left = comparisons.find(axis => axis.axis === 'left brow shape');
+    const right = comparisons.find(axis => axis.axis === 'right brow shape');
+    if (left && right) {
+      const sameSubjectA = left.valueA === right.valueA;
+      const sameSubjectB = left.valueB === right.valueB;
+      if (sameSubjectA && sameSubjectB) {
+        axes = comparisons.filter(axis =>
+          axis.axis !== 'left brow shape' && axis.axis !== 'right brow shape'
+        );
+      }
     }
   }
 

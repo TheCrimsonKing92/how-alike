@@ -48,6 +48,12 @@
 - When any test errors are found, resolve them until the entire test suite is green
 - After moving files or changing imports, run tests to confirm everything still passes
 
+### Test Fixtures
+- Test fixtures are auto-generated from MediaPipe's official canonical face model
+- NEVER manually edit `web/src/__tests__/fixtures/canonical-face.ts`
+- If MediaPipe updates their canonical model, regenerate fixtures using `web/scripts/generate-canonical-landmarks.js`
+- See CLAUDE.md "Canonical Fixture System" section for detailed generation pipeline documentation
+
 ## E2E Smoke Test - Best Practices
 - When to run in CI
   - On main branch merges and release builds

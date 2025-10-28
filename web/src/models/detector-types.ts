@@ -23,11 +23,15 @@ export type ParsingLogits = {
     neck?: number;
     hair?: number;
     background?: number;
+    browLeft?: number;
+    browRight?: number;
   };
   skin?: Float32Array;
   neck?: Float32Array;
   hair?: Float32Array;
   background?: Float32Array;
+  browLeft?: Float32Array;
+  browRight?: Float32Array;
 };
 
 export type RegionHintsArray = RegionHint[] & {

@@ -9,7 +9,7 @@ import type {
   RegionHint,
   RegionMaskDebug,
 } from './detector-types';
-import type { Pt } from '@/lib/hints';
+import type { Pt } from '@/lib/points';
 import { deriveRegionHints } from '@/lib/hints';
 import { PARSING_INPUT_SIZE, parsingModelUrl, parsingClassConfig } from './parsing-config';
 import { maskToOutline } from '@/lib/mask';

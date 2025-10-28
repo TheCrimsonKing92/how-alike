@@ -433,7 +433,7 @@ describe('performComparison', () => {
   it('should return complete comparison result', () => {
     const measurementsA: FeatureMeasurements = {
       eyes: { canthalTilt: 5, eyeSize: 0.20, interocularDistance: 0.40 },
-      brows: { shape: 0.12, position: 0.16, length: 1.05 },
+      brows: { shape: 0.12, position: 0.16, length: 1.05, leftShape: 0.11, rightShape: 0.12 },
       nose: { width: 0.30, bridgeContour: 0.01, tipProjection: -0.10 },
       mouth: { lipFullness: 0.15, cupidsBowDefinition: 0.03, lipCornerOrientation: 0, philtrumLength: 0.20, mouthWidth: 0.285 },
       cheeks: { prominence: 0.06, nasolabialDepth: 0.05, height: 0.38 },
@@ -444,7 +444,7 @@ describe('performComparison', () => {
 
     const measurementsB: FeatureMeasurements = {
       eyes: { canthalTilt: 4.5, eyeSize: 0.21, interocularDistance: 0.39 },
-      brows: { shape: 0.11, position: 0.15, length: 1.03 },
+      brows: { shape: 0.11, position: 0.15, length: 1.03, leftShape: 0.10, rightShape: 0.11 },
       nose: { width: 0.28, bridgeContour: 0.02, tipProjection: -0.12 },
       mouth: { lipFullness: 0.16, cupidsBowDefinition: 0.04, lipCornerOrientation: 2, philtrumLength: 0.19, mouthWidth: 0.290 },
       cheeks: { prominence: 0.07, nasolabialDepth: 0.04, height: 0.39 },

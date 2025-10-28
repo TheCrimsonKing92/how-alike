@@ -143,6 +143,44 @@ All code changes must include tests. The test suite must pass before merge:
 
 Run `npm test` locally during development. After moving files or changing imports, always run tests to confirm nothing broke.
 
+#### Canonical Fixture System
+
+Test fixtures are generated from **MediaPipe's official canonical face model** to ensure authoritative geometry and correct facial proportions. The fixture system provides a reproducible pipeline for generating test data from Google's canonical_face_model.obj.
+
+**Key Files**:
+
+- `web/scripts/mediapipe-canonical-468.json` — Source data with all 468 vertices from MediaPipe's canonical model (parsed from OBJ format)
+- `web/scripts/convert-obj-to-json.js` — Converts OBJ vertex lines to JSON format
+- `web/scripts/generate-canonical-landmarks.js` — Normalizes vertices to [0,1]³ bounding box and generates TypeScript fixture
+- `web/src/__tests__/fixtures/canonical-face.ts` — **Auto-generated fixture** used by all tests (DO NOT EDIT MANUALLY)
+
+**Generation Pipeline**:
+
+```bash
+# If MediaPipe updates their canonical model, regenerate fixtures:
+cd web/scripts
+
+# 1. Fetch fresh OBJ data from MediaPipe GitHub
+# 2. Convert to JSON (first 468 vertices only)
+node convert-obj-to-json.js < canonical_face_model.obj 2>/dev/null > mediapipe-canonical-468.json
+
+# 3. Normalize and generate TypeScript fixture
+node generate-canonical-landmarks.js
+# Output: ✓ Generated ../src/__tests__/fixtures/canonical-face.ts
+#         468 landmarks normalized to [0, 1]³
+
+# 4. Verify all tests still pass
+cd ..
+npm test
+```
+
+**Important Notes**:
+
+- `canonical-face.ts` header warns "Do not edit manually - regenerate from source if needed"
+- All 468 landmarks are normalized to [0,1]³ for scale-independent testing
+- Tests like `measurement-variance.test.ts` use canonical fixture as baseline for deterministic jitter testing
+- If MediaPipe releases an updated canonical model, run the generation pipeline to keep fixtures current
+
 ### TFJS Backend Selection
 
 - Default backend: WebGL (fastest for inference)
@@ -268,3 +306,4 @@ Read these before making architectural changes:
 - **Canvas lifecycle**: Calling `transferToImageBitmap()` detaches/empties the canvas - compute all derived data BEFORE transferring
 - **Stale results**: Always check `jobId` matches current request before rendering results
 - **E2E flakiness**: If deep E2E fails, check `/health/detector` route and model CDN availability
+- **MediaPipe landmark ordering**: MediaPipe landmarks are already sequenced anatomically - do NOT sort by angle/distance unless you understand the contour structure. Radial sorting breaks non-circular features like eyebrow arches (see brow arch fix 2025-10-27)

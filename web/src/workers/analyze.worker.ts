@@ -14,6 +14,8 @@ import { estimateFacePose, normalizeLandmarksToFrontal, poseAngularDistance, for
 import type { RegionPoly, MaskOverlay } from './types';
 import type { RegionHintsArray, ParsingLogits } from '@/models/detector-types';
 import { computeJawFromMasks, type SyntheticJawResult } from '@/lib/jaw-from-masks';
+import { refineBothBrows, type BrowEndpoints, type RefineBothBrowsResult } from '@/lib/brow-seg-refinement';
+import { mergeRefinedBrowsIntoPolys } from '@/lib/refined-brow-overlay';
 import type { AnalyzeMessage, AnalyzeResponse } from './types';
 import type { FaceLandmarksDetectorInput, MediaPipeFaceMeshTfjsEstimationConfig } from '@tensorflow-models/face-landmarks-detection';
 import type { Point } from '@/lib/points';
@@ -41,6 +43,12 @@ const JAW_CONFIDENCE_FOR_OVERLAY = SYNTHETIC_JAW_CONFIDENCE_THRESHOLD;
 const LEFT_GONION_INDEX = 234;
 const RIGHT_GONION_INDEX = 454;
 const CHIN_INDEX = 152;
+const LEFT_BROW_HEAD = 52;
+const LEFT_BROW_TAIL = 65;
+const RIGHT_BROW_HEAD = 282;
+const RIGHT_BROW_TAIL = 295;
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 function vecToPoint(vec: { x: number; y: number }): Point {
   return { x: vec.x, y: vec.y };
@@ -87,6 +95,53 @@ function buildSyntheticJawInputForMeasurements(
   };
 }
 
+function createBrowSampler(logits?: ParsingLogits) {
+  if (!logits || (!logits.browLeft && !logits.browRight)) return null;
+  const { width, height, crop } = logits;
+  if (width <= 0 || height <= 0 || !Number.isFinite(width) || !Number.isFinite(height)) return null;
+  const cropWidth = crop?.sw || width;
+  const cropHeight = crop?.sh || height;
+  if (!cropWidth || !cropHeight) return null;
+  const scaleX = width / cropWidth;
+  const scaleY = height / cropHeight;
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const samplePlane = (plane: Float32Array | undefined, gx: number, gy: number) => {
+    if (!plane) return 0;
+    if (!Number.isFinite(gx) || !Number.isFinite(gy)) return 0;
+    if (gx < 0 || gy < 0 || gx > width - 1 || gy > height - 1) {
+      const cx = clamp(Math.round(gx), 0, width - 1);
+      const cy = clamp(Math.round(gy), 0, height - 1);
+      return plane[cy * width + cx];
+    }
+    const x0 = Math.floor(gx);
+    const y0 = Math.floor(gy);
+    const x1 = Math.min(x0 + 1, width - 1);
+    const y1 = Math.min(y0 + 1, height - 1);
+    const fx = gx - x0;
+    const fy = gy - y0;
+    const sample = (x: number, y: number) => plane[y * width + x];
+    const v00 = sample(x0, y0);
+    const v10 = sample(x1, y0);
+    const v01 = sample(x0, y1);
+    const v11 = sample(x1, y1);
+    const top = lerp(v00, v10, fx);
+    const bottom = lerp(v01, v11, fx);
+    return lerp(top, bottom, fy);
+  };
+  return {
+    probAt(x: number, y: number): number {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return 0;
+      const gx = (x - crop.sx) * scaleX;
+      const gy = (y - crop.sy) * scaleY;
+      if (!Number.isFinite(gx) || !Number.isFinite(gy)) return 0;
+      const left = samplePlane(logits.browLeft, gx, gy);
+      const right = samplePlane(logits.browRight, gx, gy);
+      const value = Math.max(left, right, 0);
+      return value > 1 ? 1 : value;
+    },
+  };
+}
+
 async function computeOutlinePolys(
   points: { x: number; y: number }[],
   leftEye: { x: number; y: number },
@@ -101,6 +156,8 @@ async function computeOutlinePolys(
   mask?: MaskOverlay;
   logits?: ParsingLogits;
   syntheticJaw?: SyntheticJawResult;
+  refinedBrows?: RefineBothBrowsResult;
+  browContours?: Array<{ region: string; points: {x: number; y: number}[] }>;
 }> {
   const polys: RegionPoly[] = [];
   let parseMs = 0;
@@ -109,6 +166,8 @@ async function computeOutlinePolys(
   let mask: MaskOverlay | undefined;
   let logits: ParsingLogits | undefined;
   let syntheticJaw: SyntheticJawResult | undefined;
+  let refinedBrows: RefineBothBrowsResult | undefined;
+  let browHintsForMeasurements: Array<{ region: string; points: {x: number; y: number}[] }> = [];
   const mapPts = (idxs: number[]) => idxs.map((i) => points[i]).filter(Boolean) as {x:number;y:number}[];
   const centroid = (pts: {x:number;y:number}[]) => {
     const n = pts.length || 1;
@@ -297,6 +356,43 @@ async function computeOutlinePolys(
           console.warn('[worker] synthetic jaw extraction failed:', e);
         }
       }
+      // Skip brow refinement if parsing adapter already provided good segmentation-based brows
+      try {
+        const sampler = createBrowSampler(logits);
+        if (sampler) {
+          const endpoints: BrowEndpoints = {
+            browL_head: points[LEFT_BROW_HEAD],
+            browL_tail: points[LEFT_BROW_TAIL],
+            browR_head: points[RIGHT_BROW_HEAD],
+            browR_tail: points[RIGHT_BROW_TAIL],
+          };
+          if (
+            endpoints.browL_head &&
+            endpoints.browL_tail &&
+            endpoints.browR_head &&
+            endpoints.browR_tail
+          ) {
+            const ipd = Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y) || 1;
+            refinedBrows = refineBothBrows(sampler, endpoints, {
+              ipd,
+              roiScaleLen: 1.3,
+              roiScaleHt: 0.8,
+            });
+            if (process.env.NODE_ENV !== 'production') {
+              console.info('[worker] refined brow metrics:', {
+                left: refinedBrows.left?.archHeightNorm?.toFixed(3),
+                right: refinedBrows.right?.archHeightNorm?.toFixed(3),
+                confL: refinedBrows.left?.confidence?.toFixed(3),
+                confR: refinedBrows.right?.confidence?.toFixed(3),
+              });
+            }
+          }
+        }
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[worker] brow refinement failed:', e);
+        }
+      }
     }
 
     // Add adapter hints to polys
@@ -309,6 +405,20 @@ async function computeOutlinePolys(
     }
 
     for (const h of hints) polys.push(h as RegionPoly);
+
+    // Extract brow contours from parsing adapter for measurements
+    // These provide better arch detection than landmarks (follow hair vs bone)
+    // Use unsimplified version (epsilon=0) for accurate arch measurement
+    const unsimplifiedBrows = (hints as any).__browsUnsimplified;
+    browHintsForMeasurements = unsimplifiedBrows && unsimplifiedBrows.length > 0
+      ? unsimplifiedBrows
+      : (source === 'transformers' ? hints.filter(h => h.region === 'brows') : []);
+
+    if (process.env.NODE_ENV !== 'production' && browHintsForMeasurements.length > 0) {
+      console.info('[worker] brow hints for measurements:',
+        browHintsForMeasurements.map(b => `${b.points.length} pts`).join(', '),
+        unsimplifiedBrows ? '(unsimplified)' : '(simplified)');
+    }
 
     // If adapter didn't provide brows, use our landmark fallback
     const hasBrows = hints.some(h => h.region === 'brows');
@@ -364,7 +474,9 @@ async function computeOutlinePolys(
     console.info('[worker] brow polys:', browPolys.length, browPolys.map(p => `${p.points.length} pts`));
   }
 
-  return { polys, parseMs, source, ort, mask, logits, syntheticJaw };
+  const finalPolys = mergeRefinedBrowsIntoPolys(polys, refinedBrows);
+
+  return { polys: finalPolys, parseMs, source, ort, mask, logits, syntheticJaw, refinedBrows, browContours: browHintsForMeasurements };
 }
 
 ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
@@ -405,6 +517,20 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       type FaceLike = { keypoints?: KP[]; scaledMesh?: Array<[number, number, number?]> };
       const fA = facesA[0] as unknown as FaceLike;
       const fB = facesB[0] as unknown as FaceLike;
+
+      // Debug: Check what MediaPipe actually returns
+      console.log('[worker] MediaPipe face result keys:', Object.keys(fA));
+      console.log('[worker] Has keypoints?', !!fA.keypoints);
+      console.log('[worker] Has scaledMesh?', !!fA.scaledMesh);
+      if (fA.keypoints) {
+        console.log('[worker] Sample keypoint [0]:', fA.keypoints[0]);
+        console.log('[worker] Sample keypoint [2]:', fA.keypoints[2]);
+      }
+      if (fA.scaledMesh) {
+        console.log('[worker] Sample scaledMesh [0]:', fA.scaledMesh[0]);
+        console.log('[worker] Sample scaledMesh [2]:', fA.scaledMesh[2]);
+      }
+
       const kpsA: KP[] = fA.keypoints ?? (fA.scaledMesh ?? []).map((p) => ({ x: p[0], y: p[1], z: p[2] }));
       const kpsB: KP[] = fB.keypoints ?? (fB.scaledMesh ?? []).map((p) => ({ x: p[0], y: p[1], z: p[2] }));
 
@@ -462,6 +588,28 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       const syntheticJawForMeasurementsB = outlineB.syntheticJaw
         ? buildSyntheticJawInputForMeasurements(outlineB.syntheticJaw, originalPtsB, originalLeftB, originalRightB)
         : undefined;
+      const refinedBrowsForMeasurementsA = outlineA.refinedBrows;
+      const refinedBrowsForMeasurementsB = outlineB.refinedBrows;
+
+      // Normalize brow contours to IPD-relative space (same as landmarks)
+      const normalizeBrowContours = (
+        contours: typeof outlineA.browContours,
+        leftEye: Point,
+        rightEye: Point
+      ) => {
+        if (!contours || contours.length === 0) return undefined;
+        const ipd = Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y) || 1;
+        return contours.map(c => ({
+          region: c.region,
+          points: c.points.map(p => ({
+            x: (p.x - leftEye.x) / ipd,
+            y: (p.y - leftEye.y) / ipd
+          }))
+        }));
+      };
+
+      const browContoursA = normalizeBrowContours(outlineA.browContours, originalLeftA, originalRightA);
+      const browContoursB = normalizeBrowContours(outlineB.browContours, originalLeftB, originalRightB);
 
       // Use segmentation-based scoring if masks are available, otherwise fall back to Procrustes
       let scores, overall, texts: { region: string; text: string }[] = [];
@@ -536,17 +684,72 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
       }
 
       // Compute detailed feature axis analysis
-      let featureNarrative: { overall: string; featureSummaries: Record<string, string>; axisDetails: Record<string, string[]> } | undefined;
+      let featureNarrative: ReturnType<typeof generateNarrative> | undefined;
       let congruenceScore: number | undefined;
+      let measurementsA: ReturnType<typeof extractFeatureMeasurements> | undefined;
+      let measurementsB: ReturnType<typeof extractFeatureMeasurements> | undefined;
 
       try {
         // Extract measurements from both faces
-        const measurementsA = extractFeatureMeasurements(ptsA, leftA, rightA, {
+        measurementsA = extractFeatureMeasurements(ptsA, leftA, rightA, {
           syntheticJaw: syntheticJawForMeasurementsA,
+          refinedBrows: refinedBrowsForMeasurementsA,
+          browContours: browContoursA,
         });
-        const measurementsB = extractFeatureMeasurements(ptsB, leftB, rightB, {
+        measurementsB = extractFeatureMeasurements(ptsB, leftB, rightB, {
           syntheticJaw: syntheticJawForMeasurementsB,
+          refinedBrows: refinedBrowsForMeasurementsB,
+          browContours: browContoursB,
         });
+
+        // Diagnostic logging for all 12 anthropometric fixes (2025-10-26 + 2025-10-27)
+        if (process.env.NODE_ENV !== 'production') {
+          console.group('[worker] ANTHROPOMETRIC FIX VALIDATION');
+
+          console.group('Face A:');
+          console.group('HIGH priority fixes (2025-10-26):');
+          console.info('  Eye size (avgHeight / meanEyeWidth):', measurementsA.eyes?.eyeSize?.toFixed(6));
+          console.info('  Lip fullness (totalHeight / mouthWidth):', measurementsA.mouth?.lipFullness?.toFixed(6));
+          console.info('  Nose tip projection (zDepth / nasalLength):', measurementsA.nose?.tipProjection?.toFixed(6));
+          console.info('  Chin projection (zDepth / lowerFaceHeight):', measurementsA.jaw?.chinProjection?.toFixed(6));
+          console.groupEnd();
+
+          console.group('MEDIUM priority fixes (2025-10-27):');
+          console.info('  Brow shape (arcHeight / browWidth):', measurementsA.brows?.shape?.toFixed(6));
+          console.info('  Brow position (avgGap / avgEyeWidth):', measurementsA.brows?.position?.toFixed(6));
+          console.info('  Cupid\'s bow definition (bowDepth / philtralWidth):', measurementsA.mouth?.cupidsBowDefinition?.toFixed(6));
+          console.info('  Philtrum length (distance / upperFaceHeight):', measurementsA.mouth?.philtrumLength?.toFixed(6));
+          console.info('  Jaw symmetry (1 - deviation / maxDeviation):', measurementsA.jaw?.symmetry?.toFixed(6));
+          console.info('  Cheek prominence (zDepth / totalFaceHeight):', measurementsA.cheeks?.prominence?.toFixed(6));
+          console.info('  Nasolabial depth (zDepth / mouthWidth):', measurementsA.cheeks?.nasolabialDepth?.toFixed(6));
+          console.info('  Forehead height (foreheadHeight / totalFaceHeight):', measurementsA.forehead?.height?.toFixed(6));
+          console.info('  Forehead contour (zDepth / foreheadLength):', measurementsA.forehead?.contour?.toFixed(6));
+          console.groupEnd();
+          console.groupEnd();
+
+          console.group('Face B:');
+          console.group('HIGH priority fixes (2025-10-26):');
+          console.info('  Eye size (avgHeight / meanEyeWidth):', measurementsB.eyes?.eyeSize?.toFixed(6));
+          console.info('  Lip fullness (totalHeight / mouthWidth):', measurementsB.mouth?.lipFullness?.toFixed(6));
+          console.info('  Nose tip projection (zDepth / nasalLength):', measurementsB.nose?.tipProjection?.toFixed(6));
+          console.info('  Chin projection (zDepth / lowerFaceHeight):', measurementsB.jaw?.chinProjection?.toFixed(6));
+          console.groupEnd();
+
+          console.group('MEDIUM priority fixes (2025-10-27):');
+          console.info('  Brow shape (arcHeight / browWidth):', measurementsB.brows?.shape?.toFixed(6));
+          console.info('  Brow position (avgGap / avgEyeWidth):', measurementsB.brows?.position?.toFixed(6));
+          console.info('  Cupid\'s bow definition (bowDepth / philtralWidth):', measurementsB.mouth?.cupidsBowDefinition?.toFixed(6));
+          console.info('  Philtrum length (distance / upperFaceHeight):', measurementsB.mouth?.philtrumLength?.toFixed(6));
+          console.info('  Jaw symmetry (1 - deviation / maxDeviation):', measurementsB.jaw?.symmetry?.toFixed(6));
+          console.info('  Cheek prominence (zDepth / totalFaceHeight):', measurementsB.cheeks?.prominence?.toFixed(6));
+          console.info('  Nasolabial depth (zDepth / mouthWidth):', measurementsB.cheeks?.nasolabialDepth?.toFixed(6));
+          console.info('  Forehead height (foreheadHeight / totalFaceHeight):', measurementsB.forehead?.height?.toFixed(6));
+          console.info('  Forehead contour (zDepth / foreheadLength):', measurementsB.forehead?.contour?.toFixed(6));
+          console.groupEnd();
+          console.groupEnd();
+
+          console.groupEnd();
+        }
 
         // Classify measurements into categorical descriptors
         const classificationsA = classifyFeatures(measurementsA);
@@ -634,6 +837,9 @@ ctx.onmessage = async (ev: MessageEvent<AnalyzeMessage>) => {
         poseB,
         poseDisparity,
         poseWarning,
+        // TEMPORARY: Include measurements for validation (2025-10-27)
+        measurementsA,
+        measurementsB,
       });
       return;
     }

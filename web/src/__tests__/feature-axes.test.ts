@@ -4,6 +4,7 @@ import {
   extractNoseMeasurements,
   extractMouthMeasurements,
   extractJawMeasurements,
+  extractBrowMeasurements,
   extractFeatureMeasurements,
   type Point,
   type SyntheticJawInput,
@@ -70,8 +71,9 @@ describe('extractEyeMeasurements', () => {
     // Positive tilt means outer corners are higher than inner
     expect(result.canthalTilt).toBeGreaterThan(0);
     expect(result.eyeSize).toBeGreaterThan(0);
+    // interocularDistance now uses ICD/eye-width metric (typical range 0.9-1.1)
+    // This test data produces a high ratio due to narrow eye width relative to ICD
     expect(result.interocularDistance).toBeGreaterThan(0);
-    expect(result.interocularDistance).toBeLessThan(1);
   });
 
   it('should calculate negative canthal tilt for downward-slanting eyes', () => {
@@ -213,6 +215,93 @@ describe('extractEyeMeasurements', () => {
     const result = extractEyeMeasurements(landmarks, leftEye, rightEye);
 
     expect(result.interocularDistance).toBeGreaterThan(0.5);
+  });
+});
+
+describe('extractBrowMeasurements with segmentation refinement', () => {
+  it('prefers refined metrics when confidence is high', () => {
+    const landmarks = createMockLandmarks({
+      // Simplified brow landmarks set to a flat line (fallback shape ~0)
+      70: { x: -40, y: -20, z: 0 },
+      63: { x: -30, y: -20, z: 0 },
+      105: { x: -20, y: -20, z: 0 },
+      66: { x: -10, y: -20, z: 0 },
+      107: { x: 0, y: -20, z: 0 },
+      55: { x: 10, y: -20, z: 0 },
+      65: { x: 20, y: -20, z: 0 },
+      52: { x: 30, y: -20, z: 0 },
+      53: { x: 35, y: -20, z: 0 },
+      46: { x: 40, y: -20, z: 0 },
+      300: { x: 80, y: -18, z: 0 },
+      293: { x: 90, y: -18, z: 0 },
+      334: { x: 100, y: -18, z: 0 },
+      296: { x: 110, y: -18, z: 0 },
+      336: { x: 120, y: -18, z: 0 },
+      285: { x: 130, y: -18, z: 0 },
+      417: { x: 140, y: -18, z: 0 },
+      282: { x: 150, y: -18, z: 0 },
+      283: { x: 160, y: -18, z: 0 },
+      295: { x: 170, y: -18, z: 0 },
+      // Eye landmarks for width/IPD calculations
+      133: { x: -20, y: 0, z: 0 },
+      33: { x: 20, y: 0, z: 0 },
+      362: { x: 120, y: 0, z: 0 },
+      263: { x: 160, y: 0, z: 0 },
+      159: { x: -20, y: -10, z: 0 },
+      145: { x: -20, y: 10, z: 0 },
+      386: { x: 120, y: -10, z: 0 },
+      374: { x: 120, y: 10, z: 0 },
+    });
+
+    const leftEye = { x: 0, y: 0, z: 0 };
+    const rightEye = { x: 140, y: 0, z: 0 };
+
+    const refinedLeft = {
+      side: 'left' as const,
+      curveImg: [],
+      headImg: { x: -40, y: -20 },
+      tailImg: { x: 40, y: -24 },
+      apexImg: { x: 0, y: -32 },
+      archHeightNorm: 0.30,
+      curvature: 0.12,
+      tiltDeg: -2.5,
+      browLenNorm: 1.02,
+      confidence: 0.72,
+    };
+    const refinedRight = {
+      side: 'right' as const,
+      curveImg: [],
+      headImg: { x: 110, y: -18 },
+      tailImg: { x: 190, y: -22 },
+      apexImg: { x: 150, y: -30 },
+      archHeightNorm: 0.26,
+      curvature: 0.11,
+      tiltDeg: 1.8,
+      browLenNorm: 0.96,
+      confidence: 0.68,
+    };
+
+    const result = extractBrowMeasurements(landmarks, leftEye, rightEye, {
+      left: refinedLeft,
+      right: refinedRight,
+    });
+
+    expect(result.shape).toBeCloseTo(Math.max(refinedLeft.archHeightNorm, refinedRight.archHeightNorm), 3);
+    const ipd = Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y);
+    const leftEyeWidth = Math.hypot(
+      landmarks[33].x - landmarks[133].x,
+      landmarks[33].y - landmarks[133].y
+    );
+    const rightEyeWidth = Math.hypot(
+      landmarks[263].x - landmarks[362].x,
+      landmarks[263].y - landmarks[362].y
+    );
+    const avgEyeWidth = (leftEyeWidth + rightEyeWidth) / 2;
+    const expectedLength =
+      ((refinedLeft.browLenNorm * ipd) / avgEyeWidth + (refinedRight.browLenNorm * ipd) / avgEyeWidth) / 2;
+    expect(result.length).toBeCloseTo(expectedLength, 3);
+    expect(result.leftShape).toBeCloseTo(refinedLeft.archHeightNorm, 3);
+    expect(result.rightShape).toBeCloseTo(refinedRight.archHeightNorm, 3);
   });
 });
 

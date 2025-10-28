@@ -63,10 +63,11 @@ export const FEATURE_OUTLINES: Record<string, number[][]> = {
     [33, 7, 163, 144, 145, 153, 154, 155, 133, 246, 161, 160, 159, 158, 157, 173],
     [263, 249, 390, 373, 374, 380, 381, 382, 362, 466, 388, 387, 386, 385, 384, 398],
   ],
-  // Brows: smooth arc per side (kept as a thin closed band for hover hit-testing)
+  // Brows: complete eyebrow contours (all 14 MediaPipe brow landmarks per side)
+  // Using full landmark set from REGION_INDICES.brows for better coverage
   brows: [
-    [70, 63, 105, 66, 107, 55, 193, 35, 124],
-    [300, 293, 334, 296, 336, 285, 417, 265, 353],
+    [156, 70, 63, 105, 66, 107, 55, 193, 35, 124, 46, 53, 52, 65],
+    [383, 300, 293, 334, 296, 336, 285, 417, 265, 353, 276, 283, 282, 295],
   ],
   // Mouth: outer and inner loops
   mouth: [

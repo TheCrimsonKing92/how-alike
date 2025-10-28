@@ -96,7 +96,7 @@ describe('classifyEyes', () => {
     const measurements: EyeMeasurements = {
       canthalTilt: 0,
       eyeSize: 0.20,
-      interocularDistance: 0.45,
+      interocularDistance: 1.2, // ICD / mean eye width > 1.1 = wide-set
     };
 
     const result = classifyEyes(measurements);
@@ -110,7 +110,7 @@ describe('classifyEyes', () => {
     const measurements: EyeMeasurements = {
       canthalTilt: 0,
       eyeSize: 0.20,
-      interocularDistance: 0.35,
+      interocularDistance: 0.8, // ICD / mean eye width < 0.9 = close-set
     };
 
     const result = classifyEyes(measurements);
@@ -342,7 +342,7 @@ describe('classifyMouth', () => {
       cupidsBowDefinition: 0.03,
       lipCornerOrientation: 0,
       philtrumLength: 0.20,
-      mouthWidth: 0.35,
+      mouthWidth: 0.55, // Updated to match new anthropometric thresholds (>0.50 = wide)
     };
 
     const result = classifyMouth(measurements);
@@ -527,6 +527,8 @@ describe('classifyFeatures', () => {
         shape: 0.12,
         position: 0.16,
         length: 1.05,
+        leftShape: 0.11,
+        rightShape: 0.12,
       },
       nose: {
         width: 0.275,
@@ -568,6 +570,7 @@ describe('classifyFeatures', () => {
     expect(result.eyes.length).toBe(3);
     expect(result.brows).toBeDefined();
     expect(result.brows.length).toBe(3);
+    expect(result.brows.some(c => c.axis === 'brow shape')).toBe(true);
     expect(result.nose).toBeDefined();
     expect(result.nose.length).toBe(3);
     expect(result.mouth).toBeDefined();
@@ -593,6 +596,8 @@ describe('classifyFeatures', () => {
         shape: 0.12,
         position: 0.16,
         length: 1.05,
+        leftShape: 0.11,
+        rightShape: 0.12,
       },
       nose: {
         width: 0.275,
@@ -657,6 +662,8 @@ describe('classifyFeatures', () => {
         shape: 0.12,
         position: 0.16,
         length: 1.05,
+        leftShape: 0.11,
+        rightShape: 0.12,
       },
       nose: {
         width: 0.275,

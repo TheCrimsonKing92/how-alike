@@ -79,16 +79,19 @@ function classifyInterocularDistance(ratio: number): AxisClassification {
   let value: string;
   let confidence: number;
 
-  // Typical range: 0.35-0.45 (IPD / face width)
-  if (ratio > 0.42) {
+  // Anthropometric standard: ICD / mean eye width
+  // Source: ANTHROPOMETRIC_STANDARDS.md (2025-10-26)
+  // Thresholds based on "distance between eyes ≈ one eye width" rule
+  // Typical range: 0.9-1.1 (balanced), <0.9 (close-set), >1.1 (wide-set)
+  if (ratio > 1.1) {
     value = 'wide-set';
-    confidence = Math.min(1, (ratio - 0.42) / 0.08);
-  } else if (ratio < 0.38) {
+    confidence = Math.min(1, (ratio - 1.1) / 0.2);
+  } else if (ratio < 0.9) {
     value = 'close-set';
-    confidence = Math.min(1, (0.38 - ratio) / 0.08);
+    confidence = Math.min(1, (0.9 - ratio) / 0.2);
   } else {
     value = 'balanced';
-    confidence = 1 - Math.abs(ratio - 0.40) / 0.02;
+    confidence = 1 - Math.abs(ratio - 1.0) / 0.1;
   }
 
   return {
@@ -294,16 +297,19 @@ function classifyMouthWidth(ratio: number): AxisClassification {
   let value: string;
   let confidence: number;
 
-  // Mouth width / face width
-  if (ratio > 0.32) {
+  // Mouth width / face width (bizygomatic)
+  // Anthropometric standard: typical range 0.40-0.60, average ~0.45-0.50
+  // Source: Empirical calibration from real faces (2025-10-26)
+  // TODO: Validate against larger sample set
+  if (ratio > 0.50) {
     value = 'wide';
-    confidence = Math.min(1, (ratio - 0.32) / 0.10);
-  } else if (ratio < 0.25) {
+    confidence = Math.min(1, (ratio - 0.50) / 0.10);
+  } else if (ratio < 0.40) {
     value = 'narrow';
-    confidence = Math.min(1, (0.25 - ratio) / 0.10);
+    confidence = Math.min(1, (0.40 - ratio) / 0.10);
   } else {
     value = 'balanced';
-    confidence = 1 - Math.abs(ratio - 0.285) / 0.035;
+    confidence = 1 - Math.abs(ratio - 0.45) / 0.05;
   }
 
   return {
@@ -466,16 +472,20 @@ function classifyBrowShape(ratio: number): AxisClassification {
   let value: string;
   let confidence: number;
 
-  // Ratio of arc height to brow width
-  if (ratio > 0.15) {
+  // Sagitta/chord ratio (peak-to-chord distance / chord length).
+  // SegFormer contours yield lower ratios than landmark-only data, so thresholds were
+  // re-tuned on segmentation-driven measurements (2025-10-28).
+  if (ratio >= 0.13) {
     value = 'arched';
-    confidence = Math.min(1, (ratio - 0.15) / 0.15);
-  } else if (ratio < 0.08) {
+    confidence = Math.min(1, (ratio - 0.13) / 0.10);
+  } else if (ratio <= 0.085) {
     value = 'straight';
-    confidence = Math.min(1, (0.08 - ratio) / 0.08);
+    confidence = Math.min(1, (0.085 - ratio) / 0.10);
   } else {
     value = 'moderate';
-    confidence = 1 - Math.abs(ratio - 0.115) / 0.035;
+    const center = 0.1075;
+    const halfRange = 0.0225;
+    confidence = Math.max(0, 1 - Math.abs(ratio - center) / halfRange);
   }
 
   return {
@@ -485,7 +495,6 @@ function classifyBrowShape(ratio: number): AxisClassification {
     rawMeasurement: ratio,
   };
 }
-
 function classifyBrowPosition(normalized: number): AxisClassification {
   let value: string;
   let confidence: number;
@@ -535,11 +544,21 @@ function classifyBrowLength(ratio: number): AxisClassification {
 }
 
 export function classifyBrows(measurements: BrowMeasurements): AxisClassification[] {
-  return [
-    classifyBrowShape(measurements.shape),
+  const aggregate = { ...classifyBrowShape(measurements.shape), axis: 'brow shape' };
+  const left = { ...classifyBrowShape(measurements.leftShape), axis: 'left brow shape' };
+  const right = { ...classifyBrowShape(measurements.rightShape), axis: 'right brow shape' };
+  const axes: AxisClassification[] = [aggregate];
+
+  if (left.value !== right.value) {
+    axes.push(left, right);
+  }
+
+  axes.push(
     classifyBrowPosition(measurements.position),
     classifyBrowLength(measurements.length),
-  ];
+  );
+
+  return axes;
 }
 
 // ============================================================================

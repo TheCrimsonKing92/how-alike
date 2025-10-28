@@ -17,7 +17,7 @@ import type {
   RegionMaskDebug,
   ParsingLogits,
 } from './detector-types';
-import type { Pt } from '@/lib/hints';
+import type { Pt } from '@/lib/points';
 import { deriveRegionHints } from '@/lib/hints';
 import { maskToOutline } from '@/lib/mask';
 import { computeFaceCrop } from './parsing-utils';
@@ -58,6 +58,8 @@ const NECK_CLASS_ID = LABEL_TO_CLASS_ID['neck'];
 const SKIN_CLASS_ID = LABEL_TO_CLASS_ID['skin'];
 const BACKGROUND_CLASS_ID = LABEL_TO_CLASS_ID['background'];
 const HAIR_CLASS_ID = LABEL_TO_CLASS_ID['hair'];
+const LEFT_BROW_CLASS_ID = LABEL_TO_CLASS_ID['l_brow'];
+const RIGHT_BROW_CLASS_ID = LABEL_TO_CLASS_ID['r_brow'];
 const NECK_ALIAS_CLASS_IDS = [
   LABEL_TO_CLASS_ID['necklace'],
   LABEL_TO_CLASS_ID['cloth'],
@@ -684,13 +686,17 @@ export const transformersParsingAdapter: DetectorAdapter = {
         }
 
         // Load model and processor directly (not through pipeline)
-        [processor, model] = await Promise.all([
+        const [proc, mdl] = await Promise.all([
           AutoProcessor.from_pretrained('jonathandinu/face-parsing'),
           AutoModel.from_pretrained('jonathandinu/face-parsing')
         ]);
 
-        store[modelKey] = model;
-        store[processorKey] = processor;
+        store[modelKey] = mdl;
+        store[processorKey] = proc;
+
+        // Cast from stored values
+        model = mdl as unknown as ModelType;
+        processor = proc as unknown as ProcessorType;
 
         if (process.env.NODE_ENV !== 'production') {
           console.info('[transformers-parsing] model and processor loaded successfully');
@@ -799,12 +805,16 @@ export const transformersParsingAdapter: DetectorAdapter = {
           neck: NECK_CLASS_ID >= 0 && NECK_CLASS_ID < numClasses ? NECK_CLASS_ID : undefined,
           hair: HAIR_CLASS_ID >= 0 && HAIR_CLASS_ID < numClasses ? HAIR_CLASS_ID : undefined,
           background: BACKGROUND_CLASS_ID >= 0 && BACKGROUND_CLASS_ID < numClasses ? BACKGROUND_CLASS_ID : undefined,
+          browLeft: LEFT_BROW_CLASS_ID >= 0 && LEFT_BROW_CLASS_ID < numClasses ? LEFT_BROW_CLASS_ID : undefined,
+          browRight: RIGHT_BROW_CLASS_ID >= 0 && RIGHT_BROW_CLASS_ID < numClasses ? RIGHT_BROW_CLASS_ID : undefined,
         };
 
         const skinPlane = copyPlane(classIds.skin);
         const neckPlane = copyPlane(classIds.neck);
         const hairPlane = copyPlane(classIds.hair);
         const backgroundPlane = copyPlane(classIds.background);
+        let browLeftProb: Float32Array | undefined;
+        let browRightProb: Float32Array | undefined;
 
         if (skinPlane || neckPlane || hairPlane || backgroundPlane) {
           exportedLogits = {
@@ -818,6 +828,58 @@ export const transformersParsingAdapter: DetectorAdapter = {
           if (hairPlane) exportedLogits.hair = hairPlane;
           if (backgroundPlane) exportedLogits.background = backgroundPlane;
         }
+
+        const needsBrowProb = Boolean(classIds.browLeft !== undefined || classIds.browRight !== undefined);
+        if (needsBrowProb) {
+          const maxLogits = new Float32Array(planeSize);
+          maxLogits.fill(Number.NEGATIVE_INFINITY);
+          for (let c = 0; c < numClasses; c++) {
+            const offset = c * planeSize;
+            for (let i = 0; i < planeSize; i++) {
+              const value = logitData[offset + i];
+              if (value > maxLogits[i]) maxLogits[i] = value;
+            }
+          }
+          const sumExp = new Float32Array(planeSize);
+          for (let c = 0; c < numClasses; c++) {
+            const offset = c * planeSize;
+            for (let i = 0; i < planeSize; i++) {
+              const base = maxLogits[i];
+              if (!Number.isFinite(base)) continue;
+              sumExp[i] += Math.exp(logitData[offset + i] - base);
+            }
+          }
+
+          const computeProbPlane = (classId: number | undefined): Float32Array | undefined => {
+            if (classId === undefined) return undefined;
+            const prob = new Float32Array(planeSize);
+            const offset = classId * planeSize;
+            for (let i = 0; i < planeSize; i++) {
+              const base = maxLogits[i];
+              const denom = sumExp[i];
+              if (!Number.isFinite(base) || denom <= 0 || !Number.isFinite(denom)) {
+                prob[i] = 0;
+              } else {
+                prob[i] = Math.exp(logitData[offset + i] - base) / denom;
+              }
+            }
+            return prob;
+          };
+
+          browLeftProb = computeProbPlane(classIds.browLeft);
+          browRightProb = computeProbPlane(classIds.browRight);
+        }
+
+        if (!exportedLogits) {
+          exportedLogits = {
+            width: outWidth,
+            height: outHeight,
+            crop: { sx: 0, sy: 0, sw: iw, sh: ih },
+            classIds,
+          };
+        }
+        if (browLeftProb) exportedLogits.browLeft = browLeftProb;
+        if (browRightProb) exportedLogits.browRight = browRightProb;
       }
 
       // Use the documented post-processing method to upsample and apply argmax
@@ -835,6 +897,10 @@ export const transformersParsingAdapter: DetectorAdapter = {
       const segmentationTensor = processed[0].segmentation;
       const labels = new Uint8Array(segmentationTensor.data);
       const [segHeight, segWidth] = segmentationTensor.dims;
+
+      if (PARSING_TRACE_LOGS && process.env.NODE_ENV !== 'production') {
+        console.info(`[transformers-parsing] final segmentation dims: ${segWidth} x ${segHeight} (original image: ${iw} x ${ih})`);
+      }
       const labelsSnapshot = neckDebug ? labels.slice() : null;
 
       if (neckDebug) {
@@ -900,38 +966,92 @@ export const transformersParsingAdapter: DetectorAdapter = {
       // Generate region hints from segmentation masks
       const hints: RegionHint[] = [];
 
-      // Define regions to extract - process each class separately to avoid merging
-      const regionClasses: { region: string; classId: number; open?: boolean }[] = [
-        { region: 'brows', classId: 6, open: true },  // l_brow
-        { region: 'brows', classId: 7, open: true },  // r_brow
-        { region: 'nose', classId: 2, open: true },    // nose
-        { region: 'eyes', classId: 4 },                // l_eye
-        { region: 'eyes', classId: 5 },                // r_eye
-        { region: 'mouth', classId: 10 },              // mouth
-        { region: 'mouth', classId: 11 },              // u_lip
-        { region: 'mouth', classId: 12 },              // l_lip
+      // Compute face midline from eye landmarks to spatially separate left/right brows
+      const midX = eyeLeft && eyeRight ? (eyeLeft.x + eyeRight.x) / 2 : segWidth / 2;
+
+      // For brows: merge BOTH brow classes (6 & 7) but separate by spatial location
+      // This handles SegFormer misclassifying brow pixels across left/right boundaries
+      const browMask = new Uint8Array(labels.length);
+      for (let i = 0; i < labels.length; i++) {
+        browMask[i] = (labels[i] === 6 || labels[i] === 7) ? 1 : 0;
+      }
+
+      // Split brow mask by midline
+      const leftBrowMask = new Uint8Array(labels.length);
+      const rightBrowMask = new Uint8Array(labels.length);
+      for (let y = 0; y < segHeight; y++) {
+        for (let x = 0; x < segWidth; x++) {
+          const i = y * segWidth + x;
+          if (browMask[i]) {
+            if (x < midX) {
+              leftBrowMask[i] = 1;
+            } else {
+              rightBrowMask[i] = 1;
+            }
+          }
+        }
+      }
+
+      // Define regions to extract
+      const regionMasks: { region: string; mask: Uint8Array; open?: boolean }[] = [
+        { region: 'brows', mask: leftBrowMask, open: true },   // left brow (spatial)
+        { region: 'brows', mask: rightBrowMask, open: true },  // right brow (spatial)
       ];
 
-      for (const { region, classId, open } of regionClasses) {
-        // Create binary mask for this specific class (not merged)
+      // Add non-brow regions using single class IDs
+      const otherRegions: { region: string; classId: number; open?: boolean }[] = [
+        { region: 'nose', classId: 2, open: true },
+        { region: 'eyes', classId: 4 },
+        { region: 'eyes', classId: 5 },
+        { region: 'mouth', classId: 10 },
+        { region: 'mouth', classId: 11 },
+        { region: 'mouth', classId: 12 },
+      ];
+
+      for (const { region, classId, open } of otherRegions) {
         const classMask = new Uint8Array(labels.length);
         for (let i = 0; i < labels.length; i++) {
           classMask[i] = labels[i] === classId ? 1 : 0;
         }
+        regionMasks.push({ region, mask: classMask, open });
+      }
+
+      // Store unsimplified brow contours for precise measurements
+      const unsimplifiedBrows: Array<{ region: string; points: Pt[] }> = [];
+
+      for (const { region, mask: classMask, open } of regionMasks) {
 
         // Check if this class has any pixels
         const pixelCount = classMask.reduce((sum, v) => sum + v, 0);
         if (pixelCount === 0) continue;
 
         if (PARSING_TRACE_LOGS && process.env.NODE_ENV !== 'production') {
-          console.info(`[transformers-parsing] processing region=${region} classId=${classId} pixels=${pixelCount}`);
+          console.info(`[transformers-parsing] processing region=${region} pixels=${pixelCount}`);
         }
 
-        // Convert mask to outline polygon
-        const outline = maskToOutline(classMask, segWidth, segHeight, 2.0);
+        // For brows: generate both unsimplified (for measurements) and simplified (for display)
+        const isBrow = region === 'brows';
+        const epsilon = 2.0;
+
+        // Always generate simplified version for display
+        const outline = maskToOutline(classMask, segWidth, segHeight, epsilon);
+
+        // For brows, also generate unsimplified version for accurate arch measurement
+        if (isBrow) {
+          const unsimplified = maskToOutline(classMask, segWidth, segHeight, 0);
+          if (unsimplified.length >= 3) {
+            unsimplifiedBrows.push({ region, points: unsimplified });
+          }
+        }
 
         if (PARSING_TRACE_LOGS && process.env.NODE_ENV !== 'production') {
-          console.info(`[transformers-parsing] outline for classId=${classId}: ${outline.length} points`);
+          console.info(`[transformers-parsing] outline for ${region}: ${outline.length} points`);
+          if (outline.length > 0) {
+            const sample = outline[0];
+            const xRange = { min: Math.min(...outline.map(p => p.x)), max: Math.max(...outline.map(p => p.x)) };
+            const yRange = { min: Math.min(...outline.map(p => p.y)), max: Math.max(...outline.map(p => p.y)) };
+            console.info(`[transformers-parsing]   first point: (${sample.x.toFixed(1)}, ${sample.y.toFixed(1)}), x range: ${xRange.min.toFixed(1)}-${xRange.max.toFixed(1)}, y range: ${yRange.min.toFixed(1)}-${yRange.max.toFixed(1)}`);
+          }
         }
 
         if (outline.length >= 3) {
@@ -961,9 +1081,16 @@ export const transformersParsingAdapter: DetectorAdapter = {
       result.__transformers = 'ok';
       result.__mask = debugMask;
       if (exportedLogits) result.__logits = exportedLogits;
+      // Store unsimplified brow contours for precise arch measurements
+      if (unsimplifiedBrows.length > 0) {
+        (result as any).__browsUnsimplified = unsimplifiedBrows;
+      }
 
       if (PARSING_TRACE_LOGS && process.env.NODE_ENV !== 'production') {
         console.info('[transformers-parsing] generated', hints.length, 'region hints from segmentation');
+        if (unsimplifiedBrows.length > 0) {
+          console.info('[transformers-parsing] unsimplified brow contours:', unsimplifiedBrows.map(b => b.points.length).join(', '));
+        }
       }
 
       return result;

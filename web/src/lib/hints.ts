@@ -50,21 +50,27 @@ export function deriveRegionHints(points: Pt[]): RegionHint[] {
   const rightEyeCenter = centroid(rightEyePts);
   const ipd = Math.hypot(rightEyeCenter.x - leftEyeCenter.x, rightEyeCenter.y - leftEyeCenter.y) || 1;
 
-  // Brows: use landmark-based extraction with upper lid offset
-  try {
-    const [leftBrow, rightBrow] = extractLandmarkBrows(points, leftEyeCenter, rightEyeCenter, ipd);
-    if (leftBrow.length >= 3) {
-      hints.push({ region: 'brows', points: leftBrow, open: true });
-    }
-    if (rightBrow.length >= 3) {
-      hints.push({ region: 'brows', points: rightBrow, open: true });
-    }
-  } catch (err) {
-    // Fallback to static contours
-    const browDefs = FEATURE_OUTLINES.brows ?? [];
-    for (const seq of browDefs) {
-      const pts = keepCentral(mapPts(points, seq), 0.85);
-      if (pts.length >= 2) hints.push({ region: 'brows', points: pts, open: true });
+  // Brows: use direct landmark points without heavy smoothing to preserve arch peaks
+  // Note: extractLandmarkBrows applies light smoothing (window=3) which can dampen peaks
+  // For visualization, use raw landmarks to better follow hair contours
+  const browDefs = FEATURE_OUTLINES.brows ?? [];
+  for (const seq of browDefs) {
+    const pts = mapPts(points, seq);
+    if (pts.length >= 3) {
+      // Offset brow contour outward to better approximate hair boundary
+      // MediaPipe landmarks are on the brow ridge, but hair extends beyond
+      const browCenter = centroid(pts);
+      const offsetDistance = 0.015 * ipd; // ~1.5% of IPD outward
+      const offsetPts = pts.map(p => {
+        const dx = p.x - browCenter.x;
+        const dy = p.y - browCenter.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        return {
+          x: p.x + (dx / dist) * offsetDistance,
+          y: p.y + (dy / dist) * offsetDistance
+        };
+      });
+      hints.push({ region: 'brows', points: offsetPts, open: true });
     }
   }
 

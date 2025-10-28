@@ -1,7 +1,7 @@
 import type { ParsingLogits } from '@/models/detector-types';
 import type { SyntheticJawResult } from '@/lib/jaw-from-masks';
 
-export type AnalyzeInit = { type: 'INIT'; payload?: { adapter?: 'facemesh' | 'parsing' } };
+export type AnalyzeInit = { type: 'INIT'; payload?: { adapter?: 'facemesh' | 'parsing' | 'transformers' } };
 
 export type DebugSettings = {
   disableAxisTolerance?: boolean;
@@ -28,7 +28,13 @@ export type AnalyzeProgress = {
 };
 
 export type OverlayPoint = { x: number; y: number };
-export type RegionPoly = { region: string; points: OverlayPoint[]; open?: boolean };
+export type RegionPoly = {
+  region: string;
+  points: OverlayPoint[];
+  open?: boolean;
+  source?: 'landmark' | 'segmentation' | 'refined';
+  confidence?: number;
+};
 
 export type MaskOverlay = {
   width: number;
@@ -70,7 +76,7 @@ export type AnalyzeResult = {
   regionsA: RegionPoly[];
   regionsB: RegionPoly[];
   texts?: { region: string; text: string }[];
-  adapter?: 'facemesh' | 'parsing';
+  adapter?: 'facemesh' | 'parsing' | 'transformers';
   parseMsA?: number;
   parseMsB?: number;
   hintsSourceA?: string;
@@ -89,6 +95,9 @@ export type AnalyzeResult = {
   poseB?: PoseEstimate;
   poseDisparity?: number;  // Angular distance between poses in degrees
   poseWarning?: string;    // Warning message if pose disparity is significant
+  // TEMPORARY: Include measurements for validation (2025-10-27)
+  measurementsA?: any;
+  measurementsB?: any;
 };
 
 export type AnalyzeError = { type: 'ERROR'; jobId: string; message: string };

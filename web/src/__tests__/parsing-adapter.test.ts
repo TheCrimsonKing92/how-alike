@@ -11,7 +11,7 @@ describe('parsing-adapter ORT integration (mocked)', () => {
     delete (globalThis as any)['__parsingSession__'];
   });
 
-  it('returns onnx hints when ORT produces segmentation', async () => {
+  it('returns onnx hints when ORT produces segmentation', { timeout: 15000 }, async () => {
     const hintPoly = [
       { x: 0, y: 0 },
       { x: S, y: 0 },

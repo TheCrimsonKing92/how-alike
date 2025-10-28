@@ -2,6 +2,7 @@
 import React from "react";
 import type { RegionPoly, MaskOverlay } from "@/workers/types";
 import { hitTestRegion } from "@/lib/overlay-hit-test";
+import { REFINED_BROW_CONFIDENCE_THRESHOLD } from "@/lib/brow-seg-refinement";
 
 export type OverlayPoint = { x: number; y: number };
 
@@ -158,6 +159,16 @@ export default function ImageOverlayPanel({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bitmap, 0, 0);
 
+      // Debug: log what brow hints we're receiving
+      if (regions) {
+        const browRegions = regions.filter(r => r.region === 'brows');
+        if (browRegions.length > 0) {
+          console.log(`[ImageOverlayPanel ${title}] brow regions: ${browRegions.length}, ` +
+                      `points: [${browRegions.map(r => r.points.length).join(', ')}], ` +
+                      `source: ${(regions as any).__source}`);
+        }
+      }
+
       // Render full segmentation (all classes) if enabled
       if (mask && fullSegCanvas) {
         ctx.save();
@@ -201,7 +212,7 @@ export default function ImageOverlayPanel({
         const sorted = [...regions].sort((a,b)=> order.indexOf(a.region)-order.indexOf(b.region));
         const tensionFor = (name: string) => {
           switch (name) {
-            case 'brows': return 0.6; // reduce overshoot
+            case 'brows': return 0.4; // lower tension for parsing-based segmentation contours
             case 'mouth': return 0.6;
             case 'jaw': return 0.35; // reduce overshoot further
             default: return 0.55;
@@ -220,8 +231,12 @@ export default function ImageOverlayPanel({
           })();
           return highlight ? base + 1.2 : base;
         };
-        const colorFor = (name: string) => {
-          const s = scoreMap?.[name] ?? 0.5;
+        const colorFor = (poly: RegionPoly) => {
+          if (poly.region === 'brows' && poly.source === 'refined') {
+            const conf = poly.confidence ?? 0;
+            return conf >= REFINED_BROW_CONFIDENCE_THRESHOLD ? '#ec4899' : '#f9a8d4';
+          }
+          const s = scoreMap?.[poly.region] ?? 0.5;
           if (s >= 0.85) return '#16a34a'; // green-600
           if (s >= 0.7) return '#22c55e';  // green-500
           if (s >= 0.5) return '#3b82f6';  // blue-500
@@ -230,13 +245,35 @@ export default function ImageOverlayPanel({
         for (const r of sorted) {
           const pts = r.points;
           if (pts.length < 2) continue;
-          const stroke = r.region === highlight ? '#10b981' : colorFor(r.region);
-          ctx.strokeStyle = stroke;
+          const strokeColor = r.region === highlight ? '#10b981' : colorFor(r);
+          ctx.strokeStyle = strokeColor;
           ctx.lineWidth = widthFor(r.region, r.region === highlight);
           ctx.lineJoin = 'round';
           ctx.lineCap = 'round';
           const closed = !(r.open === true);
+
+          if (r.region === 'brows' && r.source === 'refined') {
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+              ctx.lineTo(pts[i].x, pts[i].y);
+            }
+            ctx.closePath();
+            const conf = r.confidence ?? 0;
+            const strong = conf >= REFINED_BROW_CONFIDENCE_THRESHOLD;
+            ctx.save();
+            ctx.globalAlpha = strong ? 0.24 : 0.16;
+            ctx.fillStyle = strong ? '#ec4899' : '#f9a8d4';
+            ctx.fill();
+            ctx.restore();
+            ctx.stroke();
+            continue;
+          }
+
           drawSmooth(ctx, pts, tensionFor(r.region), closed);
+          if (closed) {
+            ctx.fillStyle = 'transparent';
+          }
           ctx.stroke();
         }
       }
